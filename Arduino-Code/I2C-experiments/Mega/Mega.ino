@@ -1,28 +1,33 @@
 #include <Wire.h>
 
+#define slave2 2
+#define slave3 3
+#define slave4 4
+#define slave5 5
+
+int slaves[4] = {slave2, slave3, slave4, slave5};
+
 void setup() {
   Wire.begin();        // join i2c bus (address optional for master)
+  Wire.setClock(400000);
 
-  Serial.begin(9600);  // start serial for output
+  Serial.begin(9600);
 }
 
+long updateBeginTime;
+
 void loop() {
-  Wire.requestFrom(6, 15);    // request 6 bytes from peripheral device #6 (arduino uno)
-  Wire.requestFrom(6, 15);
-  while (Wire.available()) { // peripheral may send less than requested
-    char c = Wire.read(); // receive a byte as character
+  updateBeginTime = millis();
+  for (int i = 0; i < 4; i++) {
+    Wire.requestFrom(slaves[i], 20);
+    while (Wire.available()) { // peripheral may send less than requested
+      char c = Wire.read(); // receive a byte as character
 
-    Serial.print(c);         // print the character
+      Serial.print(c);         // print the character
+    }
+    Serial.print(" NEXT SLAVE\n");
   }
-  Serial.print("\n");
+  Serial.print((millis() - updateBeginTime) / 1000.0); Serial.print(" Sekunden\n");
 
-  Wire.requestFrom(2, 18);
-  while (Wire.available()) { // peripheral may send less than requested
-    char c = Wire.read(); // receive a byte as character
-
-    Serial.print(c);         // print the character
-  }
-  Serial.print("\n");
-
-  delay(500);
+  delay(2000);
 }
