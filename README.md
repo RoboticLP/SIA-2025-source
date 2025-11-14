@@ -35,7 +35,8 @@ ht1:%d|ht2:%d|err
 - seltener Abfragen **ob** er ein Update parat hat, und erst dann das Update abfragen.
 - Error Meldungen nur alle Paar Sekunden schicken (und codiert? also *Zahl* bedeutet bestimmter Error, der erstm in der UI formuliert wird)
 
-## sprintf (Formatierung von Strings)
+## sprintf
+Formatierung von Strings
 - [Online Tutorial für sprintf](https://www.programmingelectronics.com/sprintf-arduino/)
 
 **Code Beispiel**
