@@ -1,7 +1,7 @@
 #include <Wire.h>
 
 void setup() {  
-  Wire.begin(6);                // join i2c bus with address #8
+  Wire.begin(2);                // join i2c bus with address #8
 
   Wire.onRequest(requestEvent); // register event
 }
@@ -16,6 +16,6 @@ void loop() {
 
 void requestEvent() {
 
-  Wire.write("hello from uno "); // respond with message of 6 bytes
+  Wire.write("Hello from slave 2"); // respond with message of 6 bytes
   // as expected by master
 }
