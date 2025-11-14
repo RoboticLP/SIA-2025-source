@@ -8,6 +8,7 @@ void setup() {
 
 void loop() {
   Wire.requestFrom(6, 15);    // request 6 bytes from peripheral device #6 (arduino uno)
+  Wire.requestFrom(6, 15);
   while (Wire.available()) { // peripheral may send less than requested
     char c = Wire.read(); // receive a byte as character
 
@@ -15,7 +16,7 @@ void loop() {
   }
   Serial.print("\n");
 
-  Wire.requestFrom(2, 18);    // request 6 bytes from peripheral device #2 (arduino nano)
+  Wire.requestFrom(2, 18);
   while (Wire.available()) { // peripheral may send less than requested
     char c = Wire.read(); // receive a byte as character
 
