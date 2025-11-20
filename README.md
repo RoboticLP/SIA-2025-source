@@ -69,11 +69,11 @@ sprintf(varBuffer, "der String: die %s", "Formatierung");
 ```cpp
 int datenAnzahl;  // gibt die länge des Arrays an
 String* arrayName = splitString(zuSplittenderString, trennzeichen, datenAnzahl);  // splitString(String input, char splitter, int &count)
-for (int i = 0; i < dataCount; i++) { // die Schleife zum durchlaufen der sub-Strings
+for (int i = 0; i < datenAnzahl; i++) { // die Schleife zum durchlaufen der sub-Strings
   arrayName[i]; // so greift man auf einen sub-String zu
   // hier können wir die sub-Strings verarbeiten
 }
-delete[] segments; // das Array wieder löschen um memory leaks zu verhindern
+delete[] arrayName; // das Array wieder löschen um memory leaks zu verhindern
 ```
 
 <details>
