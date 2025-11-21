@@ -22,7 +22,7 @@ const char* webpage_main = R"=====(
         background: #f5f5f5;
       }
 
-      .controls-container {
+      .controls-container, .settings-container, .error-container {
         background: white;
         padding: 20px;
         border-radius: 12px;
@@ -30,18 +30,83 @@ const char* webpage_main = R"=====(
         margin-bottom: 16px;
       }
 
-      .error-container {
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      }
-
-      .error-title {
+      .section-title {
         font-size: 14px;
         font-weight: 600;
         color: #333;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
+      }
+
+      /* Button Styles */
+      .btn {
+        width: 100%;
+        height: 50px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: inherit;
+      }
+
+      .btn-primary {
+        background: #5c6bc0;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #4a5bb5;
+      }
+
+      .btn-primary:active {
+        background: #3949ab;
+        transform: translateY(1px);
+      }
+
+      .btn-secondary {
+        background: white;
+        color: #5c6bc0;
+        border: 2px solid #5c6bc0;
+      }
+
+      .btn-secondary:hover {
+        background: #f5f7ff;
+      }
+
+      .btn-secondary:active {
+        background: #e8ebf9;
+        transform: translateY(1px);
+      }
+
+      .btn-danger {
+        background: white;
+        color: #c62828;
+        border: 2px solid #c62828;
+      }
+
+      .btn-danger:hover {
+        background: #fff5f5;
+      }
+
+      .btn-danger:active {
+        background: #ffebee;
+        transform: translateY(1px);
+      }
+
+      .btn-small {
+        height: auto;
+        padding: 8px 16px;
+        font-size: 13px;
+        width: auto;
+      }
+
+      /* Log Styles */
+      .log-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
       }
 
       .log-entry {
@@ -49,6 +114,10 @@ const char* webpage_main = R"=====(
         padding: 10px 12px;
         border-radius: 6px;
         margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
       }
 
       .log-entry:last-child {
@@ -67,30 +136,88 @@ const char* webpage_main = R"=====(
         border-left: 3px solid #1565c0;
       }
 
-      #btn0 {
-        width: 100%;
-        height: 50px;
-        border: none;
-        border-radius: 10px;
-        font-size: 16px;
-        font-weight: 500;
-        color: white;
-        background: #5c6bc0;
+      .log-timestamp {
+        color: #9e9e9e;
+        font-size: 11px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        opacity: 0.8;
+      }
+
+      /* Settings Styles */
+      .setting-item {
+        margin-bottom: 16px;
+      }
+
+      .setting-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .setting-label {
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 8px;
+        display: block;
+      }
+
+      .toggle-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .toggle {
+        position: relative;
+        width: 50px;
+        height: 28px;
+        background: #e0e0e0;
+        border-radius: 14px;
         cursor: pointer;
-        margin-bottom: 24px;
-        transition: all 0.2s ease;
+        transition: background 0.3s;
       }
 
-      #btn0:active {
-        background: #4a5bb5;
-        transform: translateY(1px);
+      .toggle.active {
+        background: #5c6bc0;
       }
 
+      .toggle-thumb {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 22px;
+        height: 22px;
+        background: white;
+        border-radius: 50%;
+        transition: left 0.3s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .toggle.active .toggle-thumb {
+        left: 25px;
+      }
+
+      .text-input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      .text-input:focus {
+        border-color: #5c6bc0;
+      }
+
+      /* Slider Styles */
       .slider-label {
         font-size: 14px;
         font-weight: 500;
         color: #333;
         margin-bottom: 12px;
+        margin-top: 24px;
       }
 
       #brightness-slider {
@@ -122,6 +249,10 @@ const char* webpage_main = R"=====(
         transform: scale(1.1);
       }
 
+      #brightness-slider::-webkit-slider-thumb:active {
+        transform: scale(1.05);
+      }
+
       #brightness-slider::-moz-range-thumb {
         width: 22px;
         height: 22px;
@@ -136,6 +267,10 @@ const char* webpage_main = R"=====(
       #brightness-slider::-moz-range-thumb:hover {
         transform: scale(1.1);
       }
+
+      #brightness-slider::-moz-range-thumb:active {
+        transform: scale(1.05);
+      }
     </style>
     <script>
       function updateSliderProgress() {
@@ -148,28 +283,140 @@ const char* webpage_main = R"=====(
         const logContainer = document.getElementById('log-container');
         const logEntry = document.createElement('div');
         logEntry.className = 'log-entry log-' + type;
-        logEntry.textContent = message;
-        logContainer.appendChild(logEntry);
+        
+        const messageSpan = document.createElement('span');
+        messageSpan.textContent = message;
+       
+        const timestampSpan = document.createElement('span');
+        timestampSpan.className = 'log-timestamp';
+        const now = new Date();
+        timestampSpan.textContent = now.toLocaleTimeString('de-DE');
+        
+        logEntry.appendChild(messageSpan);
+        logEntry.appendChild(timestampSpan);
+        logContainer.prepend(logEntry);
+
+        if (type === 'info') {
+          setTimeout(() => {
+            logEntry.remove();
+          }, 20000);
+        }
+      }
+
+      function toggleSetting(element) {
+        element.classList.toggle('active');
+      }
+
+      function applySettings() {
+        const autoMode = document.getElementById('auto-mode-toggle').classList.contains('active');
+        const deviceName = document.getElementById('device-name').value;
+        
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("PUT", "SETTINGS?autoMode=" + autoMode + "&deviceName=" + deviceName, false);
+        xhttp.send();
+        
+        addLog('info', 'Settings applied successfully');
+      }
+
+      function resetGame() {
+        if (confirm('Are you sure you want to reset the game?')) {
+          var xhttp = new XMLHttpRequest();
+          xhttp.open("PUT", "RESET_GAME", false);
+          xhttp.send();
+          addLog('info', 'Game has been reset');
+        }
+      }
+
+      function exportLogs() {
+        const logEntries = document.querySelectorAll('.log-entry');
+        let exportText = 'Device Logs Export\n';
+        exportText += '='.repeat(50) + '\n\n';
+        
+        logEntries.forEach(entry => {
+          const message = entry.querySelector('span:first-child').textContent;
+          const timestamp = entry.querySelector('.log-timestamp').textContent;
+          const type = entry.classList.contains('log-error') ? '[ERROR]' : '[INFO]';
+          
+          exportText += `${message} ${type} <-- ${timestamp}\n`;
+        });
+        
+        const blob = new Blob([exportText], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const dateStr = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        a.download = `device-logs-${dateStr}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        addLog('info', 'Logs exported successfully');
+      }
+
+      function createExampleLog(type, message) {
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry log-' + type;
+        
+        const messageSpan = document.createElement('span');
+        messageSpan.textContent = message;
+       
+        const timestampSpan = document.createElement('span');
+        timestampSpan.className = 'log-timestamp';
+        const now = new Date();
+        timestampSpan.textContent = now.toLocaleTimeString('de-DE');
+        
+        logEntry.appendChild(messageSpan);
+        logEntry.appendChild(timestampSpan);
+        
+        return logEntry;
       }
     </script>
   </head>
   
   <body onload="process(); updateSliderProgress();">
     <div class="controls-container">
-      <button id="btn0" onclick="handleButtonPress0()">Turn on</button>
+      <button id="btn0" class="btn btn-primary" onclick="handleButtonPress0()">Turn on</button>
       <div class="slider-label">LED Brightness</div>
       <input type="range" id="brightness-slider" min="0" max="255" value="0" oninput="handleSliderInput(this.value)"/>
     </div>
 
-    <div class="error-container">
-      <div class="error-title">Log</div>
-      <div id="log-container">
-        <div class="log-entry log-info">Device connected successfully</div>
-        <div class="log-entry log-error">Connection timeout - Failed to reach device at 192.168.1.100</div>
+    <div class="settings-container">
+      <div class="section-title">Settings</div>
+      
+      <div class="setting-item">
+        <label class="setting-label">Auto Mode</label>
+        <div class="toggle-container">
+          <div id="auto-mode-toggle" class="toggle" onclick="toggleSetting(this)">
+            <div class="toggle-thumb"></div>
+          </div>
+        </div>
       </div>
+
+      <div class="setting-item">
+        <label class="setting-label">Device Name</label>
+        <input type="text" id="device-name" class="text-input" placeholder="Enter device name" value="My Device">
+      </div>
+
+      <div class="setting-item">
+        <button class="btn btn-danger" onclick="resetGame()">Reset Game</button>
+      </div>
+
+      <button class="btn btn-primary" onclick="applySettings()">Apply Settings</button>
+    </div>
+
+    <div class="error-container">
+      <div class="log-header">
+        <div class="section-title">Log</div>
+        <button class="btn btn-secondary btn-small" onclick="exportLogs()">Export Logs</button>
+      </div>
+      <div id="log-container"></div>
     </div>
 
     <script type="text/javascript">
+      document.getElementById('log-container').appendChild(createExampleLog('error', 'Connection timeout - Failed to reach device at 192.168.1.100'));
+      document.getElementById('log-container').appendChild(createExampleLog('info', 'Device connected successfully'));
+
       var xmlHttp = createXmlHttpObject();
 
       function createXmlHttpObject(){
@@ -194,14 +441,13 @@ const char* webpage_main = R"=====(
         xhttp.send();
       }
 
-      // Debounce slider updates for better performance
       let sliderTimeout;
       function handleSliderInput(value) {
-        updateSliderProgress();
+        requestAnimationFrame(() => updateSliderProgress());
         clearTimeout(sliderTimeout);
         sliderTimeout = setTimeout(() => {
           handleUpdateSlider(value);
-        }, 50);
+        }, 100);
       }
 
       function response() {
@@ -233,7 +479,7 @@ const char* webpage_main = R"=====(
           xmlHttp.onreadystatechange=response;
           xmlHttp.send(null);
         }       
-        setTimeout("process()", 1000);
+        setTimeout("process()", 4000);
       }
     </script>
   </body>
