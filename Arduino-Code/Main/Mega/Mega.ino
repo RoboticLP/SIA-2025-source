@@ -47,15 +47,15 @@ void loop() {
         delete[] dataset;
       } else {  // if its just a piece of data, not a key with a value (ex.: err)
         // if we recieve err, reqeuest error data, process it and then continue
+        Serial.print("No key: ");
         Serial.println(data[j]);
       }
     }
     delete[] data;
-    Serial.print(" NEXT SLAVE\n");
   }
   Serial.print((millis() - updateBeginTime) / 1000.0); Serial.print(" Sekunden\n");
 
 
   // request admin panel less often with same logic as above
-  delay(2000);
+  delay(4000);
 }
