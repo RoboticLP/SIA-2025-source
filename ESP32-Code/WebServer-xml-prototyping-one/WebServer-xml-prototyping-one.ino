@@ -3,7 +3,10 @@
 #include "index.h"
 
 // credentials for wifi
-#include "wifi_credentials.h"
+#define WiFi_SSID "lol"
+#define WiFi_PASSWORD "null"
+// #include "wifi_credentials.h"
+
 
 // credentials for the access point
 #define AP_SSID "NeuerESP32"
@@ -15,7 +18,7 @@
 #define led1 14
 
 // Variables
-bool useWiFi = true; // easier for debugging if on, if not it will create a AP
+bool useWiFi = false; // easier for debugging if on, if not it will create a AP
 bool LED0 = false;
 int LED1_br = 0;
 
