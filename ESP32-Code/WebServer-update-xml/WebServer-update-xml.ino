@@ -6,7 +6,7 @@
 #include "wifi_credentials.h"
 
 // credentials for the access point
-#define AP_SSID "NeuerESP32"
+#define AP_SSID "ESP_Wifi"
 #define AP_PASSWORD "12345678"
 
 
@@ -45,7 +45,7 @@ void setup() {
     WiFi.begin(WiFi_SSID, WiFi_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
-      Serial.print(".");
+      Serial.print("No connection!");
     }
     Serial.print("Connected! IP address: "); Serial.println(WiFi.localIP());
     Actual_IP = WiFi.localIP();
@@ -54,7 +54,8 @@ void setup() {
     WiFi.softAP(AP_SSID, AP_PASSWORD);
     Actual_IP = WiFi.softAPIP();
     WiFi.softAPConfig(PageIP, gateway, subnet);
-    Serial.print("IP address: "); Serial.println(Actual_IP);
+    Serial.print("IP address: "); 
+    Serial.println(Actual_IP);
   }
 
   // once someone opens main address
