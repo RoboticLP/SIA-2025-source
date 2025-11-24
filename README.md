@@ -14,6 +14,7 @@ Alle Source-Codes der diesjährigen SIA.
 | 3        | Arduino Nano |  |
 | 4        | Arduino Nano |  |
 | 5        | Arduino Nano |  |
+| 6        | ESP32        | WebServer       |
 
 ---
 
@@ -24,7 +25,8 @@ Jedes Modul wird mehrmals pro Sekunde nach Updates gefragt, hier definieren wir 
 ```c
 ht1:%d|ht2:%d|err
 ```
-*Die Reihenfolge der Keys+Werte ist egal*
+> *Die **Reihenfolge der Keys+Werte ist egal**, genau wie ihre **Vorhandenheit** - es werden nur erhaltene Daten verarbeitet und es sind keine speziellen Daten notwendig. Allerdings **muss** jeder versendete Key einen zugehörigen Wert haben*
+
 |  Key-Name  | Wertetyp | Bedeutung                                            |
 |------------|----------|------------------------------------------------------|
 | ```\|```   | /        | Trennzeichen zwischen den Daten                      |
@@ -32,7 +34,7 @@ ht1:%d|ht2:%d|err
 | ```ht2```  | int      | Zahl der Treffer (Hits) des **zweiten** Ziels (Targets) seit dem letztem Update      |
 | ```err```  | /        | Wird nur gesendet, **wenn** das Modul eine Fehlermeldung hat > dann kann die Fehlermeldung seperat direkt danach abegefragt werden(vor verarbeitung anderer slaves), damit normale Abfragen klein und schnell bleiben können |
 
-Da es von Arduino selbst keine eigene Lösung für das Splitten von Strings hat benutzen wir folgende eigene Lösung: [splitString](#splitstring)
+> Da es von Arduino selbst keine eigene Lösung für das Splitten von Strings hat benutzen wir folgende eigene Lösung: [splitString](#splitstring)
 
 ---
 
@@ -77,7 +79,7 @@ delete[] arrayName; // das Array wieder löschen um memory leaks zu verhindern
 ```
 
 <details>
-<summary>Die Funktion zum kopieren</summary>
+<summary>Die Funktion zum kopieren (ist auch in utils.h im Mega Source vorhanden)</summary>
 
 ```cpp
 String* splitString(String input, char splitter, int &count) {
