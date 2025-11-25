@@ -3,9 +3,12 @@
 #include "index.h"
 
 // credentials for wifi
-#define WiFi_SSID "lol"
-#define WiFi_PASSWORD "null"
-// #include "wifi_credentials.h"
+#define WiFi_SSID ""
+#define WiFi_PASSWORD ""
+
+#if __has_include("wifi_credentials.h")
+  #include "wifi_credentials.h"
+#endif
 
 
 // credentials for the access point
@@ -44,7 +47,7 @@ void setup() {
   // LED0 = false;
   // digitalWrite(led, LED0);
 
-  if (useWiFi == true) {
+  if (WiFi_SSID != "" && WiFi_PASSWORD != "") {
     WiFi.begin(WiFi_SSID, WiFi_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
