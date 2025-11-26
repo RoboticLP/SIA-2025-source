@@ -272,109 +272,9 @@ const char* webpage_main = R"=====(
         transform: scale(1.05);
       }
     </style>
-    <script>
-      function updateSliderProgress() {
-        const slider = document.getElementById('brightness-slider');
-        const value = (slider.value / slider.max) * 100;
-        slider.style.background = `linear-gradient(to right, #5c6bc0 ${value}%, #e0e0e0 ${value}%)`;
-      }
-
-      function addLog(type, message) {
-        const logContainer = document.getElementById('log-container');
-        const logEntry = document.createElement('div');
-        logEntry.className = 'log-entry log-' + type;
-        
-        const messageSpan = document.createElement('span');
-        messageSpan.textContent = message;
-       
-        const timestampSpan = document.createElement('span');
-        timestampSpan.className = 'log-timestamp';
-        const now = new Date();
-        timestampSpan.textContent = now.toLocaleTimeString('de-DE');
-        
-        logEntry.appendChild(messageSpan);
-        logEntry.appendChild(timestampSpan);
-        logContainer.prepend(logEntry);
-
-        if (type === 'info') {
-          setTimeout(() => {
-            logEntry.remove();
-          }, 20000);
-        }
-      }
-
-      function toggleSetting(element) {
-        element.classList.toggle('active');
-      }
-
-      function applySettings() {
-        const autoMode = document.getElementById('auto-mode-toggle').classList.contains('active');
-        const deviceName = document.getElementById('device-name').value;
-        
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("PUT", "SETTINGS?autoMode=" + autoMode + "&deviceName=" + deviceName, false);
-        xhttp.send();
-        
-        addLog('info', 'Settings applied successfully');
-      }
-
-      function resetGame() {
-        if (confirm('Are you sure you want to reset the game?')) {
-          var xhttp = new XMLHttpRequest();
-          xhttp.open("PUT", "RESET_GAME", false);
-          xhttp.send();
-          addLog('info', 'Game has been reset');
-        }
-      }
-
-      function exportLogs() {
-        const logEntries = document.querySelectorAll('.log-entry');
-        let exportText = 'Device Logs Export\n';
-        exportText += '='.repeat(50) + '\n\n';
-        
-        logEntries.forEach(entry => {
-          const message = entry.querySelector('span:first-child').textContent;
-          const timestamp = entry.querySelector('.log-timestamp').textContent;
-          const type = entry.classList.contains('log-error') ? '[ERROR]' : '[INFO]';
-          
-          exportText += `${message} ${type} <-- ${timestamp}\n`;
-        });
-        
-        const blob = new Blob([exportText], { type: 'text/plain' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        const dateStr = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-        a.download = `device-logs-${dateStr}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        
-        addLog('info', 'Logs exported successfully');
-      }
-
-      function createExampleLog(type, message) {
-        const logEntry = document.createElement('div');
-        logEntry.className = 'log-entry log-' + type;
-        
-        const messageSpan = document.createElement('span');
-        messageSpan.textContent = message;
-       
-        const timestampSpan = document.createElement('span');
-        timestampSpan.className = 'log-timestamp';
-        const now = new Date();
-        timestampSpan.textContent = now.toLocaleTimeString('de-DE');
-        
-        logEntry.appendChild(messageSpan);
-        logEntry.appendChild(timestampSpan);
-        
-        return logEntry;
-      }
-    </script>
   </head>
   
-  <body onload="process(); updateSliderProgress();">
+  <body onload="updateSliderProgress();">
     <div class="controls-container">
       <button id="btn0" class="btn btn-primary" onclick="handleButtonPress0()">Turn on</button>
       <div class="slider-label">LED Brightness</div>
@@ -414,11 +314,100 @@ const char* webpage_main = R"=====(
     </div>
 
     <script type="text/javascript">
-      document.getElementById('log-container').appendChild(createExampleLog('error', 'Connection timeout - Failed to reach device at 192.168.1.100'));
-      document.getElementById('log-container').appendChild(createExampleLog('info', 'Device connected successfully'));
+      
+      //**     Log related stuff     **//
 
+      const logType = {
+        error: 'error',
+        info: 'info'
+      };
+
+      //** Fügt neuen Log ganz oben hinzu
+      function addLog(type, message, timestamp = new Date().toLocaleTimeString('de-DE')) {
+        const logContainer = document.getElementById('log-container');
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry log-' + type;
+          
+        const messageSpan = document.createElement('span');
+        messageSpan.textContent = message;
+         
+        const timestampSpan = document.createElement('span');
+        timestampSpan.className = 'log-timestamp';
+        timestampSpan.textContent = timestamp;
+         
+        logEntry.appendChild(messageSpan);
+        logEntry.appendChild(timestampSpan);
+        logContainer.prepend(logEntry);
+  
+        if (type === logType.info) {
+          setTimeout(() => {
+            logEntry.remove();
+          }, 20000);
+        }
+      }
+  
+      //** Für Toggle-Buttons, um deren Aktiv-Status umzuschalten
+      function toggleSetting(element) {
+        element.classList.toggle('active');
+      }
+  
+      //** Apply settings
+      // Alle eingegebenen Einstellungen auf ihren Weg schicken
+      function applySettings() { // bisher nur von KI gekochter shit
+        const autoMode = document.getElementById('auto-mode-toggle').classList.contains('active');
+        const deviceName = document.getElementById('device-name').value;
+          
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("PUT", "SETTINGS?autoMode=" + autoMode + "&deviceName=" + deviceName, false);
+        xhttp.send();
+          
+        addLog(logType.info, 'Settings have been sent.');
+      }
+  
+      // Spiel zurücksetzen
+      function resetGame() {
+        if (confirm('Are you sure you want to reset the game?')) {
+          var xhttp = new XMLHttpRequest();
+          xhttp.open("PUT", "RESET_GAME", false);
+          xhttp.send();
+          addLog(logType.info, 'Game reset request has been sent.');
+        }
+      }
+  
+      //** Logs exportieren
+      function exportLogs() {
+        const logEntries = document.querySelectorAll('.log-entry');
+        let exportText = 'Device Logs Export\n';
+        exportText += '='.repeat(50) + '\n\n';
+        
+        logEntries.forEach(entry => {
+          const message = entry.querySelector('span:first-child').textContent;
+          const timestamp = entry.querySelector('.log-timestamp').textContent;
+          const type = entry.classList.contains('log-error') ? '[ERROR]' : '[INFO]';
+          
+          exportText += `${message} ${type} <-- ${timestamp}\n`;
+        });
+        
+        const blob = new Blob([exportText], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const dateStr = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        a.download = `device-logs-${dateStr}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        addLog(logType.info, 'Logs exported successfully');
+      }
+      //** Beispiel Logs
+      // addLog(logType.error, 'Connection timeout - Failed to reach device at 192.168.1.100');
+      // addLog(logType.info, 'Device connected successfully');
+      
+      //**     Kommunikation     **//
       var xmlHttp = createXmlHttpObject();
-
+      
       function createXmlHttpObject(){
         if(window.XMLHttpRequest){
           xmlHttp=new XMLHttpRequest();
@@ -428,19 +417,14 @@ const char* webpage_main = R"=====(
         }
         return xmlHttp;
       }
-
+      
+      //**     User input handlers     **//
       function handleButtonPress0() {
         var xhttp = new XMLHttpRequest();
         xhttp.open("PUT", "BUTTON_0", false);
         xhttp.send();
       }
-
-      function handleUpdateSlider(value) {
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("PUT", "BRIGHTNESS_SLIDER?value=" + value, false);
-        xhttp.send();
-      }
-
+      
       let sliderTimeout;
       function handleSliderInput(value) {
         requestAnimationFrame(() => updateSliderProgress());
@@ -449,37 +433,53 @@ const char* webpage_main = R"=====(
           handleUpdateSlider(value);
         }, 100);
       }
+      function handleUpdateSlider(value) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("PUT", "BRIGHTNESS_SLIDER?value=" + value, false);
+        xhttp.send();
+      }
+      function updateSliderProgress() {
+        const slider = document.getElementById('brightness-slider');
+        const value = (slider.value / slider.max) * 100;
+        slider.style.background = `linear-gradient(to right, #5c6bc0 ${value}%, #e0e0e0 ${value}%)`;
+      }
+      
+      //**     SSE stuff (Server send events)     **//
+      if(typeof(EventSource) !== "undefined") {
+        addLog(logType.info, 'Your Browser supports SSE. Opening connection...');
+        const eventSource = new EventSource('/sse');
+        eventSource.onmessage = function(event) {
+          onSSEmessage(event);
+        }
+        
+        eventSource.onopen = function() {
+          addLog(logType.info, 'SSE connection established')
+        }
+        eventSource.onerror = function() {
+          addLog(logType.error, 'SSE connection lost, retrying...');
+        }
+      } else {
+        addLog(logType.error, 'Your Browser doensn\'t support SSE! Cannot open connection for updating data.');
+      }
 
-      function response() {
-        var xmlResponse;
+      function onSSEmessage(event) {
+        const parser = new DOMParser();
+        const xmlData = parser.parseFromString(event.data, 'text/xml');
         var xml_tag_data;
         var message_data;
-        
-        if (this.responseXML != null) {
-          xmlResponse = xmlHttp.responseXML;
-
-          xml_tag_data = xmlResponse.getElementsByTagName("B0");
-          message_data = xml_tag_data[0].firstChild.nodeValue;
-          if (message_data == 0) {
-            document.getElementById("btn0").innerHTML = "Turn on";
-          } else {
-            document.getElementById("btn0").innerHTML = "Turn off";
-          }
-
-          xml_tag_data = xmlResponse.getElementsByTagName("SL_V");
+         
+        xml_tag_data = xmlData.getElementsByTagName("B0")[0];
+        if (xml_tag_data) {
+          message_data = xml_tag_data.firstChild.nodeValue;
+          document.getElementById("btn0").innerHTML = message_data == 0 ? "Turn on" : "Turn off";
+        }
+          
+        xml_tag_data = xmlData.getElementsByTagName("SL_V");
+        if (xml_tag_data) {
           message_data = xml_tag_data[0].firstChild.nodeValue;
           document.getElementById("brightness-slider").value = message_data;
           updateSliderProgress();
         }
-      }
-
-      function process() {
-        if(xmlHttp.readyState==0 || xmlHttp.readyState==4) {
-          xmlHttp.open("PUT","xml",true);
-          xmlHttp.onreadystatechange=response;
-          xmlHttp.send(null);
-        }       
-        setTimeout("process()", 4000);
       }
     </script>
   </body>

@@ -57,9 +57,9 @@ void setup() {
     Actual_IP = WiFi.localIP();
   } else {
     // start access point and print out the IP address
+    WiFi.softAPConfig(PageIP, gateway, subnet);
     WiFi.softAP(AP_SSID, AP_PASSWORD);
     Actual_IP = WiFi.softAPIP();
-    WiFi.softAPConfig(PageIP, gateway, subnet);
     Serial.print("IP address: "); Serial.println(Actual_IP);
   }
 
@@ -67,7 +67,10 @@ void setup() {
   server.on("/", sendWebsite);
 
   // where website can request new data for refreshing
-  server.on("/xml", sendXML);
+  // server.on("/xml", sendXML);
+
+  // SSE connection
+  server.on("/sse", handleSSE_updates);
 
   // add server listeners
   server.on("/BUTTON_0", handleButtonPress0);
@@ -100,21 +103,44 @@ void sendWebsite() {
   server.send(200, "text/html", webpage_main);
 }
 
-// sends data to client to update its data
-void sendXML() {
-  strcpy(XML, "<?xml version = '1.0'?>\n<Data>\n");
-  // send Button0 state
-  if (LED0) {
-    strcat(XML, "<B0>1</B0>\n"); // send that LED is on
-  } else {
-    strcat(XML, "<B0>0</B0>\n"); // send that LED if off
+void handleSSE_updates() {
+  WiFiClient client = server.client();
+
+  server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  server.send(200, "text/event-stream", "");
+
+  unsigned long lastKeepAlive = millis();
+
+  // während client verbunden ist die Verbindung aufrecht halten
+  while(client.connected()) {
+
+    // wenn 30-90s nichts passiert werden Verbindungen geschlossen, deswegen das hier
+    if (millis() - lastKeepAlive > 30000) {
+      client.print("keepalive\n\n");
+      client.flush();
+      lastKeepAlive = millis();
+    }
+
+    delay(100);
+    yield(); // damit WiFi auch noch Zeit hat
   }
-
-  // send slider value
-  char sl_v_buffer[20]; // is big enough for string below (including number up to 3 digits)
-  sprintf(sl_v_buffer, "<SL_V>%d</SL_V>\n", LED1_br);
-  strcat(XML, sl_v_buffer);
-
-  strcat(XML, "</Data>\n");
-  server.send(200, "text/xml", XML);
 }
+
+// sends data to client to update its data
+// void sendXML() {
+//   strcpy(XML, "<?xml version = '1.0'?>\n<Data>\n");
+//   // send Button0 state
+//   if (LED0) {
+//     strcat(XML, "<B0>1</B0>\n"); // send that LED is on
+//   } else {
+//     strcat(XML, "<B0>0</B0>\n"); // send that LED if off
+//   }
+
+//   // send slider value
+//   char sl_v_buffer[20]; // is big enough for string below (including number up to 3 digits)
+//   sprintf(sl_v_buffer, "<SL_V>%d</SL_V>\n", LED1_br);
+//   strcat(XML, sl_v_buffer);
+
+//   strcat(XML, "</Data>\n");
+//   server.send(200, "text/xml", XML);
+// }
