@@ -276,7 +276,6 @@ const char* webpage_main = R"=====(
   
   <body onload="updateSliderProgress();">
     <div class="controls-container">
-      <!-- <button id="btn0" class="btn btn-primary" onclick="handleButtonPress0()">Turn on</button> -->
       <div class="section-title">LED Controls</div>
       <div class="slider-label">LED 1</div>
        <div class="toggle-container">
@@ -474,11 +473,11 @@ const char* webpage_main = R"=====(
         const xmlData = parser.parseFromString(event.data, 'text/xml');
         var xml_tag_data;
         var message_data;
-         
+        
+        // toggle update
         xml_tag_data = xmlData.getElementsByTagName("B0")[0];
-        if (xml_tag_data) {
+        if (xml_tag_data && xml_tag_data.length > 0) {
           message_data = xml_tag_data.firstChild.nodeValue;
-          // document.getElementById("btn0").innerHTML = message_data == 0 ? "Turn on" : "Turn off";
           const ledToggle = document.getElementById("led-toggle");
           if (ledToggle.classList.contains("active") && message_data == 0) {
             ledToggle.classList.remove("active");
@@ -487,11 +486,29 @@ const char* webpage_main = R"=====(
           }
         }
           
+        // slider update
         xml_tag_data = xmlData.getElementsByTagName("SL_V");
-        if (xml_tag_data) {
+        if (xml_tag_data && xml_tag_data.length > 0) {
           message_data = xml_tag_data[0].firstChild.nodeValue;
           document.getElementById("brightness-slider").value = message_data;
           updateSliderProgress();
+        }
+
+        // add log
+        var logType;
+        var logMessage;
+        var logTimestamp;
+        xml_tag_data = xmlData.getElementsByTagName("log");
+        if (xml_tag_data && xml_tag_data.length > 0) {
+          logType = xml_tag_data[0].getElementsByTagName("logType");
+          logMessage = xml_tag_data[0].getElementsByTagName("logMessage");
+          logTimestamp = xml_tag_data[0].getElementsByTagName("logTimestamp");
+          if (logType.length > 0 && logMessage.length > 0 && logTimestamp.length > 0) {
+            logType = logType[0].firstChild.nodeValue;
+            logMessage = logMessage[0].firstChild.nodeValue;
+            logTimestamp = logTimestamp[0].firstChild.nodeValue;
+            addLog(logType, logMessage, logTimestamp);
+          }
         }
       }
     </script>

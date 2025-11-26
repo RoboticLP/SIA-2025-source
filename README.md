@@ -1,10 +1,15 @@
 # SIA-2025-source
 Alle Source-Codes der diesjährigen SIA.
 
-## Resourcen
-- [I2C Arduino Docs](https://docs.arduino.cc/learn/communication/wire/#arduino-i2c-pins)
-- [SIA-Playlist YouTube von Adrian](https://youtube.com/playlist?list=PLDd5gBML2x-RDGElEF7yUXcqWyJdSLfL-&si=K51pTD4f3ktHvXSp)
-- [sprintf (Formatierung von Strings)](#sprintf)
+## Navigation
+> **Seiten**
+> [ESP32 Webserver](docs/ESP32-Webserver.md)
+
+> **Auf dieser Seite**
+> [I2C Arduino Docs](https://docs.arduino.cc/learn/communication/wire/#arduino-i2c-pins)
+> [SIA-Playlist YouTube von Adrian](https://youtube.com/playlist?list=PLDd5gBML2x-RDGElEF7yUXcqWyJdSLfL-&si=K51pTD4f3ktHvXSp)
+> [sprintf (Formatierung von Strings)](#sprintf)
+---
 
 ## I<sup>2</sup>C Infos
 | Adressen | Gerät        | Aufgabe / Modul |

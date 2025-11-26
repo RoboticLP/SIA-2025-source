@@ -149,6 +149,7 @@ void handleSSEConnect() {
   client.flush();
   Serial.println("SSE answer sent. Sending first update packet");
   broadcastSSE_update(); // first update to set all data to current
+  broadcastSSE_log("info", "Ein neuer Client hat sich verbunden", millis()); // nur testweise hier
 }
 
 void broadcastSSE_update() {
@@ -174,6 +175,29 @@ void broadcastSSE_update() {
       // SSE Format: "data: INHALT\n\n"
       sseClients[i].print("data: ");
       sseClients[i].print(XML);
+      sseClients[i].print("\n\n");
+      sseClients[i].flush();
+    }
+  }
+}
+
+//** sendet log an alle aktuell verbundenen clients
+//** logType: String - der Typ ("error" oder "info")
+//** logMessage: String - die zu versendende Nachricht (max 95 Zeichen)
+//** logTimestamp: int - der Zeitpunkt des ereignisses, der auf dem Adminpanel angezeigt wird (max 7 Stellen)
+void broadcastSSE_log(String logType, String logMessage, int logTimestamp) {
+  String xmlData = "<?xml version='1.0'?><Data><log>";
+  xmlData += "<logType>" + logType + "</logType>";
+  xmlData += "<logMessage>" + logMessage + "</logMessage>";
+  xmlData += "<logTimestamp>" + String(logTimestamp) + "</logTimestamp>";
+  xmlData += "</log></Data>";
+
+  // send data to all clients
+  for (int i = 0; i < maxSSEClients; i++) {
+    if (sseClientsConnected[i] && sseClients[i].connected()) {
+      // SSE Format: "data: INHALT\n\n"
+      sseClients[i].print("data: ");
+      sseClients[i].print(xmlData);
       sseClients[i].print("\n\n");
       sseClients[i].flush();
     }
