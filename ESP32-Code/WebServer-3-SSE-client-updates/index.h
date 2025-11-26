@@ -339,11 +339,11 @@ const char* webpage_main = R"=====(
         logEntry.appendChild(timestampSpan);
         logContainer.prepend(logEntry);
   
-        if (type === logType.info) {
-          setTimeout(() => {
-            logEntry.remove();
-          }, 20000);
-        }
+        // if (type === logType.info) {
+        //   setTimeout(() => {
+        //     logEntry.remove();
+        //   }, 20000);
+        // }
       }
   
       //** Für Toggle-Buttons, um deren Aktiv-Status umzuschalten

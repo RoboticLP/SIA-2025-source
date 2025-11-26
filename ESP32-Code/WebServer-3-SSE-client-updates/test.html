@@ -335,11 +335,11 @@
         logEntry.appendChild(timestampSpan);
         logContainer.prepend(logEntry);
   
-        if (type === logType.info) {
-          setTimeout(() => {
-            logEntry.remove();
-          }, 20000);
-        }
+        // if (type === logType.info) {
+        //   setTimeout(() => {
+        //     logEntry.remove();
+        //   }, 20000);
+        // }
       }
   
       //** Für Toggle-Buttons, um deren Aktiv-Status umzuschalten
@@ -449,7 +449,7 @@
         }
         
         eventSource.onopen = function() {
-          addLog(logType.info, 'SSE connection established')
+          addLog(logType.info, 'SSE connection established');
         }
         eventSource.onerror = function() {
           addLog(logType.error, 'SSE connection lost, retrying...');

@@ -37,6 +37,11 @@ IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress Actual_IP;
 
+// SSE Clients
+int maxSSEClients = 4;
+WiFiClient sseClients[4];
+bool sseClientsConnected[4] = {false, false, false, false};
+
 void setup() {
   Serial.begin(115200);
 
@@ -70,7 +75,7 @@ void setup() {
   // server.on("/xml", sendXML);
 
   // SSE connection
-  server.on("/sse", handleSSE_updates);
+  server.on("/sse", handleSSEConnect);
 
   // add server listeners
   server.on("/BUTTON_0", handleButtonPress0);
@@ -82,6 +87,8 @@ void setup() {
 void loop() {
   // needs to be called every frame
   server.handleClient();
+
+  handleSSEClients();
 }
 
 void handleButtonPress0() {
@@ -103,44 +110,61 @@ void sendWebsite() {
   server.send(200, "text/html", webpage_main);
 }
 
-void handleSSE_updates() {
+void handleSSEConnect() {
+  Serial.println("SSE connect request recieved");
   WiFiClient client = server.client();
 
-  server.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  server.send(200, "text/event-stream", "");
-
-  unsigned long lastKeepAlive = millis();
-
-  // während client verbunden ist die Verbindung aufrecht halten
-  while(client.connected()) {
-
-    // wenn 30-90s nichts passiert werden Verbindungen geschlossen, deswegen das hier
-    if (millis() - lastKeepAlive > 30000) {
-      client.print("keepalive\n\n");
-      client.flush();
-      lastKeepAlive = millis();
+  int slot = -1;
+  for (int i = 0; i < maxSSEClients; i++) {
+    if (sseClientsConnected[i] == false) {
+      slot = i;
+      Serial.print("it's slot #"); Serial.println(slot);
+      break;
     }
-
-    delay(100);
-    yield(); // damit WiFi auch noch Zeit hat
   }
+
+  if (slot == -1) {
+    Serial.println("Max sse clients reached, rejecting connection");
+    client.println("HTTP/1.1 503 Service Unavailable");
+    client.println("Content-Type: text/plain");
+    client.println("Connection: close");
+    client.println("");
+
+    return;
+  }
+
+  sseClientsConnected[slot] = true;
+  sseClients[slot] = client;
+
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-Type: text/event-stream");
+  client.println("Cache-Control: no-cache");
+  client.println("Connection: keep-alive");
+  client.println("");
+  client.flush();
+
+  client.print("keepalive\n\n");
+  client.flush();
+  Serial.println("SSE answer sent");
 }
 
-// sends data to client to update its data
-// void sendXML() {
-//   strcpy(XML, "<?xml version = '1.0'?>\n<Data>\n");
-//   // send Button0 state
-//   if (LED0) {
-//     strcat(XML, "<B0>1</B0>\n"); // send that LED is on
-//   } else {
-//     strcat(XML, "<B0>0</B0>\n"); // send that LED if off
-//   }
+// runs every frame
+unsigned long lastKeepAlive = 0;
+void handleSSEClients() {
+  for (int i = 0; i < maxSSEClients; i++) {
+    if (sseClientsConnected[i] == true && sseClients[i].connected()) {
+      if (millis() - lastKeepAlive > 30000) {
+        WiFiClient client = sseClients[i];
 
-//   // send slider value
-//   char sl_v_buffer[20]; // is big enough for string below (including number up to 3 digits)
-//   sprintf(sl_v_buffer, "<SL_V>%d</SL_V>\n", LED1_br);
-//   strcat(XML, sl_v_buffer);
-
-//   strcat(XML, "</Data>\n");
-//   server.send(200, "text/xml", XML);
-// }
+        client.print("keepalive\n\n");
+        client.flush();
+        Serial.println("keepalive sent");
+        lastKeepAlive = millis();
+      }
+    } else if (sseClientsConnected[i] == true && sseClients[i].connected() != true) {
+      Serial.print("SSE connection lost for client #"); Serial.println(i);
+      sseClientsConnected[i] = false;
+      sseClients[i].stop();
+    }
+  }
+}
