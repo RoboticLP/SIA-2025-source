@@ -7,7 +7,7 @@
 #define WiFi_PASSWORD ""
 
 #if __has_include("wifi_credentials.h")
-  #include "wifi_credentials.h"
+  // #include "wifi_credentials.h"
 #endif
 
 
@@ -153,30 +153,18 @@ void handleSSEConnect() {
 }
 
 void broadcastSSE_update() {
+  String xmlData = "<?xml version='1.0'?><Data>";
+  xmlData += "<B0>" + String(LED0 ? "1" : "0") + "</B0>";
+  xmlData += "<SL_V>" + String(LED1_br) + "</SL_V>";
+  xmlData += "</Data>";
+
   for (int i = 0; i < maxSSEClients; i++) {
     if (sseClientsConnected[i] && sseClients[i].connected()) {
-      // XML Daten erstellen
-      strcpy(XML, "<?xml version='1.0'?><Data>");
-      
-      // Button Status
-      if (LED0) {
-        strcat(XML, "<B0>1</B0>");
-      } else {
-        strcat(XML, "<B0>0</B0>");
-      }
-      
-      // Slider Wert
-      char sl_v_buffer[20];
-      sprintf(sl_v_buffer, "<SL_V>%d</SL_V>", LED1_br);
-      strcat(XML, sl_v_buffer);
-      
-      strcat(XML, "</Data>");
-      
       // SSE Format: "data: INHALT\n\n"
       sseClients[i].print("data: ");
-      sseClients[i].print(XML);
+      sseClients[i].print(xmlData);
       sseClients[i].print("\n\n");
-      sseClients[i].flush();
+      // sseClients[i].flush();
     }
   }
 }

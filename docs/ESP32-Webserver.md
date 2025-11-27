@@ -44,12 +44,29 @@ Fügt eine neue Log hinzu
 ```logTimestamp``` der Zeitpunkt von dem zu berichtenden Ereigniss (bei leer lassen wird aktuelle Zeit genommen)
 
 #### Code Snippets
+##### Section
+```html
+<div class="section-container">
+    <div class="section-title">Beispiel Titel</div> <!-- Titel des Abschnitts -->
+    
+    <div class="section-subtitle">Beispiel Unterabschnitttitel</div> <!-- Titel eines Unterabschnitts -->
+</div>
+```
+
+##### 2 Spalten in section-container
+```html
+<div class="controls-grid">
+    ...
+</div>
+```
+
 ##### Toggle
 ```html
 <div class="toggle-container">
-  <div id="led-toggle" class="toggle" onclick="toggleSetting(this); drueckMethodeHier()">
+    <div id="beispiel-toggle" class="toggle" onclick="toggleSetting(this);">
         <div class="toggle-thumb"></div>
     </div>
+    Toggle text
 </div>
 ```
 
@@ -79,4 +96,10 @@ ist iwie komplizierterer shit
 ##### Danger Button Klasse (Gefahr)
 ```html
 <button class="btn btn-danger" onclick="drueckMethodeHier()">KnopfTextHier</button>
+```
+
+##### Buttons verkleinern
+```btn-small``` bei jedem anderen Button nutzen.
+```html
+<button class="btn btn-danger btn-small" onclick="drueckMethodeHier()">KnopfTextHier</button>
 ```

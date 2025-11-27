@@ -22,12 +22,19 @@ const char* webpage_main = R"=====(
         background: #f5f5f5;
       }
 
-      .controls-container, .settings-container, .error-container {
+      .section-container {
         background: white;
         padding: 20px;
         border-radius: 12px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         margin-bottom: 16px;
+      }
+
+       /* Grid Layout - 2 Spalten für Controls */
+      .controls-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
       }
 
       .section-title {
@@ -153,17 +160,21 @@ const char* webpage_main = R"=====(
         margin-bottom: 0;
       }
 
-      .setting-label {
+      .section-subtitle {
         font-size: 14px;
+        font-weight: 600;
         color: #333;
         margin-bottom: 8px;
         display: block;
       }
 
       .toggle-container {
+        font-size: 14px;
+        color: #333;
         display: flex;
         align-items: center;
         gap: 12px;
+        margin-bottom: 16px;
       }
 
       .toggle {
@@ -275,23 +286,49 @@ const char* webpage_main = R"=====(
   </head>
   
   <body onload="updateSliderProgress();">
-    <div class="controls-container">
-      <div class="section-title">LED Controls</div>
-      <div class="slider-label">LED 1</div>
+
+    <!-- Test LED Controls -->
+    <div class="section-container">
+      <div class="section-title">Test Controls</div>
        <div class="toggle-container">
           <div id="led-toggle" class="toggle" onclick="toggleSetting(this); handleButtonPress0()">
             <div class="toggle-thumb"></div>
           </div>
+          LED 1
         </div>
       <div class="slider-label">Brightness LED 2</div>
       <input type="range" id="brightness-slider" min="0" max="255" value="0" oninput="handleSliderInput(this.value)"/>
     </div>
 
-    <div class="settings-container">
+    <!-- Lighting Settings (later) -->
+    <div class="section-container">
+      <div class="section-title">Lighting Controls</div>
+
+      <div class="section-subtitle">Effects</div>
+      <div class="controls-grid">
+        <div class="toggle-container">
+          <div id="led-toggle" class="toggle" onclick="toggleSetting(this);">
+            <div class="toggle-thumb"></div>
+          </div>
+          Rainbow
+        </div>
+        <div class="toggle-container">
+          <div id="led-toggle" class="toggle" onclick="toggleSetting(this);">
+            <div class="toggle-thumb"></div>
+          </div>
+          Strobe
+        </div>
+      </div>
+
+      <div class="section-subtitle">Some other section</div>
+    </div>
+
+    <!-- Settings -->
+    <div class="section-container">
       <div class="section-title">Settings (not yet working)</div>
       
       <div class="setting-item">
-        <label class="setting-label">Auto Mode</label>
+        <label class="section-subtitle">Auto Mode</label>
         <div class="toggle-container">
           <div id="auto-mode-toggle" class="toggle" onclick="toggleSetting(this)">
             <div class="toggle-thumb"></div>
@@ -300,7 +337,7 @@ const char* webpage_main = R"=====(
       </div>
 
       <div class="setting-item">
-        <label class="setting-label">Device Name</label>
+        <label class="section-subtitle">Device Name</label>
         <input type="text" id="device-name" class="text-input" placeholder="Enter device name" value="My Device">
       </div>
 
@@ -311,7 +348,7 @@ const char* webpage_main = R"=====(
       <button class="btn btn-primary" onclick="applySettings()">Apply Settings</button>
     </div>
 
-    <div class="error-container">
+    <div class="section-container">
       <div class="log-header">
         <div class="section-title">Log</div>
         <button class="btn btn-secondary btn-small" onclick="exportLogs()">Export Logs</button>
@@ -364,7 +401,7 @@ const char* webpage_main = R"=====(
         const deviceName = document.getElementById('device-name').value;
           
         var xhttp = new XMLHttpRequest();
-        xhttp.open("PUT", "SETTINGS?autoMode=" + autoMode + "&deviceName=" + deviceName, false);
+        xhttp.open("PUT", "SETTINGS?autoMode=" + autoMode + "&deviceName=" + deviceName, true);
         xhttp.send();
           
         addLog(logType.info, 'Settings have been sent.');
@@ -374,7 +411,7 @@ const char* webpage_main = R"=====(
       function resetGame() {
         if (confirm('Are you sure you want to reset the game?')) {
           var xhttp = new XMLHttpRequest();
-          xhttp.open("PUT", "RESET_GAME", false);
+          xhttp.open("PUT", "RESET_GAME", true);
           xhttp.send();
           addLog(logType.info, 'Game reset request has been sent.');
         }
@@ -427,7 +464,7 @@ const char* webpage_main = R"=====(
       //**     User input handlers     **//
       function handleButtonPress0() {
         var xhttp = new XMLHttpRequest();
-        xhttp.open("PUT", "BUTTON_0", false);
+        xhttp.open("PUT", "BUTTON_0", true);
         xhttp.send();
       }
       
@@ -441,7 +478,7 @@ const char* webpage_main = R"=====(
       }
       function handleUpdateSlider(value) {
         var xhttp = new XMLHttpRequest();
-        xhttp.open("PUT", "BRIGHTNESS_SLIDER?value=" + value, false);
+        xhttp.open("PUT", "BRIGHTNESS_SLIDER?value=" + value, true);
         xhttp.send();
       }
       function updateSliderProgress() {
@@ -475,14 +512,14 @@ const char* webpage_main = R"=====(
         var message_data;
         
         // toggle update
-        xml_tag_data = xmlData.getElementsByTagName("B0")[0];
+        xml_tag_data = xmlData.getElementsByTagName("B0");
         if (xml_tag_data && xml_tag_data.length > 0) {
-          message_data = xml_tag_data.firstChild.nodeValue;
+          message_data = xml_tag_data[0].firstChild.nodeValue;
           const ledToggle = document.getElementById("led-toggle");
-          if (ledToggle.classList.contains("active") && message_data == 0) {
-            ledToggle.classList.remove("active");
-          } else if (!ledToggle.classList.contains("active") && message_data == 1) {
-            ledToggle.classList.add("active");
+          if (message_data == 0) {
+            ledToggle.classList.remove("active"); // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
+          } else {
+            ledToggle.classList.add("active"); // enable toggle
           }
         }
           
