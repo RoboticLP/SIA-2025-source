@@ -16,6 +16,8 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 
 
 ## Interruptpins
+> Information zu Interrupts auf der [Aurdiono Website](https://docs.arduino.cc/language-reference/funktionen/external-interrupts/attachInterrupt)
+
 | Mega | Nanos |
 |----------|----------|
 | 2, 3, 18, 19, 20, 21   | 2, 3 |
