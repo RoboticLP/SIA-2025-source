@@ -1,6 +1,6 @@
 # ESP32 Webserver
 Die versendeten Daten und ihre Bedeutung.
-Die ```test.html``` Datei ist nur zum lokalen Ausprobieren gedacht. Ihr Code wird später immer in die Variable in ```index.h``` eingefügt.
+Die ```index.html``` Datei ist nur zum lokalen Ausprobieren gedacht. Ihr Code wird später immer in die Variable in ```index.h``` eingefügt.
 
 ## Navigation
 > **Seiten**
@@ -74,7 +74,7 @@ Beispielmethode für Drück-Methode:
 ```javascript
 function handleButtonPress0() {
     var xhttp = new XMLHttpRequest();
-    xhttp.open("PUT", "BUTTON_0", false);
+    xhttp.open("PUT", "BUTTON_0", true);
     xhttp.send();
 }
 ```
