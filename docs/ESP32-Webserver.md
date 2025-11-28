@@ -1,6 +1,7 @@
 # ESP32 Webserver
 Die versendeten Daten und ihre Bedeutung.
 Die ```index.html``` Datei ist nur zum lokalen Ausprobieren gedacht. Ihr Code wird später immer in die Variable in ```index.h``` eingefügt.
+Zur Programmierung des ESP32 der Hochschule müsst ihr einen [Treiber](https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads) installieren.
 
 ## Navigation
 > **Seiten**
