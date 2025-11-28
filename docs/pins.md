@@ -31,32 +31,32 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 
 # Pin Belegung der einzelnen Arduinos
 ## Mega
-| Pins | Nutzung | Relai |
-|----------|----------|----------|
-| 2 | Nutzung einer Spule | Ja |
-| 3 | Nutzung einer LED | Nein |
+| Pins | Nutzung | Relais | Interrupt |
+|----------|----------|----------|----------|
+| 2 | Nutzung einer Spule | Ja | Ja |
+| 3 | Nutzung einer LED | Nein | Ja |
 
 ## Nano 2
-| Pins | Nutzung | Relai |
-|----------|----------|----------|
-| 2 | Nutzung einer Spule | Ja |
-| 3 | Nutzung einer LED | Nein |
+| Pins | Nutzung | Relais | Interrupt |
+|----------|----------|----------|----------|
+| 2 | Nutzung einer Spule | Ja | Ja |
+| 3 | Nutzung einer LED | Nein | Ja |
 
 ## Nano 3
-| Pins | Nutzung | Relai |
-|----------|----------|----------|
-| 2 | Nutzung einer Spule | Ja |
-| 3 | Nutzung einer LED | Nein |
+| Pins | Nutzung | Relais | Interrupt |
+|----------|----------|----------|----------|
+| 2 | Nutzung einer Spule | Ja | Ja |
+| 3 | Nutzung einer LED | Nein | Ja |
 
 ## Nano 4
-| Pins | Nutzung | Relai |
-|----------|----------|----------|
-| 2 | Nutzung einer Spule | Ja |
-| 3 | Nutzung einer LED | Nein |
+| Pins | Nutzung | Relais | Interrupt |
+|----------|----------|----------|----------|
+| 2 | Nutzung einer Spule | Ja | Ja |
+| 3 | Nutzung einer LED | Nein | Ja |
 
 ## Nano 5
-| Pins | Nutzung | Relai |
-|----------|----------|----------|
-| 2 | Nutzung einer Spule | Ja |
-| 3 | Nutzung einer LED | Nein |
+| Pins | Nutzung | Relais | Interrupt |
+|----------|----------|----------|----------|
+| 2 | Nutzung einer Spule | Ja | Ja |
+| 3 | Nutzung einer LED | Nein | Ja |
 
