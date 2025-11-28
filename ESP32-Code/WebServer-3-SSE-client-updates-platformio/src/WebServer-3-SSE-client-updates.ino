@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include <WebServer.h>
+#include <Wire.h>
 #include "index.h"
 
 // credentials for wifi
@@ -12,7 +13,7 @@
 
 
 // credentials for the access point
-#define AP_SSID "NeuerESP32"
+#define AP_SSID "FlipperAdmin"
 #define AP_PASSWORD "12345678"
 
 
@@ -45,12 +46,13 @@ bool sseClientsConnected[4] = {false, false, false, false};
 void setup() {
   Serial.begin(115200);
 
+  // I2C
+  Wire.begin(6);
+  Wire.onRequest(wireRequestEvent);
+
   // Setting pin modes
   pinMode(led0, OUTPUT);
   pinMode(led1, OUTPUT);
-
-  // LED0 = false;
-  // digitalWrite(led, LED0);
 
   if (WiFi_SSID != "" && WiFi_PASSWORD != "") {
     WiFi.begin(WiFi_SSID, WiFi_PASSWORD);
@@ -71,9 +73,6 @@ void setup() {
   // once someone opens main address
   server.on("/", sendWebsite);
 
-  // where website can request new data for refreshing
-  // server.on("/xml", sendXML);
-
   // SSE connection
   server.on("/sse", handleSSEConnect);
 
@@ -91,6 +90,13 @@ void loop() {
   handleSSEClients();
 }
 
+// I2C
+void wireRequestEvent() {
+  Serial.println("I2C request recieved");
+  Wire.write("Moin moin, hier der ESP");
+}
+
+// Webpage Handlers
 void handleButtonPress0() {
   LED0 = !LED0;
 

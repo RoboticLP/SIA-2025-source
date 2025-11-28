@@ -2,8 +2,9 @@
 <html>
   <head>
     <meta charset="UTF-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Panel</title>
+    <title>Flipper Adminpanel</title>
 
     <style>
       * {
@@ -283,6 +284,13 @@
   
   <body onload="updateSliderProgress();">
 
+    <div class="section-container">
+      <div class="log-header"> <!-- die Klasse ist n workaround -->
+        <div class="section-title">Flipper Adminpanel</div>
+        <button class="btn btn-secondary btn-small" onclick="window.location.reload();">Reload window</button>
+      </div>
+    </div>
+
     <!-- Test LED Controls -->
     <div class="section-container">
       <div class="section-title">Test Controls</div>
@@ -295,12 +303,12 @@
       <div class="slider-label">Brightness LED 2</div>
       <input type="range" id="brightness-slider" min="0" max="255" value="0" oninput="handleSliderInput(this.value)"/>
     </div>
-
-    <!-- Lighting Settings (later) -->
+    
+    <!-- Settings -->
     <div class="section-container">
-      <div class="section-title">Lighting Controls</div>
-
-      <div class="section-subtitle">Effects</div>
+      <div class="section-title">Settings (not yet working)</div>
+      
+      <div class="section-subtitle">Lighting Controlts</div>
       <div class="controls-grid">
         <div class="toggle-container">
           <div id="led-toggle" class="toggle" onclick="toggleSetting(this);">
@@ -315,28 +323,6 @@
           Strobe
         </div>
       </div>
-
-      <div class="section-subtitle">Some other section</div>
-    </div>
-
-    <!-- Settings -->
-    <div class="section-container">
-      <div class="section-title">Settings (not yet working)</div>
-      
-      <div class="setting-item">
-        <label class="section-subtitle">Auto Mode</label>
-        <div class="toggle-container">
-          <div id="auto-mode-toggle" class="toggle" onclick="toggleSetting(this)">
-            <div class="toggle-thumb"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="setting-item">
-        <label class="section-subtitle">Device Name</label>
-        <input type="text" id="device-name" class="text-input" placeholder="Enter device name" value="My Device">
-      </div>
-
       <div class="setting-item">
         <button class="btn btn-danger" onclick="resetGame()">Reset Game</button>
       </div>
@@ -347,7 +333,10 @@
     <div class="section-container">
       <div class="log-header">
         <div class="section-title">Log</div>
-        <button class="btn btn-secondary btn-small" onclick="exportLogs()">Export Logs</button>
+        <div>
+          <button class="btn btn-danger btn-small" onclick="deleteInfoLogs()">Delete info logs</button>
+          <button class="btn btn-secondary btn-small" onclick="exportLogs()">Export Logs</button>
+        </div>
       </div>
       <div id="log-container"></div>
     </div>
@@ -377,12 +366,6 @@
         logEntry.appendChild(messageSpan);
         logEntry.appendChild(timestampSpan);
         logContainer.prepend(logEntry);
-  
-        // if (type === logType.info) {
-        //   setTimeout(() => {
-        //     logEntry.remove();
-        //   }, 20000);
-        // }
       }
   
       //** Für Toggle-Buttons, um deren Aktiv-Status umzuschalten
@@ -413,6 +396,20 @@
         }
       }
   
+      // delete info logs
+      function deleteInfoLogs() {
+        if (confirm('Are you sure you want to delete every info log?')) {
+          const logEntries = document.querySelectorAll('.log-entry');
+          
+          logEntries.forEach(entry => {
+            if (entry.classList.contains('log-info')) {
+              entry.remove();
+            } 
+            
+          });
+        }
+      }
+
       //** Logs exportieren
       function exportLogs() {
         const logEntries = document.querySelectorAll('.log-entry');
