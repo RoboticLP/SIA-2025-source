@@ -31,32 +31,46 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 
 # Pin Belegung der einzelnen Arduinos
 ## Mega
-| Pins | Nutzung | Relais | Interrupt |
-|----------|----------|----------|----------|
-| 2 | Nutzung einer Spule | Ja | Ja |
-| 3 | Nutzung einer LED | Nein | Ja |
+> Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-mega2560-rev3)
+
+| Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
+|----------|----------|----------|----------|----------|----------|----------|
+| 2 | Flipper Finger 1 lesen | Nein | Ja | Taster | Digital | Input |
+| ? | Flipper Finger 1 ausgeben | Ja | Nein | Spule | Digital | Output |
+| 3 | Flipper Finger 2 lesen | Nein | Ja | Taster | Digital | Input |
+| ? | Flipper Finger 2 ausgeben | Ja | Nein | Spule | Digital | Output |
+| 5 | Ball entlass in die Startvorrichtung | Nein | Nein | Servo | PWM |
 
 ## Nano 2
-| Pins | Nutzung | Relais | Interrupt |
-|----------|----------|----------|----------|
-| 2 | Nutzung einer Spule | Ja | Ja |
-| 3 | Nutzung einer LED | Nein | Ja |
+> Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
+
+| Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
+|----------|----------|----------|----------|----------|----------|----------|
+| 2 | Sensor für Abschussvorrichtung | Nein | Ja | Lichtschranke ? | Digital |
+| 5 | Spule für Abschussvorrichtung | Ja | Nein | Spule | Digital |
 
 ## Nano 3
-| Pins | Nutzung | Relais | Interrupt |
-|----------|----------|----------|----------|
-| 2 | Nutzung einer Spule | Ja | Ja |
-| 3 | Nutzung einer LED | Nein | Ja |
+> Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
+
+NICHT SICHER
+| Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
+|----------|----------|----------|----------|----------|----------|----------|
+| 2 | Bumper Tower (3 Stück) | Ja | Ja | Spule | Digital | Input |
+| 3 | Sensor für Obrige Rollbahn | Nein | Ja | Lichtschranke ? | Digital | Input |
 
 ## Nano 4
-| Pins | Nutzung | Relais | Interrupt |
-|----------|----------|----------|----------|
-| 2 | Nutzung einer Spule | Ja | Ja |
-| 3 | Nutzung einer LED | Nein | Ja |
+> Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
+
+NICHT SICHER
+| Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
+|----------|----------|----------|----------|----------|----------|----------|
+| 2 | Kontakt Punkte Zähler (4 Stück) | Nein | Ja | Taster | Digital | Input |
+| 3 | Sensor für Kugel im Spiel | Nein | Ja | Lichtschranke ? | Digital | Input |
 
 ## Nano 5
-| Pins | Nutzung | Relais | Interrupt |
-|----------|----------|----------|----------|
-| 2 | Nutzung einer Spule | Ja | Ja |
-| 3 | Nutzung einer LED | Nein | Ja |
+### Nano 5 ist für weitere Aktionen in der Zukunft geplant und wird im Falle vom Gebraucht genutzt.
+> Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
+
+| Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
+|----------|----------|----------|----------|----------|----------|----------|
 
