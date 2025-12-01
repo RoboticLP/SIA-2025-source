@@ -19,8 +19,7 @@ Sobald der ESP32 hochfährt und der WLAN-Modus nicht aktiv ist eröffnet er eine
 Beim betätigen einer der Buttons wird eine PUT-Anfrage an die zugeordnete Endstelle gesendet (z.B. ```/BUTTON_0```). Wenn diese verständigt wird erkennt das der Server und schält in diesem Fall eine interne Variable um, die danach in digitalWrite für die LED verwendet wird. Diese Variable wird auch sofort mit der Methode ```broadcastSSE_update()``` an alle verbundenen Clients per SSE gesendet, damit alle auf dem gleichen Stand sind.
 
 ## Server-sent events (Aktualisierung der Client-Daten)
-
-*erklärung folgt*
+Die Clients verbinden sich nach laden der Website mit der Adresse /sse, der die SSE-Schnittstelle des Servers ist. SSE (Server-sent events) bedeutet, dass die Clients nicht aktiv den Server nach neuen Daten abfragen müssen, sondern dass der Server jegliche Daten sofort an die Clients senden kann, wann immer er will. Das verringert den Datenaustausch zwischen Client und Server auf das nötigste und macht die Daten-Updates der Clients fast sofortig, da nicht in einem bestimmten Takt abgefragt werden muss.
 
 ---
 
@@ -81,7 +80,22 @@ function handleButtonPress0() {
 ```
 
 #### Slider
-ist iwie komplizierterer shit
+```html
+<input type="range" id="brightness-slider" min="0" max="255" value="0" ininput="handleSliderInput(this.value)"\>
+```
+Die Methode ```handleSliderInput``` wird bei jeder veränderung des Sliders ausgeführt. Diese passt die Größe des farbigen Hintergrunds an, der den Wert des Sliders deutlicher macht. Zusätzlich wird alle 100ms der Wert des Sliders an den Server geschickt, solange dieser Verschoben wird. Der Server hat eine seperate Schnittstelle für den Slider, bei dem als URL-Parameter der Slider-Wert erwartet wird.
+
+Beispielmethoden für Slider-Verarbeitung:
+```javascript
+let sliderTimeout;
+function handleSliderInput(value) {
+    requestAnimationFrame(() => updateSliderProgress()); // aktualisiert Größe des Hintergrunds (zur Vereinfachung hier weggelassen)
+    clearTimeout(sliderTimeout);
+    sliderTimeout = setTimeout(() => {
+        handleUpdateSlider(value); // sendet Daten an Server mit "PUT" "BRIGHTNESS_SLIDER?value="+value
+    }, 100);
+}
+```
 
 #### Buttons
 ##### Primary Button Klasse (Primär)
