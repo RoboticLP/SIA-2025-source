@@ -4,6 +4,7 @@ Alle Source-Codes der diesjährigen SIA.
 ## Navigation
 > **Seiten**
 > [ESP32 Webserver](docs/ESP32-Webserver.md)
+> [Pin-Belegung](docs/pins.md)
 
 > **Auf dieser Seite**
 > [I2C Arduino Docs](https://docs.arduino.cc/learn/communication/wire/#arduino-i2c-pins)
@@ -15,10 +16,10 @@ Alle Source-Codes der diesjährigen SIA.
 | Adressen | Gerät        | Aufgabe / Modul |
 |----------|--------------|-----------------|
 | (1)      | Arduino Mega | Master          |
-| 2        | Arduino Nano |  |
-| 3        | Arduino Nano |  |
-| 4        | Arduino Nano |  |
-| 5        | Arduino Nano |  |
+| 2        | Arduino Nano | Modul 1 |
+| 3        | Arduino Nano | Modul 2 |
+| 4        | Arduino Nano | Modul 3 |
+| 5        | Arduino Nano | Extra Nano |
 | 6        | ESP32        | WebServer       |
 
 ---
