@@ -37,9 +37,9 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| 2 | Flipper Finger 1 lesen | Nein | Ja | Taster | Digital | Input |
+| 2 | Taster Finger 1 lesen | Nein | Ja | Taster | Digital | Input |
 | ? | Flipper Finger 1 ausgeben | Ja | Nein | Spule | Digital | Output |
-| 3 | Flipper Finger 2 lesen | Nein | Ja | Taster | Digital | Input |
+| 3 | Taster Finger 2 lesen | Nein | Ja | Taster | Digital | Input |
 | ? | Flipper Finger 2 ausgeben | Ja | Nein | Spule | Digital | Output |
 | 5 | Ball entlass in die Startvorrichtung | Nein | Nein | Servo | PWM |
 
