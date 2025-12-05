@@ -1,54 +1,74 @@
 #include <Wire.h>
- 
- 
-void setup()
-{
-  Wire.begin();
- 
+#include "utils.h"
+
+#define slave2 2
+#define slave3 3
+#define slave4 4
+#define slave5 5
+#define adminpanel 6
+
+int moduleCount = 3;
+int moduleSlaves[3] = {slave2, slave3, slave4}; // slave 5
+
+void setup() {
+  Wire.begin();        // join i2c bus (address optional for master)
+
   Serial.begin(9600);
-  while (!Serial);             // Leonardo: wait for serial monitor
-  Serial.println("\nI2C Scanner");
 }
- 
- 
-void loop()
-{
-  byte error, address;
-  int nDevices;
- 
-  Serial.println("Scanning...");
- 
-  nDevices = 0;
-  for(address = 1; address < 127; address++ )
-  {
-    // The i2c_scanner uses the return value of
-    // the Write.endTransmisstion to see if
-    // a device did acknowledge to the address.
-    Wire.beginTransmission(address);
-    error = Wire.endTransmission();
- 
-    if (error == 0)
-    {
-      Serial.print("I2C device found at address 0x");
-      if (address<16)
-        Serial.print("0");
-      Serial.print(address,HEX);
-      Serial.println("  !");
- 
-      nDevices++;
+
+long updateBeginTime;
+
+void loop() {
+  updateBeginTime = millis();
+  for (int i = 0; i < moduleCount; i++) {
+    Wire.requestFrom(moduleSlaves[i], 20);
+
+    // get all data from that slave and save it into 'answer'
+    String answer = "";
+    while (Wire.available()) {
+      char c = Wire.read();
+      answer += c;
     }
-    else if (error==4)
-    {
-      Serial.print("Unknown error at address 0x");
-      if (address<16)
-        Serial.print("0");
-      Serial.println(address,HEX);
-    }    
+
+    // process data recieved by that slave
+    int dataCount;
+    String* data = splitString(answer, '|', dataCount);
+    for (int j = 0; j < dataCount; j++) {
+      if (data[j].indexOf(':') != -1) { // process substring if its a key with a value (ex.: ht1:1)
+        int count;
+        String* dataset = splitString(data[j], ':', count);
+        String key = dataset[0];    // key from one of the datasets (ex.: hit1)
+        String value = dataset[1];  // value of that key
+        Serial.print(moduleSlaves[i]);
+        Serial.print("Key: ");
+        Serial.print(key);
+        Serial.print(" Value: ");
+        Serial.println(value);
+        delete[] dataset;
+      } else {  // if its just a piece of data, not a key with a value (ex.: err)
+        // if we recieve err, reqeuest error data, process it and then continue
+        Serial.print(moduleSlaves[i]);
+        Serial.print("No key: ");
+        Serial.println(data[j]);
+      }
+    }
+    delete[] data;
   }
-  if (nDevices == 0)
-    Serial.println("No I2C devices found\n");
-  else
-    Serial.println("done\n");
- 
-  delay(5000);           // wait 5 seconds for next scan
+  Serial.print((millis() - updateBeginTime) / 1000.0); Serial.print(" Sekunden\n");
+
+  // request admin panel less often with same logic as above - TESTING
+  Wire.requestFrom(6, 25); // test size
+
+  // get all data from that slave and save it into 'answer'
+  // String answer = "";
+  Serial.print("ESP32: ");
+  while (Wire.available()) {
+    char c = Wire.read();
+    Serial.print(c);
+    // answer += c;
+  }
+  Serial.print("\nended\n");
+  // Serial.println(answer);
+  
+  delay(4000);
 }

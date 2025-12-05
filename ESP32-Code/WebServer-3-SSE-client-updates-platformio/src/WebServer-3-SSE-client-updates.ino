@@ -92,8 +92,8 @@ void loop() {
 
 // I2C
 void wireRequestEvent() {
-  Serial.println("I2C request recieved");
   Wire.write("Moin moin, hier der ESP");
+  Serial.println("I2C request recieved");
 }
 
 // Webpage Handlers
