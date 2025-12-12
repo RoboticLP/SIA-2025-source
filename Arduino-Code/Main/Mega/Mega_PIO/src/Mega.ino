@@ -135,8 +135,6 @@ void processSlaveData(String key, String value, int module) {
     Serial.println(value);
   }
   else if (key == "text") {
-
-    //HIER ERROR AN ESP
     Serial.print("Module ");
     Serial.print(module);
     Serial.print(" text: ");

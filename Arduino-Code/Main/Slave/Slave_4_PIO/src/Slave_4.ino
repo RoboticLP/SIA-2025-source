@@ -2,7 +2,7 @@
 #include <Wire.h>
 
 void setup() {  
-  Wire.begin(4);                // join i2c bus with address #8
+  Wire.begin(4);                // join i2c bus with address #4
 
   Wire.onRequest(requestEvent); // register event
 }
