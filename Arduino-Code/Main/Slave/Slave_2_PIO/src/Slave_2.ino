@@ -27,11 +27,11 @@ void loop() {
 
 void handleBallEject(){
   Serial.println("Ball eingegangen, warte "+String(waitTime)+"ms bis Auswurf");
-  //MUSIK UND SOUND EINFÜGEN
+  //LICHT UND SOUND EINFÜGEN
   hits_goals++;
   delay(waitTime);
   digitalWrite(ballEjectOUT, HIGH); // Auswurf einschalten
-  delay(100); //Kurz warten
+  delay(500); //Kurz warten damit der Ball auch wirklich ausgeworfen wird
   digitalWrite(ballEjectOUT, LOW); // Auswurf wieder ausschalten
   Serial.println("Ball ausgeworfen");
 }
