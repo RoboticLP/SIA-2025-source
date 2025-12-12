@@ -5,12 +5,13 @@ Zur Programmierung des ESP32 der Hochschule müsst ihr einen [Treiber](https://w
 
 ## Navigation
 > **Seiten**
-> [Hauptseite](../README.md)
-> [Pin-Belegung](pins.md)
+- [Hauptseite](../README.md)
+- [Pin-Belegung](pins.md)
+- [Error Codes](error-codes.md)
 
 > **Auf dieser Seite**
-> [Methoden](#dokumentation-der-methoden)
-> [Code Snippets](#code-snippets)
+- [Methoden](#dokumentation-der-methoden)
+- [Code Snippets](#code-snippets)
 ---
 
 ## WiFi Access Point

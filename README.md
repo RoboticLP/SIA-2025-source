@@ -3,13 +3,14 @@ Alle Source-Codes der diesjährigen SIA.
 
 ## Navigation
 > **Seiten**
-> [ESP32 Webserver](docs/ESP32-Webserver.md)
-> [Pin-Belegung](docs/pins.md)
+- [ESP32 Webserver](docs/ESP32-Webserver.md)
+- [Pin-Belegung](docs/pins.md)
+- [Error Codes](docs/error-codes.md)
 
 > **Auf dieser Seite**
-> [I2C Arduino Docs](https://docs.arduino.cc/learn/communication/wire/#arduino-i2c-pins)
-> [SIA-Playlist YouTube von Adrian](https://youtube.com/playlist?list=PLDd5gBML2x-RDGElEF7yUXcqWyJdSLfL-&si=K51pTD4f3ktHvXSp)
-> [sprintf (Formatierung von Strings)](#sprintf)
+- [I2C Arduino Docs](https://docs.arduino.cc/learn/communication/wire/#arduino-i2c-pins)
+- [SIA-Playlist YouTube von Adrian](https://youtube.com/playlist?list=PLDd5gBML2x-RDGElEF7yUXcqWyJdSLfL-&si=K51pTD4f3ktHvXSp)
+- [sprintf (Formatierung von Strings)](#sprintf)
 ---
 
 ## I<sup>2</sup>C Infos

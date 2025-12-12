@@ -5,6 +5,7 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 > **Seiten**
 - [Hauptseite](../README.md)
 - [ESP32 Webserver](ESP32-Webserver.md)
+- [Error Codes](error-codes.md)
 
 > **Auf dieser Seite**
 - [Mega](#mega)
@@ -58,7 +59,7 @@ NICHT SICHER
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
 | 2 | Bumper Tower (3 Stück) | Ja | Ja | Spule | Digital | Input |
-| 3 | Sensor für Obrige Rollbahn | Nein | Ja | Lichtschranke ? | Digital | Input |
+| 3 | Sensor für obere Rollbahn | Nein | Ja | Lichtschranke ? | Digital | Input |
 
 ## Nano 4
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
