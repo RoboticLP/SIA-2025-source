@@ -58,7 +58,7 @@ NICHT SICHER
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
 | 2 | Bumper Tower (3 Stück) | Ja | Ja | Spule | Digital | Input |
-| 3 | Sensor für Obrige Rollbahn | Nein | Ja | Lichtschranke ? | Digital | Input |
+| 3 | Sensor für obere Rollbahn | Nein | Ja | Lichtschranke ? | Digital | Input |
 
 ## Nano 4
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
