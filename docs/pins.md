@@ -67,8 +67,9 @@ NICHT SICHER
 NICHT SICHER
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| 2 | Kontakt Punkte Zähler (4 Stück) | Nein | Ja | Taster | Digital | Input |
+| ? | Drop Target Taster | Nein | Ja | Taster | Digital | Input |
 | 3 | Sensor für Kugel im Spiel | Nein | Ja | Lichtschranke ? | Digital | Input |
+| ? | Drop Target Spule(n) | ? | Nein | Spule | Digital | Output |
 
 ## Nano 5
 ### Nano 5 ist für weitere Aktionen in der Zukunft geplant und wird im Falle vom Gebraucht genutzt.
