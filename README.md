@@ -30,7 +30,7 @@ Jedes Modul (Arduino Nano) hat bis zu zwei Ziele (Targets) an sich angeschlossen
 Jedes Modul wird mehrmals pro Sekunde nach Updates gefragt, hier definieren wir wie die Antworten Formatiert sein müssen:
 
 ```c
-ht1:%d|ht2:%d|err
+ht1:%d|ht2:%d|err:%s
 ```
 > *Die **Reihenfolge der Keys+Werte ist egal**, genau wie ihre **Vorhandenheit** - es werden nur erhaltene Daten verarbeitet und es sind keine speziellen Daten notwendig. Allerdings **muss** jeder versendete Key einen zugehörigen Wert haben*
 
@@ -39,7 +39,7 @@ ht1:%d|ht2:%d|err
 | ```\|```   | /        | Trennzeichen zwischen den Daten                      |
 | ```ht1```  | int      | Zahl der Treffer (Hits) des **ersten** Ziels (Targets) seit dem letztem Update      |
 | ```ht2```  | int      | Zahl der Treffer (Hits) des **zweiten** Ziels (Targets) seit dem letztem Update      |
-| ```err```  | /        | Wird nur gesendet, **wenn** das Modul eine Fehlermeldung hat > dann kann die Fehlermeldung seperat direkt danach abegefragt werden(vor verarbeitung anderer slaves), damit normale Abfragen klein und schnell bleiben können |
+| ```err```  | String (Error-code) | Wird nur versendet wenn error vorhanden ist. Sendet dann einen Error-code der dann vom ESP32 verarbeitet wird. |
 
 > Da es von Arduino selbst keine eigene Lösung für das Splitten von Strings hat benutzen wir folgende eigene Lösung: [splitString](#splitstring)
 
