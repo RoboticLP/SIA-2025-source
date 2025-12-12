@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <Wire.h>
 #include <Arduino.h>
 
@@ -33,7 +34,7 @@ void hit_Goal(){
 }
 
 void requestEvent() {
-  sprintf(message, "ht1:%d|", hits_goals);
+  sprintf(message, "ht1:%d|ht2:33", hits_goals);
   hits_goals = 0;
   Wire.write(message);
   Serial.println("Daten gesendet");
