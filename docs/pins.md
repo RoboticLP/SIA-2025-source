@@ -49,8 +49,8 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| 2 | Sensor für Abschussvorrichtung | Nein | Ja | Lichtschranke ? | Digital |
-| 5 | Spule für Abschussvorrichtung | Ja | Nein | Spule | Digital |
+| 2 | Sensor für Ball Eject | Nein | Ja | Lichtschranke ? | Digital |
+| 5 | Spule für Ball Eject | Ja | Nein | Spule | Digital |
 
 ## Nano 3
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
