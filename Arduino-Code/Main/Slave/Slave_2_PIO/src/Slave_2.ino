@@ -40,5 +40,4 @@ void requestEvent() {
   sprintf(message, "ht1:%d", hits_goals);
   hits_goals = 0;
   Wire.write(message);
-  Serial.println("Daten gesendet");
 }
