@@ -60,11 +60,6 @@ void printConnectionFromSlaves(){
 
         // Speicher freigeben
         delete[] dataset;
-      } else {
-        // Wenn kein Key-Value Paar, dann einfach den Wert ausgeben
-        Serial.print(moduleSlaves[i]);
-        Serial.print(" No key: ");
-        Serial.println(data[j]);
       }
     }
     delete[] data;  // Speicher freigeben
@@ -137,6 +132,14 @@ void processSlaveData(String key, String value, int module) {
     Serial.print("Module ");
     Serial.print(module);
     Serial.print(" error: ");
+    Serial.println(value);
+  }
+  else if (key == "text") {
+
+    //HIER ERROR AN ESP
+    Serial.print("Module ");
+    Serial.print(module);
+    Serial.print(" text: ");
     Serial.println(value);
   }
 

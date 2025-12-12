@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <Wire.h>
 
 void setup() {  
@@ -16,6 +17,6 @@ void loop() {
 
 void requestEvent() {
 
-  Wire.write("Hello from slave 4"); // respond with message of 6 bytes
+  Wire.write("text:Hallo"); // respond with message of 6 bytes
   // as expected by master
 }
