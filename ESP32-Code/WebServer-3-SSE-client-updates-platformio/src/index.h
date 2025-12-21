@@ -223,132 +223,123 @@ const char* webpage_main = R"=====(
         border-color: #5c6bc0;
       }
 
-      /* Slider Styles */
-      .slider-label {
-        font-size: 14px;
-        font-weight: 500;
-        color: #333;
-        margin-bottom: 12px;
-        margin-top: 24px;
-      }
-
-      #brightness-slider {
-        -webkit-appearance: none;
-        appearance: none;
+      /* Number Input Styles - ähnlich wie text-input aber mit extra Styling für Zahlen */
+      .number-input {
         width: 100%;
-        height: 8px;
-        border-radius: 4px;
-        background: #e0e0e0;
+        padding: 10px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
         outline: none;
-        cursor: pointer;
-        touch-action: none;
+        transition: border-color 0.2s;
       }
 
-      #brightness-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: white;
-        cursor: pointer;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        border: 2px solid #5c6bc0;
-        transition: all 0.2s ease;
+      .number-input:focus {
+        border-color: #5c6bc0;
       }
 
-      #brightness-slider::-webkit-slider-thumb:hover {
-        transform: scale(1.1);
+      /* Input Container für Label + Input */
+      .input-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
       }
 
-      #brightness-slider::-webkit-slider-thumb:active {
-        transform: scale(1.05);
-      }
-
-      #brightness-slider::-moz-range-thumb {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: white;
-        cursor: pointer;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        border: 2px solid #5c6bc0;
-        transition: all 0.2s ease;
-      }
-
-      #brightness-slider::-moz-range-thumb:hover {
-        transform: scale(1.1);
-      }
-
-      #brightness-slider::-moz-range-thumb:active {
-        transform: scale(1.05);
+      .input-label {
+        font-size: 14px;
+        color: #666;
+        font-weight: 500;
       }
     </style>
   </head>
   
-  <body onload="updateSliderProgress();">
+  <body>
 
     <div class="section-container">
       <div class="log-header"> <!-- die Klasse ist n workaround -->
-        <div class="section-title">Flipper Adminpanel</div>
+        <div class="section-title">Flipper Adminpanel v.69</div>
         <button class="btn btn-secondary btn-small" onclick="window.location.reload();">Reload window</button>
       </div>
     </div>
 
-    <!-- Test LED Controls -->
     <div class="section-container">
-      <div class="section-title">Test Controls</div>
-       <div class="toggle-container">
-          <div id="led-toggle" class="toggle" onclick="toggleSetting(this); handleButtonPress0()">
-            <div class="toggle-thumb"></div>
-          </div>
-          LED 1
-        </div>
-      <div class="slider-label">Brightness LED 2</div>
-      <input type="range" id="brightness-slider" min="0" max="255" value="0" oninput="handleSliderInput(this.value)"/>
+      <div class="section-title">Module status</div>
+      <div class="controls-grid">
+        <label id="module2-status" class="input-label">Module 2: ✅</label>
+        <label id="module3-status" class="input-label">Module 3: ✅</label>
+        <label id="module4-status" class="input-label">Module 4: ✅</label>
+        <label id="module5-status" class="input-label">Module 5: ❌</label>
+      </div>
     </div>
-
-    <!-- Lighting Settings (later) -->
+    
+    <!-- Settings -->
     <div class="section-container">
-      <div class="section-title">Lighting Controls</div>
-
-      <div class="section-subtitle">Effects</div>
+      <div class="section-title">Settings (not yet working probably)</div>
+      
+      <div class="section-subtitle">Game settings</div>
       <div class="controls-grid">
         <div class="toggle-container">
-          <div id="led-toggle" class="toggle" onclick="toggleSetting(this);">
+          <div id="point-modifiers-enabled-toggle" class="toggle active" onclick="toggleSetting(this);">
+            <div class="toggle-thumb"></div>
+          </div>
+          Point multipliers enabled
+        </div>
+        <!-- Neues Number Input für Multiplier Amount -->
+        <div class="input-container">
+          <label class="input-label">Multiplier amount</label>
+          <input 
+          type="number" 
+          id="multiplier-amount" 
+          class="number-input" 
+          min="1" 
+          max="100" 
+          step="0.5" 
+          value="1.0"
+          placeholder="1.0">
+        </div>
+
+        <div class="input-container">
+          <label class="input-label">Point amount bumper tower</label>
+          <input 
+            type="number" 
+            id="point-amount-bumper" 
+            class="number-input" 
+            min="1" 
+            max="500" 
+            step="1" 
+            value="50"
+            placeholder="1">
+        </div>
+        <div class="input-container">
+          <label class="input-label">Point amount slingshot</label>
+          <input 
+            type="number" 
+            id="point-amount-slingshot" 
+            class="number-input" 
+            min="1" 
+            max="500" 
+            step="1" 
+            value="50"
+            placeholder="1">
+        </div>
+      </div>
+
+      <div class="section-subtitle">Lighting Controls</div>
+      <div class="controls-grid">
+        <div class="toggle-container">
+          <div id="rainbow-toggle" class="toggle" onclick="toggleSetting(this);">
             <div class="toggle-thumb"></div>
           </div>
           Rainbow
         </div>
         <div class="toggle-container">
-          <div id="led-toggle" class="toggle" onclick="toggleSetting(this);">
+          <div id="strobe-toggle" class="toggle" onclick="toggleSetting(this);">
             <div class="toggle-thumb"></div>
           </div>
           Strobe
         </div>
       </div>
-
-      <div class="section-subtitle">Some other section</div>
-    </div>
-
-    <!-- Settings -->
-    <div class="section-container">
-      <div class="section-title">Settings (not yet working)</div>
-      
-      <div class="setting-item">
-        <label class="section-subtitle">Auto Mode</label>
-        <div class="toggle-container">
-          <div id="auto-mode-toggle" class="toggle" onclick="toggleSetting(this)">
-            <div class="toggle-thumb"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="setting-item">
-        <label class="section-subtitle">Device Name</label>
-        <input type="text" id="device-name" class="text-input" placeholder="Enter device name" value="My Device">
-      </div>
-
       <div class="setting-item">
         <button class="btn btn-danger" onclick="resetGame()">Reset Game</button>
       </div>
@@ -359,7 +350,10 @@ const char* webpage_main = R"=====(
     <div class="section-container">
       <div class="log-header">
         <div class="section-title">Log</div>
-        <button class="btn btn-secondary btn-small" onclick="exportLogs()">Export Logs</button>
+        <div>
+          <button class="btn btn-danger btn-small" onclick="deleteInfoLogs()">Delete info logs</button>
+          <button class="btn btn-secondary btn-small" onclick="exportLogs()">Export Logs</button>
+        </div>
       </div>
       <div id="log-container"></div>
     </div>
@@ -389,12 +383,6 @@ const char* webpage_main = R"=====(
         logEntry.appendChild(messageSpan);
         logEntry.appendChild(timestampSpan);
         logContainer.prepend(logEntry);
-  
-        // if (type === logType.info) {
-        //   setTimeout(() => {
-        //     logEntry.remove();
-        //   }, 20000);
-        // }
       }
   
       //** Für Toggle-Buttons, um deren Aktiv-Status umzuschalten
@@ -404,14 +392,21 @@ const char* webpage_main = R"=====(
   
       //** Apply settings
       // Alle eingegebenen Einstellungen auf ihren Weg schicken
-      function applySettings() { // bisher nur von KI gekochter shit
-        const autoMode = document.getElementById('auto-mode-toggle').classList.contains('active');
-        const deviceName = document.getElementById('device-name').value;
+      function applySettings() {
+        const enablePointMultipliers = document.getElementById('point-modifiers-enabled-toggle').classList.contains('active');
+        const multiplierAmount = document.getElementById('multiplier-amount').value; // Neuer Wert wird ausgelesen
+        const points_bumper = document.getElementById('point-amount-bumper').value;
+        const points_slingshot = document.getElementById('point-amount-slingshot').value;
           
         var xhttp = new XMLHttpRequest();
-        xhttp.open("PUT", "SETTINGS?autoMode=" + autoMode + "&deviceName=" + deviceName, true);
+        // Multiplier Amount wird jetzt auch an den Server gesendet
+        xhttp.open("PUT", "SETTINGS?enable_point_multipliers=" + enablePointMultipliers +
+          "&multiplierAmount=" + multiplierAmount +
+          "&points_bumper=" + points_bumper + 
+          "&points_slingshot=" + points_slingshot,
+          true);
         xhttp.send();
-          
+
         addLog(logType.info, 'Settings have been sent.');
       }
   
@@ -425,6 +420,20 @@ const char* webpage_main = R"=====(
         }
       }
   
+      // delete info logs
+      function deleteInfoLogs() {
+        if (confirm('Are you sure you want to delete every info log?')) {
+          const logEntries = document.querySelectorAll('.log-entry');
+          
+          logEntries.forEach(entry => {
+            if (entry.classList.contains('log-info')) {
+              entry.remove();
+            } 
+            
+          });
+        }
+      }
+
       //** Logs exportieren
       function exportLogs() {
         const logEntries = document.querySelectorAll('.log-entry');
@@ -476,25 +485,6 @@ const char* webpage_main = R"=====(
         xhttp.send();
       }
       
-      let sliderTimeout;
-      function handleSliderInput(value) {
-        requestAnimationFrame(() => updateSliderProgress());
-        clearTimeout(sliderTimeout);
-        sliderTimeout = setTimeout(() => {
-          handleUpdateSlider(value);
-        }, 100);
-      }
-      function handleUpdateSlider(value) {
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("PUT", "BRIGHTNESS_SLIDER?value=" + value, true);
-        xhttp.send();
-      }
-      function updateSliderProgress() {
-        const slider = document.getElementById('brightness-slider');
-        const value = (slider.value / slider.max) * 100;
-        slider.style.background = `linear-gradient(to right, #5c6bc0 ${value}%, #e0e0e0 ${value}%)`;
-      }
-      
       //**     SSE stuff (Server send events)     **//
       if(typeof(EventSource) !== "undefined") {
         addLog(logType.info, 'Your Browser supports SSE. Opening connection...');
@@ -530,13 +520,12 @@ const char* webpage_main = R"=====(
             ledToggle.classList.add("active"); // enable toggle
           }
         }
-          
-        // slider update
-        xml_tag_data = xmlData.getElementsByTagName("SL_V");
+
+        // Multiplier Amount update vom Server (falls der Server den Wert zurückschickt)
+        xml_tag_data = xmlData.getElementsByTagName("MULT_AMT");
         if (xml_tag_data && xml_tag_data.length > 0) {
           message_data = xml_tag_data[0].firstChild.nodeValue;
-          document.getElementById("brightness-slider").value = message_data;
-          updateSliderProgress();
+          document.getElementById("multiplier-amount").value = message_data;
         }
 
         // add log

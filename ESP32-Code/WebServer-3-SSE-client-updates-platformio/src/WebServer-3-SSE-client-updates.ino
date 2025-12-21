@@ -1,6 +1,7 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <Wire.h>
+#include "utils.h"
 #include "index.h"
 
 // credentials for wifi
@@ -49,6 +50,7 @@ void setup() {
   // I2C
   Wire.begin(6);
   Wire.onRequest(wireRequestEvent);
+  Wire.onReceive(wireRecieveEvent);
 
   // Setting pin modes
   pinMode(led0, OUTPUT);
@@ -94,6 +96,27 @@ void loop() {
 void wireRequestEvent() {
   Wire.write("Moin moin, hier der ESP");
   Serial.println("I2C request recieved");
+}
+
+void wireRecieveEvent(int howMany) {
+  String answer;
+  while(Wire.available()) {
+    answer += (char)Wire.read(); // receive byte as a character
+  }
+  
+  int dataCount;
+  String* data = splitString(answer, '|', dataCount);
+  for (int j = 0; j < dataCount; j++) {
+    if (data[j].indexOf(':') != -1) {
+      int count;
+      String* dataset = splitString(data[j], ':', count);
+      
+      Serial.println("Status " + dataset[0] + ": " + dataset[1]);
+
+      delete[] dataset;
+    }
+  }
+  delete[] data;
 }
 
 // Webpage Handlers
