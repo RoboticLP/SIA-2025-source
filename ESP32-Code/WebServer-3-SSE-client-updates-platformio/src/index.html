@@ -262,10 +262,10 @@
     <div class="section-container">
       <div class="section-title">Module status</div>
       <div class="controls-grid">
-        <label id="module2-status" class="input-label">Module 2: ✅</label>
-        <label id="module3-status" class="input-label">Module 3: ✅</label>
-        <label id="module4-status" class="input-label">Module 4: ✅</label>
-        <label id="module5-status" class="input-label">Module 5: ❌</label>
+        <label id="module2-status" class="input-label">Module 2: </label>
+        <label id="module3-status" class="input-label">Module 3: </label>
+        <label id="module4-status" class="input-label">Module 4: </label>
+        <label id="module5-status" class="input-label">Module 5: </label>
       </div>
     </div>
     
@@ -504,25 +504,66 @@
         const xmlData = parser.parseFromString(event.data, 'text/xml');
         var xml_tag_data;
         var message_data;
-        
-        // toggle update
-        xml_tag_data = xmlData.getElementsByTagName("B0");
+
+        xml_tag_data = xmlData.getElementsByTagName("M2S");
         if (xml_tag_data && xml_tag_data.length > 0) {
           message_data = xml_tag_data[0].firstChild.nodeValue;
-          const ledToggle = document.getElementById("led-toggle");
+          const status_container = document.getElementById("module2-status");
           if (message_data == 0) {
-            ledToggle.classList.remove("active"); // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
+            status_container.innerHTML = "Module 2: ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
           } else {
-            ledToggle.classList.add("active"); // enable toggle
+            status_container.innerHTML = "Module 2: ✅"; // enable toggle
           }
         }
-
-        // Multiplier Amount update vom Server (falls der Server den Wert zurückschickt)
-        xml_tag_data = xmlData.getElementsByTagName("MULT_AMT");
+        xml_tag_data = xmlData.getElementsByTagName("M3S");
         if (xml_tag_data && xml_tag_data.length > 0) {
           message_data = xml_tag_data[0].firstChild.nodeValue;
-          document.getElementById("multiplier-amount").value = message_data;
+          const status_container = document.getElementById("module3-status");
+          if (message_data == 0) {
+            status_container.innerHTML = "Module 3: ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
+          } else {
+            status_container.innerHTML = "Module 3: ✅"; // enable toggle
+          }
         }
+        xml_tag_data = xmlData.getElementsByTagName("M4S");
+        if (xml_tag_data && xml_tag_data.length > 0) {
+          message_data = xml_tag_data[0].firstChild.nodeValue;
+          const status_container = document.getElementById("module4-status");
+          if (message_data == 0) {
+            status_container.innerHTML = "Module 4: ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
+          } else {
+            status_container.innerHTML = "Module 4: ✅"; // enable toggle
+          }
+        }
+        xml_tag_data = xmlData.getElementsByTagName("M5S");
+        if (xml_tag_data && xml_tag_data.length > 0) {
+          message_data = xml_tag_data[0].firstChild.nodeValue;
+          const status_container = document.getElementById("module5-status");
+          if (message_data == 0) {
+            status_container.innerHTML = "Module 5: ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
+          } else {
+            status_container.innerHTML = "Module 5: ✅"; // enable toggle
+          }
+        }
+        
+        // // toggle update
+        // xml_tag_data = xmlData.getElementsByTagName("B0");
+        // if (xml_tag_data && xml_tag_data.length > 0) {
+        //   message_data = xml_tag_data[0].firstChild.nodeValue;
+        //   const ledToggle = document.getElementById("led-toggle");
+        //   if (message_data == 0) {
+        //     ledToggle.classList.remove("active"); // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
+        //   } else {
+        //     ledToggle.classList.add("active"); // enable toggle
+        //   }
+        // }
+
+        // // Multiplier Amount update vom Server (falls der Server den Wert zurückschickt)
+        // xml_tag_data = xmlData.getElementsByTagName("MULT_AMT");
+        // if (xml_tag_data && xml_tag_data.length > 0) {
+        //   message_data = xml_tag_data[0].firstChild.nodeValue;
+        //   document.getElementById("multiplier-amount").value = message_data;
+        // }
 
         // add log
         var logType;
