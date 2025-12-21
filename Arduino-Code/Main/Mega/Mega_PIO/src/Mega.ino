@@ -8,6 +8,8 @@
 #define slave5 5
 #define adminpanel 6
 
+bool ballInGame = false;
+
 int moduleCount = 3;  // Anzahl der Module (Slaves)
 int moduleSlaves[3] = {slave2, slave3, slave4};  // Array mit Slave-Adressen
 
@@ -28,59 +30,82 @@ void loop() {
   delay(4000);  // 4 Sekunden warten
 }
 
-void printConnectionFromSlaves(){
+void printConnectionFromSlaves() {
   Serial.println("#######START CONSOLE#######");
   updateBeginTime = millis();
 
   for (int i = 0; i < moduleCount; i++) {
-    // Anfrage an das Slave-Modul senden
-    Wire.requestFrom(moduleSlaves[i], 50);
+    int addr = moduleSlaves[i];
 
-    // Alle Daten vom Slave in einen String sammeln
+    // 🔍 Prüfen ob Slave existiert
+    if (!isSlaveAlive(addr)) {
+      continue;
+    }
+    int alive = isSlaveAlive(addr) ? 1 : 0;
+    char aliveChar = alive ? '1' : '0';
+    sendESP32ToAdminPanel("M" + String(addr) + ":" +aliveChar+"|");
+
+
+    Wire.requestFrom(addr, 50);
+
     String answer = "";
     while (Wire.available()) {
-      char c = Wire.read();
-      answer += c;
+      answer += (char)Wire.read();
     }
 
-    // Daten aufteilen und verarbeiten
     int dataCount;
-    String* data = splitString(answer, '|', dataCount);  // Antwort in Teile splitten
+    String* data = splitString(answer, '|', dataCount);
 
-    // Jedes Datenstück bearbeiten
     for (int j = 0; j < dataCount; j++) {
-      if (data[j].indexOf(':') != -1) {  // Prüfen, ob es sich um ein Key-Value Paar handelt
+      if (data[j].indexOf(':') != -1) {
         int count;
         String* dataset = splitString(data[j], ':', count);
-        String key = dataset[0];  // Schlüssel (z.B. ht1, ht2)
-        String value = dataset[1];  // Wert des Schlüssels
 
-        // Verarbeiten des Key-Value Paares für dieses Modul
-        handleModule(moduleSlaves[i], key, value); 
+        if (count == 2) {
+          handleModule(addr, dataset[0], dataset[1]);
+        }
 
-        // Speicher freigeben
         delete[] dataset;
       }
     }
-    delete[] data;  // Speicher freigeben
+    delete[] data;
   }
 
-  // Zeit ausgeben, wie lange die Verarbeitung dauerte
   Serial.print((millis() - updateBeginTime) / 1000.0);
-  Serial.print(" Sekunden\n");
+  Serial.println(" Sekunden");
 
-  // Anfrage an das Admin-Panel senden
-  Wire.requestFrom(adminpanel, 50);  // Anfrage an Admin Panel (Größe 50)
-  Serial.print("ESP32: ");
+  if (isSlaveAlive(adminpanel)) {
+  Wire.requestFrom(adminpanel, 50);
   String adminAnswer = "";
   while (Wire.available()) {
-    char c = Wire.read();
-    adminAnswer += c;
+    adminAnswer += (char)Wire.read();
   }
+  Serial.print("ESP32: ");
   Serial.println(adminAnswer);
+} else {
+  Serial.println("Adminpanel nicht erreichbar");
+}
 
   Serial.println("#######ENDE CONSOLE#######");
 }
+
+void sendESP32ToAdminPanel(String message) {
+  if (!isSlaveAlive(adminpanel)) {
+    return;
+  }
+
+  Wire.beginTransmission(adminpanel);
+  Wire.write(message.c_str());
+  Wire.endTransmission();
+}
+
+
+
+bool isSlaveAlive(uint8_t address) {
+  Wire.beginTransmission(address);
+  return (Wire.endTransmission() == 0);
+}
+
 
 // Diese Funktion verarbeitet jedes empfangene Key-Value Paar für das gegebene Modul
 void handleModule(int module, String key, String value) {
@@ -139,6 +164,13 @@ void processSlaveData(String key, String value, int module) {
     Serial.print(module);
     Serial.print(" text: ");
     Serial.println(value);
+  }
+  else if (key == "ballingame") {
+    Serial.print("Module ");
+    Serial.print(module);
+    Serial.print(" ballInGame: ");
+    Serial.println(value);
+    ballInGame = (dataValue == 1);
   }
 
   else {

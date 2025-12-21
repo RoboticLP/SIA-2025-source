@@ -1,26 +1,40 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-
 int hits_goals = 0;
+
+int ballingame = 0; // Status, ob Ball im Spiel ist
+
+int gameSensor = 3; // Pin für den Sensor
 
 char message[50];
 
 void setup() {
   Serial.begin(9600);
 
-  Wire.begin(4);  // Arduino als I2C-Slave mit Adresse 2
+  Wire.begin(4);  // Arduino als I2C-Slave mit Adresse 4
 
   Wire.onRequest(requestEvent);  // registriere den Event für Datenanforderungen
+  pinMode(gameSensor, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(gameSensor), ballInGame, FALLING);
+  handleReset();
 }
 
 void loop() {
-  
+
 }
 
+void handleReset(){
+  ballingame = 0;
+  hits_goals = 0;
+}
+
+void ballInGame(){
+  ballingame = 1;
+  Serial.println("Ball im Spiel "+ballingame);
+}
 
 void requestEvent() {
-  sprintf(message, "ht1:%d", hits_goals);
-  hits_goals = 0;
-  Wire.write(message);
+  sprintf(message, "ballingame:%d|", ballingame);
+  Wire.write(message);  // sende Nachricht an Master
 }
