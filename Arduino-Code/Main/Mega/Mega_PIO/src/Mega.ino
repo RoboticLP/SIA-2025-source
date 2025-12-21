@@ -30,75 +30,83 @@ void loop() {
   delay(4000);  // 4 Sekunden warten
 }
 
+
 void printConnectionFromSlaves() {
-  Serial.println("#######START CONSOLE#######");
-  updateBeginTime = millis();
+    Serial.println("#######START CONSOLE#######");
+    updateBeginTime = millis();
+    String statusMessage = ""; // Alle Status hier sammeln  für ESP32 senden
 
-  for (int i = 0; i < moduleCount; i++) {
-    int addr = moduleSlaves[i];
+    for (int i = 0; i < moduleCount; i++) {
+        int addr = moduleSlaves[i];
+        int alive = isSlaveAlive(addr) ? 1 : 0;
 
-    // 🔍 Prüfen ob Slave existiert
-    if (!isSlaveAlive(addr)) {
-      continue;
-    }
-    int alive = isSlaveAlive(addr) ? 1 : 0;
-    char aliveChar = alive ? '1' : '0';
-    sendESP32ToAdminPanel("M" + String(addr) + ":" +aliveChar+"|");
+        // Status in den String einfügen
+        statusMessage += "M" + String(addr) + ":" + String(alive) + "|";
 
+        if (!isSlaveAlive(addr)) continue; // wenn Modul nicht erreichbar, nächsten
 
-    Wire.requestFrom(addr, 50);
+        // Daten vom Modul holen
+        Wire.requestFrom(addr, 50);
 
-    String answer = "";
-    while (Wire.available()) {
-      answer += (char)Wire.read();
-    }
-
-    int dataCount;
-    String* data = splitString(answer, '|', dataCount);
-
-    for (int j = 0; j < dataCount; j++) {
-      if (data[j].indexOf(':') != -1) {
-        int count;
-        String* dataset = splitString(data[j], ':', count);
-
-        if (count == 2) {
-          handleModule(addr, dataset[0], dataset[1]);
+        String answer = "";
+        while (Wire.available()) {
+            answer += (char)Wire.read();
         }
 
-        delete[] dataset;
-      }
+        // Antwort splitten und verarbeiten
+        int dataCount;
+        String* data = splitString(answer, '|', dataCount);
+
+        for (int j = 0; j < dataCount; j++) {
+            if (data[j].indexOf(':') != -1) {
+                int count;
+                String* dataset = splitString(data[j], ':', count);
+
+                if (count == 2) {
+                    handleModule(addr, dataset[0], dataset[1], statusMessage);
+
+                    // Beispiel: wenn Fehler, kann man direkt anhängen
+                    if (dataset[0] == "err") {
+                        statusMessage += "err:" + dataset[1] + "|";
+                    }
+                }
+
+                delete[] dataset;
+            }
+        }
+        delete[] data;
     }
-    delete[] data;
-  }
 
-  Serial.print((millis() - updateBeginTime) / 1000.0);
-  Serial.println(" Sekunden");
+    // 🔹 Alle Status auf einmal senden
+    sendESP32ToAdminPanel(statusMessage);
 
-  if (isSlaveAlive(adminpanel)) {
-  Wire.requestFrom(adminpanel, 50);
-  String adminAnswer = "";
-  while (Wire.available()) {
-    adminAnswer += (char)Wire.read();
-  }
-  Serial.print("ESP32: ");
-  Serial.println(adminAnswer);
-} else {
-  Serial.println("Adminpanel nicht erreichbar");
-}
+    Serial.print((millis() - updateBeginTime) / 1000.0);
+    Serial.println(" Sekunden");
 
-  Serial.println("#######ENDE CONSOLE#######");
+    if (isSlaveAlive(adminpanel)) {
+      Wire.requestFrom(adminpanel, 50);
+      String adminAnswer = "";
+      while (Wire.available()) {
+        adminAnswer += (char)Wire.read();
+      }
+      Serial.print("ESP32: ");
+      Serial.println(adminAnswer);
+    } else {
+      Serial.println("Adminpanel nicht erreichbar");
+    }
+
+    Serial.println("#######ENDE CONSOLE#######");
 }
 
 void sendESP32ToAdminPanel(String message) {
-  if (!isSlaveAlive(adminpanel)) {
-    return;
-  }
+    if (!isSlaveAlive(adminpanel)) {
+        return;
+    }
 
-  Wire.beginTransmission(adminpanel);
-  Wire.write(message.c_str());
-  Wire.endTransmission();
+    Wire.beginTransmission(adminpanel);
+    Wire.write(message.c_str()); // Ganze Nachricht auf einmal
+    Wire.endTransmission();
 }
-
 
 
 bool isSlaveAlive(uint8_t address) {
@@ -108,16 +116,16 @@ bool isSlaveAlive(uint8_t address) {
 
 
 // Diese Funktion verarbeitet jedes empfangene Key-Value Paar für das gegebene Modul
-void handleModule(int module, String key, String value) {
+void handleModule(int module, String key, String value, String statusMessage) {
   switch (module) {
     case slave2:  // Slave 2
-      processSlaveData(key, value, module);
+      processSlaveData(key, value, module, statusMessage);
       break;
     case slave3:  // Slave 3
-      processSlaveData(key, value, module);
+      processSlaveData(key, value, module, statusMessage);
       break;
     case slave4:  // Slave 4
-      processSlaveData(key, value, module);
+      processSlaveData(key, value, module, statusMessage);
       break;
     default:
       break;
@@ -125,7 +133,7 @@ void handleModule(int module, String key, String value) {
 }
 
 // Diese Funktion verarbeitet die spezifischen Daten für jedes Modul
-void processSlaveData(String key, String value, int module) {
+void processSlaveData(String key, String value, int module, String statusMessage) {
   int dataValue = value.toInt();  // Wert in eine Ganzzahl umwandeln
   
   // Beispielhafte Verarbeitungslogik je nach Schlüssel
@@ -153,7 +161,7 @@ void processSlaveData(String key, String value, int module) {
   }
   else if (key == "err") {
 
-    //HIER ERROR AN ESP
+    statusMessage += "err:" + value + "|";
     Serial.print("Module ");
     Serial.print(module);
     Serial.print(" error: ");
@@ -166,10 +174,6 @@ void processSlaveData(String key, String value, int module) {
     Serial.println(value);
   }
   else if (key == "ballingame") {
-    Serial.print("Module ");
-    Serial.print(module);
-    Serial.print(" ballInGame: ");
-    Serial.println(value);
     ballInGame = (dataValue == 1);
   }
 

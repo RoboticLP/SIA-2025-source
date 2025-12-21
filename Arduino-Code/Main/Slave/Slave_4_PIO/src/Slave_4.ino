@@ -31,10 +31,9 @@ void handleReset(){
 
 void ballInGame(){
   ballingame = 1;
-  Serial.println("Ball im Spiel "+ballingame);
 }
 
 void requestEvent() {
-  sprintf(message, "ballingame:%d|", ballingame);
+  sprintf(message, "ballingame:%d|err:33", ballingame);
   Wire.write(message);  // sende Nachricht an Master
 }
