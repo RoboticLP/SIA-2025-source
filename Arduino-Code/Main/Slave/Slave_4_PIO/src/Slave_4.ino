@@ -1,22 +1,26 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-void setup() {  
-  Wire.begin(4);                // join i2c bus with address #4
 
-  Wire.onRequest(requestEvent); // register event
+int hits_goals = 0;
+
+char message[50];
+
+void setup() {
+  Serial.begin(9600);
+
+  Wire.begin(4);  // Arduino als I2C-Slave mit Adresse 2
+
+  Wire.onRequest(requestEvent);  // registriere den Event für Datenanforderungen
 }
 
 void loop() {
-  delay(100);
+  
 }
 
-// function that executes whenever data is requested by master
-
-// this function is registered as an event, see setup()
 
 void requestEvent() {
-
-  Wire.write("text:Hallo"); // respond with message of 6 bytes
-  // as expected by master
+  sprintf(message, "ht1:%d", hits_goals);
+  hits_goals = 0;
+  Wire.write(message);
 }
