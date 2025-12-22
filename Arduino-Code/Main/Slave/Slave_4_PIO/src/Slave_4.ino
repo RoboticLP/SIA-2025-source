@@ -1,47 +1,83 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-int hitpoints = 0;
+// ───────────────────── Globale Variablen ─────────────────────
+volatile bool ballingame = false;
+volatile bool ballReported = false; // wurde schon gemeldet?
+volatile int hitpoints = 0;
 
-int ballingame = 0; // Status, ob Ball im Spiel ist
-
-int taster = 2; // Pin für die Taster
-int gameSensor = 3; // Pin für den Sensor
+const int taster = 2;          // Taster (LOW-aktiv)
+const int gameSensor = 3;      // Ballsensor (Interrupt)
 
 char message[50];
 
+// ───────────────────── Setup ─────────────────────
 void setup() {
-  Serial.begin(9600);
+    Serial.begin(9600);
 
-  Wire.begin(4);  // Arduino als I2C-Slave mit Adresse 4
+    Wire.begin(4);                 // I2C Slave Adresse 4
+    Wire.onRequest(requestEvent);  // Anfrage vom Master
 
-  Wire.onRequest(requestEvent);  // registriere den Event für Datenanforderungen
-  pinMode(gameSensor, INPUT_PULLUP);
-  pinMode(taster, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(gameSensor), ballInGame, FALLING);
-  handleReset();
+    pinMode(gameSensor, INPUT_PULLUP);
+    pinMode(taster, INPUT_PULLUP);
+
+    attachInterrupt(digitalPinToInterrupt(gameSensor), ballInGameISR, FALLING);
+
+    handleReset();
 }
 
+// ───────────────────── Loop ─────────────────────
 void loop() {
-  if(digitalRead(taster) == LOW){ //schauen ob low active
-    while (digitalRead(taster) == LOW){
-      continue;
+  checkTaster();
+}
+
+// ───────────────────── Taster funktion ─────────────────────
+void checkTaster(){
+    // Taster gedrückt?
+    if (digitalRead(taster) == LOW) {
+        delay(20); // Entprellen
+
+        if (digitalRead(taster) == LOW) {
+            hitpoints++;
+
+            // Warten bis losgelassen
+            while (digitalRead(taster) == LOW);
+        }
     }
-    hitpoints++;
-  }
 }
 
-void handleReset(){
-  ballingame = 0;
-  hitpoints = 0;
+// ───────────────────── Hilfsfunktionen ─────────────────────
+void handleReset() {
+    ballingame = false;
+    ballReported = false;
+    hitpoints = 0;
+    //Hier message das reset fertig bei dem module evt zu adminpanel?
 }
 
-void ballInGame(){
-  ballingame = 1;
+// ISR → so kurz wie möglich!
+void ballInGameISR() {
+    if (!ballingame) {
+        ballingame = true;
+        ballReported = false; // neu → darf gesendet werden
+    }
 }
 
+// ───────────────────── I2C Callback ─────────────────────
 void requestEvent() {
-  sprintf(message, "ballingame:%d|ht1:%d", ballingame, hitpoints);
-  hitpoints = 0; // nach dem Senden der Hitpoints zurücksetzen
-  Wire.write(message);  // sende Nachricht an Master
+    int len = 0;
+
+    // Ball-Event NUR EINMAL senden
+    if (ballingame && !ballReported) {
+        len += snprintf(message + len, sizeof(message) - len,
+                        "ballingame:1|");
+        ballReported = true;
+    }
+
+    // Hitpoints immer senden
+    len += snprintf(message + len, sizeof(message) - len,
+                    "ht1:%d|", hitpoints);
+
+    hitpoints = 0;
+
+    Wire.write(message);
 }
