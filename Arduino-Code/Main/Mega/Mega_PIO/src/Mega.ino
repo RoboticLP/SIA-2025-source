@@ -1,6 +1,25 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <LiquidCrystal.h>
 #include "utils.h"
+
+// ───────────────────── LCD Pins ─────────────────────
+// LCD Pin-Konfiguration: RS, E, D4, D5, D6, D7
+LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
+
+/*
+RS → Pin 7
+E → Pin 8
+D4 → Pin 9
+D5 → Pin 10
+D6 → Pin 11
+D7 → Pin 12
+VSS → GND
+VDD → 5V
+V0 → Potentiometer (Kontrast)
+RW → GND
+A → 5V (Hintergrundbeleuchtung)
+K → GND (Hintergrundbeleuchtung)*/
 
 // ───────────────────── Game States ─────────────────────
 enum GameState {
@@ -36,6 +55,16 @@ GameState lastGameState = WAIT_FOR_BALL;
 void setup() {
     Wire.begin();
     Serial.begin(9600);
+
+    // LCD initialisieren (16x2 Display)
+    lcd.begin(16, 2);
+    lcd.clear();
+    lcd.print("Flipper System");
+    lcd.setCursor(0, 1);
+    lcd.print("Booting...");
+    delay(2000);
+    lcd.clear();
+
     setDebugMode(false); //Falls man Debug Modus will mache in admin panel
 }
 
@@ -213,7 +242,17 @@ void resetGame() {
 
 // ───────────────────── LCD Display ─────────────────────
 void displayLCDDisplay(String line1, String line2) {
-    // Hier später LCD-Code
+    lcd.clear();
+    
+    // Erste Zeile
+    lcd.setCursor(0, 0);
+    lcd.print(line1.substring(0, 16)); // Maximal 16 Zeichen
+    
+    // Zweite Zeile
+    lcd.setCursor(0, 1);
+    lcd.print(line2.substring(0, 16)); // Maximal 16 Zeichen
+    
+    Serial.println("LCD: " + line1 + " | " + line2);
 }
 
 void handleLCDDisplay() {
