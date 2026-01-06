@@ -2,7 +2,7 @@
 #include <Wire.h>
 
 // ───────────────────── Globale Variablen ─────────────────────
-volatile bool ballingame = false;
+volatile int ballingame = 0;
 volatile bool ballReported = false; // wurde schon gemeldet?
 volatile int hitpoints = 0;
 
@@ -56,9 +56,9 @@ void handleReset() {
 
 // ISR → so kurz wie möglich!
 void ballInGameISR() {
-    if (!ballingame) {
-        ballingame = true;
-        ballReported = false; // neu → darf gesendet werden
+    if (!ballReported) {
+        ballingame = 1;
+        ballReported = true;
     }
 }
 
@@ -67,17 +67,15 @@ void requestEvent() {
     int len = 0;
 
     // Ball-Event NUR EINMAL senden
-    if (ballingame && !ballReported) {
-        len += snprintf(message + len, sizeof(message) - len,
-                        "ballingame:1|");
-        ballReported = true;
-    }
+    len += snprintf(message + len, sizeof(message) - len,
+                        "ballingame:%d|", ballingame);
 
-    // Hitpoints immer senden
+    // Hitpoints immer sendenS
     len += snprintf(message + len, sizeof(message) - len,
                     "ht1:%d|", hitpoints);
 
     hitpoints = 0;
+    ballingame = 0;
 
     Wire.write(message);
 }

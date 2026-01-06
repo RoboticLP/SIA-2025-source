@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include <LiquidCrystal.h>
 #include "utils.h"
+#include "GameStates.h"
 
 // ───────────────────── LCD Pins ─────────────────────
 // LCD Pin-Konfiguration: RS, E, D4, D5, D6, D7
@@ -20,15 +21,6 @@ V0 → Potentiometer (Kontrast)
 RW → GND
 A → 5V (Hintergrundbeleuchtung)
 K → GND (Hintergrundbeleuchtung)*/
-
-// ───────────────────── Game States ─────────────────────
-enum GameState {
-    WAIT_FOR_BALL,   // Kugel noch nicht im Spiel
-    IN_GAME,         // Spiel läuft
-    GAME_OVER,       // Kugel verloren
-    RESET,            // Reset des Spiels
-    DEBUG             // Nur für Debug-Zwecke
-};
 
 // ───────────────────── Adressen ─────────────────────
 #define slave2      2
@@ -155,9 +147,7 @@ void sendESP32ToAdminPanel(String message) {
 // ───────────────────── Modullogik ─────────────────────
 void handleModule(int module, String key, String value, String &statusMessage) {
     switch (module) {
-        case slave2:
-        case slave3:
-        case slave4:
+        case slave2: case slave3: case slave4:
             processSlaveData(key, value, module, statusMessage);
             break;
         default:
@@ -214,7 +204,7 @@ void checkGameState() {
     }
 
     if (gameState == GAME_OVER) {
-        delay(5000);
+        delay(10000);
         resetGame();
     }
 }
