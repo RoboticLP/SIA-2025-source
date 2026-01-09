@@ -116,20 +116,14 @@ void wireRecieveEvent(int howMany) {
     if (data[j].indexOf(':') != -1) {
       int count;
       String* dataset = splitString(data[j], ':', count);
-
-      Serial.println(j + dataset[0] + dataset[1]);
       
       if (dataset[0] == "M2") {
-        Serial.println("M2 success");
         M2S = dataset[1];
       } else if (dataset[0] == "M3") {
-        Serial.println("M3 success");
         M3S = dataset[1];
       } else if (dataset[0] == "M4") {
-        Serial.println("M4 success");
         M4S = dataset[1];
       } else if (dataset[0] == "M5") {
-        Serial.println("M5 success");
         M5S = dataset[1];
       }
 
@@ -207,6 +201,9 @@ void broadcastSSE_update() {
   String xmlData = "<?xml version='1.0'?><Data>";
   // xmlData += "<B0>" + String(LED0 ? "1" : "0") + "</B0>";
   // xmlData += "<SL_V>" + String(LED1_br) + "</SL_V>";
+
+  Serial.println("Sent connected modules status: " + M2S + " " + M3S + " " + M4S + " " + M5S);
+
   xmlData += "<M2S>" + M2S + "</M2S>";
   xmlData += "<M3S>" + M3S + "</M3S>";
   xmlData += "<M4S>" + M4S + "</M4S>";

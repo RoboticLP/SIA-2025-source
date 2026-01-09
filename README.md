@@ -5,7 +5,7 @@ Alle Source-Codes der diesjährigen SIA.
 > **Seiten**
 - [ESP32 Webserver](docs/ESP32-Webserver.md)
 - [Pin-Belegung](docs/pins.md)
-- [Error Codes](docs/error-codes.md)
+- [Message IDs](docs/error-codes.md)
 
 > **Auf dieser Seite**
 - [I2C Arduino Docs](https://docs.arduino.cc/learn/communication/wire/#arduino-i2c-pins)
@@ -46,9 +46,36 @@ ht1:%d|ht2:%d|err:%s
 ---
 
 ## Datenformat des Admin-Panel Datenstrings (vom ESP32)
-#### Idee
-- seltener Abfragen **ob** er ein Update parat hat, und erst dann das Update abfragen.
-- Error Meldungen nur alle Paar Sekunden schicken (und codiert? also *Zahl* bedeutet bestimmter Error, der erstm in der UI formuliert wird)
+Hilfreiche Resourcen:
+- [Bedeutungen der Message-IDs](docs/error-codes.md)
+
+##### Mega > ESP
+
+<span style="color:orange">*prototyping*:</span>
+```c
+gs:%d| irgendwas kommt hier noch
+```
+
+| Key-Name | Wertetyp | Bedeutung |
+|----------|----------|-----------|
+| ```gs``` | int?? | Gamestate (aktueller Zustand des Flippers) |
+| `````` | int | Id eines Logs/Errors für das Frontend |
+
+---
+
+##### ESP > Mega
+
+<span style="color:orange">*prototyping*:</span>
+```c
+mtpl:%f|pbu:%d|psl:%d
+```
+
+| Key-Name | Wertetyp | Bedeutung |
+|----------|----------|-----------|
+| ```mtpl``` | float  | Der aktuelle Punkte-Multiplier |
+| ```pbu``` | int | Trefferpunktzahl für die Bumper-tower |
+| ```psl``` | int | Trefferpunktzahl für die Slingshots |
+| `````` |  |  |
 
 ---
 

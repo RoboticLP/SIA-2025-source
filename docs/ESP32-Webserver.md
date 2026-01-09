@@ -7,7 +7,7 @@ Zur Programmierung des ESP32 der Hochschule müsst ihr einen [Treiber](https://w
 > **Seiten**
 - [Hauptseite](../README.md)
 - [Pin-Belegung](pins.md)
-- [Error Codes](error-codes.md)
+- [Message IDs](error-codes.md)
 
 > **Auf dieser Seite**
 - [Methoden](#dokumentation-der-methoden)
