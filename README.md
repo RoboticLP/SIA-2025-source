@@ -58,6 +58,7 @@ gs:%d| irgendwas kommt hier noch
 
 | Key-Name | Wertetyp | Bedeutung |
 |----------|----------|-----------|
+| ```\|``` | /        | Trennzeichen zwischen den Daten |
 | ```gs``` | int?? | Gamestate (aktueller Zustand des Flippers) |
 | `````` | int | Id eines Logs/Errors für das Frontend |
 
@@ -72,6 +73,7 @@ mtpl:%f|pbu:%d|psl:%d
 
 | Key-Name | Wertetyp | Bedeutung |
 |----------|----------|-----------|
+| ```\|``` | /        | Trennzeichen zwischen den Daten |
 | ```mtpl``` | float  | Der aktuelle Punkte-Multiplier |
 | ```pbu``` | int | Trefferpunktzahl für die Bumper-tower |
 | ```psl``` | int | Trefferpunktzahl für die Slingshots |
