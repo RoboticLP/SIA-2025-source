@@ -11,6 +11,7 @@
 int numberOfBumpers = 3;
 int light[3] = {BumperLight_1,BumperLight_2,BumperLight_3};
 long lightDuration = 1000;
+boolean lightActive[3] = {false,false,false};
 
 boolean didBumperThreeTriggerAlready = false; //Da es nur 2 Interrupt-Pins gibt, muss Bumper 3 mit einem normalen Pin und dieser Variable gesteuert werden
 
@@ -68,12 +69,18 @@ void setup() {
 // ───────────────────── Loop ─────────────────────
 void loop() {
     //Bumper 3 Abfragen, da es keinen dritten Interrupt-Pin gibt
-    if(didBumperThreeTriggerAlready) return;
-    if(digitalRead(normal_pin_3)){
+    if(didBumperThreeTriggerAlready){
+        if(digitalRead(normal_pin_3)){
         didBumperThreeTriggerAlready = true;
         triggerBumperThree;
+        }
+        else didBumperThreeTriggerAlready = false;
     }
-    else didBumperThreeTriggerAlready = false;
+    for(int i = 0; i<3; i++){
+        if(lightActive[i]){
+            d
+        }
+    }
 }
 
 // ───────────────────── Hilfsfunktionen ─────────────────────
