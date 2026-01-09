@@ -1,5 +1,16 @@
 # LCD Display Pin-Belegung
 
+## Navigation
+> **Seiten**
+- [Hauptseite](../README.md)
+- [Pin-Belegung](pins.md)
+- [Message IDs](error-codes.md)
+
+> **Auf dieser Seite**
+- [Methoden](#dokumentation-der-methoden)
+- [Code Snippets](#code-snippets)
+---
+
 ## Übersicht
 ```
 Pin-Nummern auf dem Display:
