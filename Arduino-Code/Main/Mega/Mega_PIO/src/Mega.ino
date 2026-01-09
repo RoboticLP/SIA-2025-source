@@ -8,20 +8,6 @@
 // LCD Pin-Konfiguration: RS, E, D4, D5, D6, D7
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 
-/*
-RS → Pin 7
-E → Pin 8
-D4 → Pin 9
-D5 → Pin 10
-D6 → Pin 11
-D7 → Pin 12
-VSS → GND
-VDD → 5V
-V0 → Potentiometer (Kontrast)
-RW → GND
-A → 5V (Hintergrundbeleuchtung)
-K → GND (Hintergrundbeleuchtung)*/
-
 // ───────────────────── Adressen ─────────────────────
 #define slave2      2
 #define slave3      3
@@ -31,6 +17,8 @@ K → GND (Hintergrundbeleuchtung)*/
 
 // ───────────────────── Globale Variablen ─────────────────────
 bool ballInGame = false;
+
+int backlightLED = 6; // Pin für die Hintergrundbeleuchtung des LCDs
 
 int moduleCount = 3;
 int moduleSlaves[3] = { slave2, slave3, slave4 };
@@ -45,6 +33,8 @@ GameState lastGameState = WAIT_FOR_BALL;
 
 // ───────────────────── Setup / Loop ─────────────────────
 void setup() {
+    pinMode(backlightLED, OUTPUT);
+    analogWrite(backlightLED, 100); // 0–255
     Wire.begin();
     Serial.begin(9600);
 
