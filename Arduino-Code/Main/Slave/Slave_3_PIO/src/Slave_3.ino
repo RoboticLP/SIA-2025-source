@@ -1,18 +1,22 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <Arduino.h>
-#define Spule_1 6
-#define Spule_2 7
-#define Spule_3 8
+#define BumperLight_1 6
+#define BumperLight_2 7
+#define BumperLight_3 8
 #define interrupt_1 2
 #define interrupt_2 3
+#define normal_pin_3 4
 
 int numberOfBumpers = 3;
-int bumper[3] = {Spule_1,Spule_2,Spule_3};
+int light[3] = {BumperLight_1,BumperLight_2,BumperLight_3};
+long lightDuration = 1000;
+
+boolean didBumperThreeTriggerAlready = false; //Da es nur 2 Interrupt-Pins gibt, muss Bumper 3 mit einem normalen Pin und dieser Variable gesteuert werden
 
 int bumperHits = 0;
 
-String error_module3 = "";
+String error_module3 = ""; // String that is send to the master with I2C  in case an error occurs
 
 char requestEventAnswer[50]; //text thats 50 bytes long to send the master module
 
@@ -21,6 +25,22 @@ volatile int hitpoints = 0;
 
 char message[50];
 char command[20];   // für empfangene Kommandos
+
+// ───────────────────── Bumper Methods ─────────────────────
+//each bumper needs an extra method, because attachInterrupt doesn't allow methods with parameters
+void triggerBumperOne(){ 
+    hitpoints++;
+}
+
+void triggerBumperTwo(){
+    hitpoints++;
+    
+}
+
+void triggerBumperThree(){
+    hitpoints++;
+}
+
 
 // ───────────────────── Setup ─────────────────────
 void setup() {
@@ -31,19 +51,30 @@ void setup() {
     Wire.onReceive(receiveEvent);   // Master sendet Daten
 
     handleReset();
+    //–––Interrupt 1––– (Bumper 1)
+    pinMode(interrupt_1, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(interrupt_1), triggerBumperOne, RISING);
+    //–––Interrupt 2––– (Bumper 2)
+    pinMode(interrupt_1, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(interrupt_2), triggerBumperTwo, RISING);
+    //–––Pin 4–– (Bumper 3)
+    pinMode(normal_pin_3, INPUT_PULLUP);
+    
+    //––– Bumper Lights –––
+    for(int i = 0;i < 3; i++) pinMode(light[i],OUTPUT);
+    
 }
 
 // ───────────────────── Loop ─────────────────────
 void loop() {
-  //Bumper 1
-  
+    //Bumper 3 Abfragen, da es keinen dritten Interrupt-Pin gibt
+    if(didBumperThreeTriggerAlready) return;
+    if(digitalRead(normal_pin_3)){
+        didBumperThreeTriggerAlready = true;
+        triggerBumperThree;
+    }
+    else didBumperThreeTriggerAlready = false;
 }
-
-//method to trigger a bumper, executed by the interrupt pins in  void loop
-void triggerBumper(int number){
-  hitpoints++;
-}
-
 
 // ───────────────────── Hilfsfunktionen ─────────────────────
 void handleReset() {
