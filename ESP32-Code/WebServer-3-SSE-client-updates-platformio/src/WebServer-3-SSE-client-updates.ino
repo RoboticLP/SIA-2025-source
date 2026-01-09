@@ -1,6 +1,7 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <Wire.h>
+#include "utils.h"
 #include "index.h"
 
 // credentials for wifi
@@ -38,6 +39,12 @@ IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress Actual_IP;
 
+// Module statusessss
+String M2S = "0";
+String M3S = "0";
+String M4S = "0";
+String M5S = "0";
+
 // SSE Clients
 int maxSSEClients = 4;
 WiFiClient sseClients[4];
@@ -49,6 +56,7 @@ void setup() {
   // I2C
   Wire.begin(6);
   Wire.onRequest(wireRequestEvent);
+  Wire.onReceive(wireRecieveEvent);
 
   // Setting pin modes
   pinMode(led0, OUTPUT);
@@ -94,6 +102,43 @@ void loop() {
 void wireRequestEvent() {
   Wire.write("Moin moin, hier der ESP");
   Serial.println("I2C request recieved");
+}
+
+void wireRecieveEvent(int howMany) {
+  String answer;
+  while(Wire.available()) {
+    answer += (char)Wire.read(); // receive byte as a character
+  }
+  
+  int dataCount;
+  String* data = splitString(answer, '|', dataCount);
+  for (int j = 0; j < dataCount; j++) {
+    if (data[j].indexOf(':') != -1) {
+      int count;
+      String* dataset = splitString(data[j], ':', count);
+
+      Serial.println(j + dataset[0] + dataset[1]);
+      
+      if (dataset[0] == "M2") {
+        Serial.println("M2 success");
+        M2S = dataset[1];
+      } else if (dataset[0] == "M3") {
+        Serial.println("M3 success");
+        M3S = dataset[1];
+      } else if (dataset[0] == "M4") {
+        Serial.println("M4 success");
+        M4S = dataset[1];
+      } else if (dataset[0] == "M5") {
+        Serial.println("M5 success");
+        M5S = dataset[1];
+      }
+
+      delete[] dataset;
+    }
+  }
+  delete[] data;
+
+  broadcastSSE_update();
 }
 
 // Webpage Handlers
@@ -160,8 +205,12 @@ void handleSSEConnect() {
 
 void broadcastSSE_update() {
   String xmlData = "<?xml version='1.0'?><Data>";
-  xmlData += "<B0>" + String(LED0 ? "1" : "0") + "</B0>";
-  xmlData += "<SL_V>" + String(LED1_br) + "</SL_V>";
+  // xmlData += "<B0>" + String(LED0 ? "1" : "0") + "</B0>";
+  // xmlData += "<SL_V>" + String(LED1_br) + "</SL_V>";
+  xmlData += "<M2S>" + M2S + "</M2S>";
+  xmlData += "<M3S>" + M3S + "</M3S>";
+  xmlData += "<M4S>" + M4S + "</M4S>";
+  xmlData += "<M5S>" + M5S + "</M5S>";
   xmlData += "</Data>";
 
   for (int i = 0; i < maxSSEClients; i++) {

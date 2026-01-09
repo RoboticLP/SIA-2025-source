@@ -1,21 +1,81 @@
+#include <Arduino.h>
 #include <Wire.h>
 
-void setup() {  
-  Wire.begin(4);                // join i2c bus with address #8
+// ───────────────────── Globale Variablen ─────────────────────
+volatile int ballingame = 0;
+volatile bool ballReported = false; // wurde schon gemeldet?
+volatile int hitpoints = 0;
 
-  Wire.onRequest(requestEvent); // register event
+const int taster = 2;          // Taster (LOW-aktiv)
+const int gameSensor = 3;      // Ballsensor (Interrupt)
+
+char message[50];
+
+// ───────────────────── Setup ─────────────────────
+void setup() {
+    Serial.begin(9600);
+
+    Wire.begin(4);                 // I2C Slave Adresse 4
+    Wire.onRequest(requestEvent);  // Anfrage vom Master
+
+    pinMode(gameSensor, INPUT_PULLUP);
+    pinMode(taster, INPUT_PULLUP);
+
+    attachInterrupt(digitalPinToInterrupt(gameSensor), ballInGameISR, FALLING);
+
+    handleReset();
 }
 
+// ───────────────────── Loop ─────────────────────
 void loop() {
-  delay(100);
+  checkTaster();
 }
 
-// function that executes whenever data is requested by master
+// ───────────────────── Taster funktion ─────────────────────
+void checkTaster(){
+    // Taster gedrückt?
+    if (digitalRead(taster) == LOW) {
+        delay(20); // Entprellen
 
-// this function is registered as an event, see setup()
+        if (digitalRead(taster) == LOW) {
+            hitpoints++;
 
+            // Warten bis losgelassen
+            while (digitalRead(taster) == LOW);
+        }
+    }
+}
+
+// ───────────────────── Hilfsfunktionen ─────────────────────
+void handleReset() {
+    ballingame = false;
+    ballReported = false;
+    hitpoints = 0;
+    //Hier message das reset fertig bei dem module evt zu adminpanel?
+}
+
+// ISR → so kurz wie möglich!
+void ballInGameISR() {
+    if (!ballReported) {
+        ballingame = 1;
+        ballReported = true;
+    }
+}
+
+// ───────────────────── I2C Callback ─────────────────────
 void requestEvent() {
+    int len = 0;
 
-  Wire.write("Hello from slave 4"); // respond with message of 6 bytes
-  // as expected by master
+    // Ball-Event NUR EINMAL senden
+    len += snprintf(message + len, sizeof(message) - len,
+                        "ballingame:%d|", ballingame);
+
+    // Hitpoints immer sendenS
+    len += snprintf(message + len, sizeof(message) - len,
+                    "ht1:%d|", hitpoints);
+
+    hitpoints = 0;
+    ballingame = 0;
+
+    Wire.write(message);
 }

@@ -5,6 +5,7 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 > **Seiten**
 - [Hauptseite](../README.md)
 - [ESP32 Webserver](ESP32-Webserver.md)
+- [Error Codes](error-codes.md)
 
 > **Auf dieser Seite**
 - [Mega](#mega)
@@ -48,8 +49,8 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| 2 | Sensor für Abschussvorrichtung | Nein | Ja | Lichtschranke ? | Digital |
-| 5 | Spule für Abschussvorrichtung | Ja | Nein | Spule | Digital |
+| 4 | Sensor für Ball Eject | Nein | Nein | Lichtschranke ? | Digital | Input |
+| 5 | Spule für Ball Eject | Nein | Nein | Spule | Digital | Output |
 
 ## Nano 3
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
@@ -66,8 +67,9 @@ NICHT SICHER
 NICHT SICHER
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| 2 | Kontakt Punkte Zähler (4 Stück) | Nein | Ja | Taster | Digital | Input |
+| ? | Drop Target Taster | Nein | Ja | Taster | Digital | Input |
 | 3 | Sensor für Kugel im Spiel | Nein | Ja | Lichtschranke ? | Digital | Input |
+| ? | Drop Target Spule(n) | ? | Nein | Spule | Digital | Output |
 
 ## Nano 5
 ### Nano 5 ist für weitere Aktionen in der Zukunft geplant und wird im Falle vom Gebraucht genutzt.
