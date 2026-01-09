@@ -148,3 +148,14 @@ String* splitString(String input, char splitter, int &count) {
 ```
 
 </details>
+
+---
+## Interrupt-Benutzung
+- Beim Nano sind Pin 2 und 3 Interrupts --> D2 und D3 auf dem Board
+>**Anwendung im Setup**
+```cpp
+pinMode(interrupt_1, INPUT_PULLUP); // oder INPUT
+attachInterrupt(digitalPinToInterrupt(interrupt_1), ISR, RISING);
+//dabei ist ISR eine Methode, z.B. triggerBumperOne, diese wird bei dem Event (Hier RISING) aufgerufen
+//die Methode darf KEINE Parameter haben, und wird ohne Klammern in attachInterrupt() geschrieben
+```

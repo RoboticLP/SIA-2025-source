@@ -1,5 +1,20 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <Arduino.h>
+#define Spule_1 6
+#define Spule_2 7
+#define Spule_3 8
+#define interrupt_1 2
+#define interrupt_2 3
+
+int numberOfBumpers = 3;
+int bumper[3] = {Spule_1,Spule_2,Spule_3};
+
+int bumperHits = 0;
+
+String error_module3 = "";
+
+char requestEventAnswer[50]; //text thats 50 bytes long to send the master module
 
 // ───────────────────── Globale Variablen ─────────────────────
 volatile int hitpoints = 0;
@@ -20,7 +35,13 @@ void setup() {
 
 // ───────────────────── Loop ─────────────────────
 void loop() {
+  //Bumper 1
+  
+}
 
+//method to trigger a bumper, executed by the interrupt pins in  void loop
+void triggerBumper(int number){
+  hitpoints++;
 }
 
 
