@@ -1,5 +1,9 @@
-# Error Codes
-Hier werden alle Errorcodes und deren zugehörige Bedeutungen definiert.
+# Message IDs
+Hier werden alle Message-IDs und deren zugehörige Bedeutungen definiert.
+> **Plan**
+> Error-Codes: **0-29**
+> Log-IDs: **30-59**
+> GameState-IDs: **60-89**
 
 ## Navigation
 > **Seiten**
@@ -9,8 +13,24 @@ Hier werden alle Errorcodes und deren zugehörige Bedeutungen definiert.
 
 ---
 
-## Bedeutungen
+## Error-Code Bedeutungen
 
 | Error Code | Bedeutung |
+|------------|-----------|
+| x | y |
+
+---
+
+## Log-ID Bedeutungen
+
+| Log-ID | Bedeutung |
+|------------|-----------|
+| x | y |
+
+---
+
+## GameState-ID
+
+| GameState-ID | Bedeutung |
 |------------|-----------|
 | x | y |

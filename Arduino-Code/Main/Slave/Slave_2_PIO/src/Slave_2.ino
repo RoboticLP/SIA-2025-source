@@ -37,7 +37,7 @@ void handleBallEject(){
 }
 
 void requestEvent() {
-  sprintf(message, "ht1:%d", hits_goals);
+  sprintf(message, "ht1:%d|", hits_goals);
   hits_goals = 0;
   Wire.write(message);
 }

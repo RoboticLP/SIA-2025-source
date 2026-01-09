@@ -5,7 +5,7 @@ Alle Source-Codes der diesjährigen SIA.
 > **Seiten**
 - [ESP32 Webserver](docs/ESP32-Webserver.md)
 - [Pin-Belegung](docs/pins.md)
-- [Error Codes](docs/error-codes.md)
+- [Message IDs](docs/error-codes.md)
 
 > **Auf dieser Seite**
 - [I2C Arduino Docs](https://docs.arduino.cc/learn/communication/wire/#arduino-i2c-pins)
@@ -46,9 +46,38 @@ ht1:%d|ht2:%d|err:%s
 ---
 
 ## Datenformat des Admin-Panel Datenstrings (vom ESP32)
-#### Idee
-- seltener Abfragen **ob** er ein Update parat hat, und erst dann das Update abfragen.
-- Error Meldungen nur alle Paar Sekunden schicken (und codiert? also *Zahl* bedeutet bestimmter Error, der erstm in der UI formuliert wird)
+Hilfreiche Resourcen:
+- [Bedeutungen der Message-IDs](docs/error-codes.md)
+
+##### Mega > ESP
+
+<span style="color:orange">*prototyping*:</span>
+```c
+gs:%d| irgendwas kommt hier noch
+```
+
+| Key-Name | Wertetyp | Bedeutung |
+|----------|----------|-----------|
+| ```\|``` | /        | Trennzeichen zwischen den Daten |
+| ```gs``` | int?? | Gamestate (aktueller Zustand des Flippers) |
+| `````` | int | Id eines Logs/Errors für das Frontend |
+
+---
+
+##### ESP > Mega
+
+<span style="color:orange">*prototyping*:</span>
+```c
+mtpl:%f|pbu:%d|psl:%d
+```
+
+| Key-Name | Wertetyp | Bedeutung |
+|----------|----------|-----------|
+| ```\|``` | /        | Trennzeichen zwischen den Daten |
+| ```mtpl``` | float  | Der aktuelle Punkte-Multiplier |
+| ```pbu``` | int | Trefferpunktzahl für die Bumper-tower |
+| ```psl``` | int | Trefferpunktzahl für die Slingshots |
+| `````` |  |  |
 
 ---
 
@@ -121,3 +150,14 @@ String* splitString(String input, char splitter, int &count) {
 ```
 
 </details>
+
+---
+## Interrupt-Benutzung
+- Beim Nano sind Pin 2 und 3 Interrupts --> D2 und D3 auf dem Board
+>**Anwendung im Setup**
+```cpp
+pinMode(interrupt_1, INPUT_PULLUP); // oder INPUT
+attachInterrupt(digitalPinToInterrupt(interrupt_1), ISR, RISING);
+//dabei ist ISR eine Methode, z.B. triggerBumperOne, diese wird bei dem Event (Hier RISING) aufgerufen
+//die Methode darf KEINE Parameter haben, und wird ohne Klammern in attachInterrupt() geschrieben
+```
