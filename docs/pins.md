@@ -67,8 +67,6 @@ NICHT SICHER
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| ? | Sensor für Kugel nicht im Spiel | Nein | Ja | Lichtschranke | Digital | Input |
-| ? | Sensor für Kugel im Spiel | Nein | Ja | Lichtschranke | Digital | Input |
 | ? | Metallsensor1? | Nein | Nein | Sensor | Digital | Input |
 | ? | Metallsensor2? | Nein | Nein | Sensor | Digital | Input |
 | ? | Metallsensor3? | Nein | Nein | Sensor | Digital | Input |
