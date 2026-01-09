@@ -64,12 +64,17 @@ NICHT SICHER
 ## Nano 4
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
 
-NICHT SICHER
+
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| ? | Drop Target Taster | Nein | Ja | Taster | Digital | Input |
-| 3 | Sensor für Kugel im Spiel | Nein | Ja | Lichtschranke ? | Digital | Input |
-| ? | Drop Target Spule(n) | ? | Nein | Spule | Digital | Output |
+| ? | Sensor für Kugel nicht im Spiel | Nein | Ja | Lichtschranke | Digital | Input |
+| ? | Sensor für Kugel im Spiel | Nein | Ja | Lichtschranke | Digital | Input |
+| ? | Metallsensor1? | Nein | Nein | Sensor | Digital | Input |
+| ? | Metallsensor2? | Nein | Nein | Sensor | Digital | Input |
+| ? | Metallsensor3? | Nein | Nein | Sensor | Digital | Input |
+| ? | LED1 | Nein | Nein | Ausgabe | Digital | Output |
+| ? | LED2 | Nein | Nein | Ausgabe | Digital | Output |
+| ? | LED3 | Nein | Nein | Ausgabe | Digital | Output |
 
 ## Nano 5
 ### Nano 5 ist für weitere Aktionen in der Zukunft geplant und wird im Falle vom Gebraucht genutzt.
