@@ -34,23 +34,23 @@ void setup() {
 void loop() {
   if (HitGoal1Time + onHitEjectPowerTime < millis()) {
     digitalWrite(BallEject1, LOW);
-    HitGoal1Time = max();
+    HitGoal1Time = max(); // Somit wird der Befehl (digitalWrite(BallEject1, LOW) nicht dauerhaft ausgeführt
   }
   if(HitGoal2Time + onHitEjectPowerTime < millis()) {
     digitalWrite(BallEject2, LOW);
-    HitGoal2Time = max(); 
+    HitGoal2Time = max(); // Somit wird der Befehl (digitalWrite(BallEject2, LOW) nicht dauerhaft ausgeführt
   }
 }
 
 void HitGoal1() {
   Serial.println("Hit/Slingshot1");
   digital.Write(BallEject1, HIGH);
-  HitGoal1Time = millis();
+  HitGoal1Time = millis(); // überschreibt die unendliche Zahl
 }
 void HitGoal2() {
  Searial.println("Hit/Slingshot2");
  digital.Write(BallEject2, High);
- HitGoal2Time = millis();
+ HitGoal2Time = millis(); // überschreibt die unendliche Zahl
 }
 
 void requestEvent() {
