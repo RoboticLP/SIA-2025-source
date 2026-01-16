@@ -77,7 +77,7 @@ mtple:%d|mtpl:%s|pbu:%d|psl:%d
 | ```mtpl``` | String(float) (2 Kommastellen)  | Der aktuelle Punkte-Multiplier. *Wird intern für I²C in String umgewandelt* |
 | ```pbu``` | int | Trefferpunktzahl für die Bumper-tower |
 | ```psl``` | int | Trefferpunktzahl für die Slingshots |
-| `````` |  |  |
+| ```tar``` | int | Trefferpunktzahl für die Targets |
 
 ---
 
