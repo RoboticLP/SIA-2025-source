@@ -40,7 +40,7 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 |----------|----------|----------|----------|----------|----------|----------|
 | 2 | Slingshot Sensor | Nein | Ja | Taster | Digital | Input_Pullup |
 | 3 | Slingshot Sensor | Nein | Ja | Taster | Digital | Input_Pullup |
-| 4 | Ball Lost Laser Schranke | Nein | Nein | Lichtschranke | Digital | Input |
+| 4 | Ball Lost Laser Schranke | Nein | Nein | Lichtschranke | Digital | Input_Pullup |
 | 5 | Ball entlass in die Startvorrichtung | Nein | Nein | Servo | PWM |
 
 ## Nano 2
