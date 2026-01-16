@@ -393,6 +393,8 @@
         const multiplierAmount = document.getElementById('multiplier-amount').value; // Neuer Wert wird ausgelesen
         const points_bumper = document.getElementById('point-amount-bumper').value;
         const points_slingshot = document.getElementById('point-amount-slingshot').value;
+        const light_enableRainbow = document.getElementById('rainbow-toggle').classList.contains('active');
+        const light_enableStrobe = document.getElementById('strobe-toggle').classList.contains('active');
           
         var xhttp = new XMLHttpRequest();
         // Multiplier Amount wird jetzt auch an den Server gesendet
@@ -400,6 +402,8 @@
           "&multiplierAmount=" + multiplierAmount +
           "&points_bumper=" + points_bumper + 
           "&points_slingshot=" + points_slingshot,
+          "&light_enableRainbow=" + light_enableRainbow,
+          "&light_enableStrobe=" + light_enableStrobe,
           true);
         xhttp.send();
 

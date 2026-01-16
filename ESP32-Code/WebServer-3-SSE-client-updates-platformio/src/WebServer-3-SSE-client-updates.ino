@@ -45,6 +45,13 @@ String M3S = "0";
 String M4S = "0";
 String M5S = "0";
 
+// FLipper settings get changed by code later; Meaning: error-codes.md
+bool settingsChanged = false;
+int mtple; // 1 or 0
+String mtpl; // float value with two comma digits
+int pbu;
+int psl;
+
 // SSE Clients
 int maxSSEClients = 4;
 WiFiClient sseClients[4];
@@ -68,14 +75,14 @@ void setup() {
       delay(500);
       Serial.print(".");
     }
-    Serial.print("Connected! IP address: "); Serial.println(WiFi.localIP());
+    Serial.print("[WiFi] Connected! IP address: "); Serial.println(WiFi.localIP());
     Actual_IP = WiFi.localIP();
   } else {
     // start access point and print out the IP address
     WiFi.softAPConfig(PageIP, gateway, subnet);
     WiFi.softAP(AP_SSID, AP_PASSWORD);
     Actual_IP = WiFi.softAPIP();
-    Serial.print("IP address: "); Serial.println(Actual_IP);
+    Serial.print("[WiFi] IP address: "); Serial.println(Actual_IP);
   }
 
   // once someone opens main address
@@ -86,7 +93,7 @@ void setup() {
 
   // add server listeners
   server.on("/BUTTON_0", handleButtonPress0);
-  server.on("/BRIGHTNESS_SLIDER", handleBrightnessSlider);
+  server.on("/SETTINGS", handleSettings);
 
   server.begin();
 }
@@ -100,8 +107,15 @@ void loop() {
 
 // I2C
 void wireRequestEvent() {
-  Wire.write("Moin moin, hier der ESP");
-  Serial.println("I2C request recieved");
+  if (settingsChanged == true) {
+    char settingsDataString[100];
+    sprintf(settingsDataString, "mtple:%d|mtpl:%s|pbu:%d|psl:%d", mtple, mtpl, pbu, psl);
+
+    Wire.write(settingsDataString);
+    settingsChanged = false;
+
+    Serial.print("[I²C] Sent settings update to master"); Serial.println(settingsDataString);
+  }
 }
 
 void wireRecieveEvent(int howMany) {
@@ -127,6 +141,8 @@ void wireRecieveEvent(int howMany) {
         M5S = dataset[1];
       }
 
+      Serial.print("[I²C] request recieved "); Serial.println(dataset[0]);
+      
       delete[] dataset;
     }
   }
@@ -144,12 +160,22 @@ void handleButtonPress0() {
   broadcastSSE_update();
 }
 
-void handleBrightnessSlider() {
-  String t_state = server.arg("value");
-  LED1_br = t_state.toInt();
-  analogWrite(led1, LED1_br);
+void handleSettings() {
+  mtple = server.arg("enable_point_multipliers") == "true" ? 1 : 0;
+
+  mtpl = server.arg("multiplierAmount"); // remove everything behind second comma digit
+  int dot = mtpl.indexOf('.');
+  if (dot != -1 && mtpl.length() > dot + 3) {
+    mtpl = mtpl.substring(0, dot + 3);
+  }
+
+  pbu = server.arg("points_bumper").toInt();
+  psl = server.arg("points_slingshot").toInt();
+  // String rainbow = server.arg("enable_point_multipliers");  todo: lighting settings
+
+  Serial.print("[HTTP XML] Settings applied pressed "); Serial.print(mtple); Serial.print(mtpl); Serial.print(pbu); Serial.print(psl);  Serial.print("\n");
+  settingsChanged = true;
   server.send(200, "text/plain", "");
-  broadcastSSE_update();
 }
 
 // send the html website to the client once they request it by opening xxx.xxx.xx.xx/
@@ -158,14 +184,14 @@ void sendWebsite() {
 }
 
 void handleSSEConnect() {
-  Serial.println("SSE connect request recieved");
+  Serial.println("[SSE] connect request recieved");
   WiFiClient client = server.client();
 
   int slot = -1;
   for (int i = 0; i < maxSSEClients; i++) {
     if (sseClientsConnected[i] == false) {
       slot = i;
-      Serial.print("it's slot #"); Serial.println(slot);
+      Serial.print("[SSE] it's slot #"); Serial.println(slot);
       break;
     }
   }
@@ -202,7 +228,7 @@ void broadcastSSE_update() {
   // xmlData += "<B0>" + String(LED0 ? "1" : "0") + "</B0>";
   // xmlData += "<SL_V>" + String(LED1_br) + "</SL_V>";
 
-  Serial.println("Sent connected modules status: " + M2S + " " + M3S + " " + M4S + " " + M5S);
+  Serial.println("[SSE] Sent connected modules status: " + M2S + " " + M3S + " " + M4S + " " + M5S);
 
   xmlData += "<M2S>" + M2S + "</M2S>";
   xmlData += "<M3S>" + M3S + "</M3S>";
