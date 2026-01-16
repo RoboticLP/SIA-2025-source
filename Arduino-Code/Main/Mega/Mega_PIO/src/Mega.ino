@@ -18,7 +18,7 @@ LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 auto timer = timer_create_default();
 
 // ───────────────────── Globale Variablen ─────────────────────
-int backlightLED = 6;
+int backlightPin = 6;
 
 int moduleCount = 3;
 int moduleSlaves[3] = { slave2, slave3, slave4 };
@@ -28,7 +28,6 @@ long points = 0;
 long multiplier = 1.5;
 int targets = 20; // Slave 4
 int pointsBumper = 50; // Slave 3
-int ballEject = 80;    // Slave 2
 int pointsSlingsshots = 50; // Mega
 
 int ballInGame = 0;
@@ -54,9 +53,18 @@ void sendStatusToAdminPanel();
 void reciveMessagesFromAdminPanel();
 
 // ───────────────────── Setup / Loop ─────────────────────
+void setBacklightPercent(int percent) {
+    percent = constrain(percent, 0, 100);
+
+    // Mindesthelligkeit, damit es sichtbar bleibt
+    int pwm = map(percent, 0, 100, 10, 255);
+
+    analogWrite(backlightPin, pwm);
+}
+
 void setup() {
-    pinMode(backlightLED, OUTPUT);
-    analogWrite(backlightLED, 100);
+    pinMode(backlightPin, OUTPUT);
+   setBacklightPercent(1);
 
     Wire.begin();
     Serial.begin(9600);
@@ -82,6 +90,7 @@ void loop() {
     printConnectionFromSlaves();
     sendStatusToAdminPanel();
     reciveMessagesFromAdminPanel(); 
+
 }
 
 // ───────────────────── Debug Input über Serial ─────────────────────
@@ -178,7 +187,7 @@ bool isSlaveAlive(uint8_t address) {
     return (Wire.endTransmission() == 0);
 }
 
-// ───────────────────── Status an ESP32 senden (ALTER CODE) ─────────────────────
+// ───────────────────── Status an ESP32 senden  ─────────────────────
 void sendStatusToAdminPanel() {
     if (!isSlaveAlive(adminpanel)) return;
 
@@ -198,33 +207,49 @@ void sendStatusToAdminPanel() {
 void reciveMessagesFromAdminPanel() {
     if (!isSlaveAlive(adminpanel)) return;
 
-    Wire.requestFrom(adminpanel,50);
+    Wire.requestFrom(adminpanel, 50);
     
     String answer = "";
     while (Wire.available()){
         answer += (char)Wire.read();
     }
 
+    // Splitte die Antwort in einzelne Befehle
+    int dataCount;
+    String* data = splitString(answer, '|', dataCount);
+
+    for (int j = 0; j < dataCount; j++) {
+        if (data[j].indexOf(':') == -1) continue;
+
+        int count;
+        String* dataset = splitString(data[j], ':', count);
+        if (count == 2) {
+            processESPData(dataset[0], dataset[1]);
+        }
+        delete[] dataset;
+    }
+    delete[] data;
 }
 
-void processESPData(String key, String value, int module, String &) {
-    int dataValue = value.toInt();
+// ───────────────────── Verarbeite die Befehle ─────────────────────
+void processESPData(String key, String value) {
+    //HIER SCHAUEN OB DOUBLE
+    double dataValue = value.toDouble();
 
-    if ((key == "ht1" || key == "ht2") && gameState == IN_GAME) {
-        if(module == slave3) {
-            points += pointsBumper * multiplier;
-        }
-        else if(module == slave3) {
-            points += pointsSlingsshots * multiplier;
-        }
-        points += dataValue * multiplier;
+    if (key == "mptl") {
+        multiplier = dataValue;
     }
-    else if(key == "err") {
-        Serial.println("[ERROR] Fehler von Modul " + String(module) + ": Code " + String(dataValue));
+    else if (key == "pbu") {
+        pointsBumper = dataValue;
     }
-    else if (key == "ballingame") {
-        if(dataValue == 1)
-            ballInGame = 1;
+    else if (key == "psl") {
+        pointsSlingsshots = dataValue;
+    }
+    else if (key == "tar") {
+        targets = dataValue;
+    }
+    else {
+        Serial.println("[ADMIN PANEL] Unbekannter Befehl: " + key);
     }
 }
 
