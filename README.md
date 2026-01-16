@@ -74,7 +74,6 @@ mtple:%d|mtpl:%s|pbu:%d|psl:%d
 | Key-Name | Wertetyp | Bedeutung |
 |----------|----------|-----------|
 | ```\|``` | /        | Trennzeichen zwischen den Daten |
-| ```mtple```| int [0;1]| Bit Wert der Multiplier aktiviert/deaktiviert |
 | ```mtpl``` | String(float) (2 Kommastellen)  | Der aktuelle Punkte-Multiplier. *Wird intern für I²C in String umgewandelt* |
 | ```pbu``` | int | Trefferpunktzahl für die Bumper-tower |
 | ```psl``` | int | Trefferpunktzahl für die Slingshots |

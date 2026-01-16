@@ -47,7 +47,6 @@ String M5S = "0";
 
 // FLipper settings get changed by code later; Meaning: error-codes.md
 bool settingsChanged = false;
-int mtple; // 1 or 0
 String mtpl; // float value with two comma digits
 int pbu;
 int psl;
@@ -109,7 +108,7 @@ void loop() {
 void wireRequestEvent() {
   if (settingsChanged == true) {
     char settingsDataString[100];
-    sprintf(settingsDataString, "mtple:%d|mtpl:%s|pbu:%d|psl:%d", mtple, mtpl, pbu, psl);
+    sprintf(settingsDataString, "mtpl:%s|pbu:%d|psl:%d", mtpl, pbu, psl);
 
     Wire.write(settingsDataString);
     settingsChanged = false;
@@ -161,7 +160,6 @@ void handleButtonPress0() {
 }
 
 void handleSettings() {
-  mtple = server.arg("enable_point_multipliers") == "true" ? 1 : 0;
 
   mtpl = server.arg("multiplierAmount"); // remove everything behind second comma digit
   int dot = mtpl.indexOf('.');
@@ -173,7 +171,7 @@ void handleSettings() {
   psl = server.arg("points_slingshot").toInt();
   // String rainbow = server.arg("enable_point_multipliers");  todo: lighting settings
 
-  Serial.print("[HTTP XML] Settings applied pressed "); Serial.print(mtple); Serial.print(mtpl); Serial.print(pbu); Serial.print(psl);  Serial.print("\n");
+  Serial.print("[HTTP XML] Settings applied pressed "); Serial.print(mtpl); Serial.print(pbu); Serial.print(psl);  Serial.print("\n");
   settingsChanged = true;
   server.send(200, "text/plain", "");
 }
@@ -218,7 +216,7 @@ void handleSSEConnect() {
 
   client.print("keepalive\n\n");
   client.flush();
-  Serial.println("SSE answer sent. Sending first update packet");
+  Serial.println("[SSE] answer sent. Sending first update packet");
   broadcastSSE_update(); // first update to set all data to current
   broadcastSSE_log("info", "Ein neuer Client hat sich verbunden", millis()); // nur testweise hier
 }
@@ -280,11 +278,11 @@ void handleSSEClients() {
 
         client.print("keepalive\n\n");
         client.flush();
-        Serial.println("keepalive sent");
+        Serial.println("[SSE] keepalive sent");
         lastKeepAlive = millis();
       }
     } else if (sseClientsConnected[i] == true && sseClients[i].connected() != true) {
-      Serial.print("SSE connection lost for client #"); Serial.println(i);
+      Serial.print("[SSE] connection lost for client #"); Serial.println(i);
       sseClientsConnected[i] = false;
       sseClients[i].stop();
     }
