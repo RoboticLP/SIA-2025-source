@@ -1,43 +1,49 @@
-#include <Arduino.h>
 #include <Wire.h>
+#include <Arduino.h>
 
-int ballEjectRead = 4;
-int ballEjectOUT = 5;
+const int scoring1 = 2; // Erster Slingshot Sensor
+const int scoring2 = 3; // Zweiter Slingshot Sensor
 
-int waitTime = 3000; // Zeit in ms bis der Ball ausgeworfen wird
+const int BallEject1 = 4; // Spule Erster Slingshot
+const int BallEject2 = 5; // Spule Zweiter Slingshot
 
-int hits_goals = 0;
+int HitGoal1
+int HitGoal2
 
 char message[50];
 
 void setup() {
   Serial.begin(9600);
-  pinMode(ballEjectRead, INPUT_PULLUP);
-  pinMode(ballEjectOUT, OUTPUT);
+  pinMode(scoring1, INPUT_PULLUP);
+  pinMode(scoring2, INPUT_PULLUP);
+
+  pinMode(BallEject1, OUTPUT);
+  pinMode(BallEject2, OUTPUT);
 
   Wire.begin(2);  // Arduino als I2C-Slave mit Adresse 2
-
   Wire.onRequest(requestEvent);  // registriere den Event für Datenanforderungen
+
+  attachInterrupt(digitalPinToInterrupt(scoring1), HitGoal1, Rising);
+  attachInterupt(digitalPinToInterrupt(scoring2), HitGoal2, Rising);
 }
 
-void loop() {
-  if(digitalRead(ballEjectRead) == LOW) // NOCH SCHAUEN OB LOW ODER HIGH
-    handleBallEject();
-}
 
-void handleBallEject(){
-  Serial.println("Ball eingegangen, warte "+String(waitTime)+"ms bis Auswurf");
-  //LICHT UND SOUND EINFÜGEN
-  hits_goals++;
-  delay(waitTime);
-  digitalWrite(ballEjectOUT, HIGH); // Auswurf einschalten
-  delay(500); //Kurz warten damit der Ball auch wirklich ausgeworfen wird
-  digitalWrite(ballEjectOUT, LOW); // Auswurf wieder ausschalten
-  Serial.println("Ball ausgeworfen");
+void HitGoal1() {
+  Serial.print(Hit/Slingshot1);
+  digital.Write(BallEject1, HIGH);
+  millis(50);
+  digital.Write(BallEject1, LOW);
+}
+void HitGoal2() {
+ Searial.print(Hit/Slingshot2);
+ digital.Write(BallEject2, High);
+ millis(50);
+ digital.Write(BallEject2, LOW);
 }
 
 void requestEvent() {
   sprintf(message, "ht1:%d|", hits_goals);
   hits_goals = 0;
   Wire.write(message);
+  Serial.println("Daten gesendet");
 }
