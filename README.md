@@ -59,7 +59,7 @@ gs:%d| irgendwas kommt hier noch
 | Key-Name | Wertetyp | Bedeutung |
 |----------|----------|-----------|
 | ```\|``` | /        | Trennzeichen zwischen den Daten |
-| ```gs``` | int?? | Gamestate (aktueller Zustand des Flippers) |
+| ```gs``` | int | [Gamestate](docs/error-codes.md#gamestate-id) (aktueller Zustand des Flippers) |
 | `````` | int | Id eines Logs/Errors für das Frontend |
 
 ---
@@ -68,12 +68,13 @@ gs:%d| irgendwas kommt hier noch
 
 <span style="color:orange">*prototyping*:</span>
 ```c
-mtpl:%f|pbu:%d|psl:%d
+mtple:%d|mtpl:%f|pbu:%d|psl:%d
 ```
 
 | Key-Name | Wertetyp | Bedeutung |
 |----------|----------|-----------|
 | ```\|``` | /        | Trennzeichen zwischen den Daten |
+| ```mtple```| int [0;1]| Bit Wert der Multiplier aktiviert/deaktiviert |
 | ```mtpl``` | float  | Der aktuelle Punkte-Multiplier |
 | ```pbu``` | int | Trefferpunktzahl für die Bumper-tower |
 | ```psl``` | int | Trefferpunktzahl für die Slingshots |
