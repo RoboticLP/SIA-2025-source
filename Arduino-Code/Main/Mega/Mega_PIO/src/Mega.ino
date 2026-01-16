@@ -3,94 +3,240 @@
 #include <LiquidCrystal.h>
 #include "utils.h"
 #include "GameStates.h"
+#include <arduino-timer.h>
 
 // ───────────────────── LCD Pins ─────────────────────
-// LCD Pin-Konfiguration: RS, E, D4, D5, D6, D7
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 
 // ───────────────────── Adressen ─────────────────────
 #define slave2      2
 #define slave3      3
 #define slave4      4
-#define slave5      5
 #define adminpanel  6
 
-// ───────────────────── Globale Variablen ─────────────────────
-bool ballInGame = false;
+// ───────────────────── Timer ─────────────────────
+auto timer = timer_create_default();
 
-int backlightLED = 6; // Pin für die Hintergrundbeleuchtung des LCDs
+// ───────────────────── Globale Variablen ─────────────────────
+int backlightLED = 6;
 
 int moduleCount = 3;
 int moduleSlaves[3] = { slave2, slave3, slave4 };
 
-int multiplier = 100;
-long points = 0;
 
-long updateBeginTime;
+long points = 0;
+long multiplier = 1.5;
+int targets = 20; // Slave 4
+int pointsBumper = 50; // Slave 3
+int ballEject = 80;    // Slave 2
+int pointsSlingsshots = 50; // Mega
+
+int ballInGame = 0;
 
 GameState gameState     = WAIT_FOR_BALL;
 GameState lastGameState = WAIT_FOR_BALL;
 
+// ───────────────────── Timer-Handles ─────────────────────
+Timer<>::Task gameOverTask;
+Timer<>::Task resetTask;
+Timer<>::Task pointsTask;
+
+// ───────────────────── Forward Declarations ─────────────────────
+void handleLCDDisplay();
+void checkGameState();
+void startGameOver();
+bool finishGameOver(void *);
+bool finishReset(void *);
+bool addRandomPoints(void *);
+void printConnectionFromSlaves();
+void handleDebugInput();
+void sendStatusToAdminPanel();
+void reciveMessagesFromAdminPanel();
+
 // ───────────────────── Setup / Loop ─────────────────────
 void setup() {
     pinMode(backlightLED, OUTPUT);
-    analogWrite(backlightLED, 100); // 0–255
+    analogWrite(backlightLED, 100);
+
     Wire.begin();
     Serial.begin(9600);
 
-    // LCD initialisieren (16x2 Display)
+    Serial.println("[BOOT] Flipper System startet");
+    Serial.println("[DEBUG] Tippe 0 = Kugel eingeworfen | 1 = Kugel verloren");
+
     lcd.begin(16, 2);
     lcd.clear();
     lcd.print("Flipper System");
     lcd.setCursor(0, 1);
     lcd.print("Booting...");
-    delay(2000);
+    delay(1500);
     lcd.clear();
 
-    setDebugMode(false); //Falls man Debug Modus will mache in admin panel
+    setDebugMode(false);
 }
 
 void loop() {
+    timer.tick();
+    handleDebugInput();
     checkGameState();
     printConnectionFromSlaves();
+    sendStatusToAdminPanel();
+    reciveMessagesFromAdminPanel(); 
+}
 
-    Serial.println("Points: " + String(points));
-    delay(4000);
+// ───────────────────── Debug Input über Serial ─────────────────────
+void handleDebugInput() {
+    if (!Serial.available()) return;
+
+    char c = Serial.read();
+
+    if (c == '0') {
+        Serial.println("[DEBUG INPUT] Kugel eingeworfen");
+        ballInGame = 1;
+    }
+    else if (c == '1') {
+        Serial.println("[DEBUG INPUT] Kugel verloren");
+        ballInGame = 0;
+    }
 }
 
 // ───────────────────── Debug Modus ─────────────────────
 void setDebugMode(bool enable) {
     if (enable) {
         gameState = DEBUG;
-        lastGameState = DEBUG;
-        Serial.println("DEBUG MODE AKTIVIERT");
-        handleLCDDisplay();
     } else {
         gameState = WAIT_FOR_BALL;
-        lastGameState = WAIT_FOR_BALL;
-        Serial.println("DEBUG MODE BEENDET");
+    }
+    lastGameState = gameState;
+    handleLCDDisplay();
+}
+
+// ───────────────────── Game State Logik ─────────────────────
+void checkGameState() {
+    if (gameState == DEBUG || gameState == RESET) return;
+
+    if (gameState == WAIT_FOR_BALL && ballInGame == 1) {
+        gameState = IN_GAME;
+        pointsTask = timer.every(1000, addRandomPoints);
+    }
+    else if (gameState == IN_GAME && ballInGame == 0) {
+        timer.cancel(pointsTask);
+        startGameOver();
+    }
+
+    if (gameState != lastGameState) {
         handleLCDDisplay();
+        lastGameState = gameState;
     }
 }
 
-// ───────────────────── Hauptlogik ─────────────────────
-void printConnectionFromSlaves() {
-    Serial.println("#######START CONSOLE#######");
-    updateBeginTime = millis();
+// ───────────────────── Punkte automatisch erhöhen ─────────────────────
+bool addRandomPoints(void *) {
+    if (gameState != IN_GAME) return false;
+
+    points += random(50, 150);
+    handleLCDDisplay();
+    return true;
+}
+
+// ───────────────────── Game Over / Reset ─────────────────────
+void startGameOver() {
+    gameState = GAME_OVER;
+    handleLCDDisplay();
+    gameOverTask = timer.in(10000, finishGameOver);
+}
+
+bool finishGameOver(void *) {
+    gameState = RESET;
+    handleLCDDisplay();
+    resetTask = timer.in(5000, finishReset);
+    return false;
+}
+
+bool finishReset(void *) {
+    points = 0;
+    ballInGame = 0;
+
+    for (int i = 0; i < moduleCount; i++) {
+        int addr = moduleSlaves[i];
+        if (!isSlaveAlive(addr)) continue;
+
+        Wire.beginTransmission(addr);
+        Wire.write("resetGame");
+        Wire.endTransmission();
+    }
+
+    gameState = WAIT_FOR_BALL;
+    lastGameState = WAIT_FOR_BALL;
+    handleLCDDisplay();
+    return false;
+}
+
+// ───────────────────── I2C Kommunikation ─────────────────────
+bool isSlaveAlive(uint8_t address) {
+    Wire.beginTransmission(address);
+    return (Wire.endTransmission() == 0);
+}
+
+// ───────────────────── Status an ESP32 senden (ALTER CODE) ─────────────────────
+void sendStatusToAdminPanel() {
+    if (!isSlaveAlive(adminpanel)) return;
 
     String statusMessage = "";
 
     for (int i = 0; i < moduleCount; i++) {
         int addr = moduleSlaves[i];
         bool alive = isSlaveAlive(addr);
-
         statusMessage += "M" + String(addr) + ":" + String(alive ? 1 : 0) + "|";
+    }
 
-        if (!alive) continue;
+    Wire.beginTransmission(adminpanel);
+    Wire.write(statusMessage.c_str());
+    Wire.endTransmission();
+}
+
+void reciveMessagesFromAdminPanel() {
+    if (!isSlaveAlive(adminpanel)) return;
+
+    Wire.requestFrom(adminpanel,50);
+    
+    String answer = "";
+    while (Wire.available()){
+        answer += (char)Wire.read();
+    }
+
+}
+
+void processESPData(String key, String value, int module, String &) {
+    int dataValue = value.toInt();
+
+    if ((key == "ht1" || key == "ht2") && gameState == IN_GAME) {
+        if(module == slave3) {
+            points += pointsBumper * multiplier;
+        }
+        else if(module == slave3) {
+            points += pointsSlingsshots * multiplier;
+        }
+        points += dataValue * multiplier;
+    }
+    else if(key == "err") {
+        Serial.println("[ERROR] Fehler von Modul " + String(module) + ": Code " + String(dataValue));
+    }
+    else if (key == "ballingame") {
+        if(dataValue == 1)
+            ballInGame = 1;
+    }
+}
+
+// ───────────────────── Slaves ─────────────────────
+void printConnectionFromSlaves() {
+    for (int i = 0; i < moduleCount; i++) {
+        int addr = moduleSlaves[i];
+        if (!isSlaveAlive(addr)) continue;
 
         Wire.requestFrom(addr, 50);
-
         String answer = "";
+
         while (Wire.available()) {
             answer += (char)Wire.read();
         }
@@ -103,161 +249,61 @@ void printConnectionFromSlaves() {
 
             int count;
             String* dataset = splitString(data[j], ':', count);
-
             if (count == 2) {
-                handleModule(addr, dataset[0], dataset[1], statusMessage);
+                processSlaveData(dataset[0], dataset[1], addr, answer);
             }
-
             delete[] dataset;
         }
         delete[] data;
     }
-
-    sendESP32ToAdminPanel(statusMessage);
-
-    Serial.print((millis() - updateBeginTime) / 1000.0);
-    Serial.println(" Sekunden");
-    Serial.println("#######ENDE CONSOLE#######");
 }
 
-// ───────────────────── I2C Kommunikation ─────────────────────
-bool isSlaveAlive(uint8_t address) {
-    Wire.beginTransmission(address);
-    return (Wire.endTransmission() == 0);
-}
-
-void sendESP32ToAdminPanel(String message) {
-    if (!isSlaveAlive(adminpanel)) return;
-
-    Wire.beginTransmission(adminpanel);
-    Wire.write(message.c_str());
-    Wire.endTransmission();
-}
-
-// ───────────────────── Modullogik ─────────────────────
-void handleModule(int module, String key, String value, String &statusMessage) {
-    switch (module) {
-        case slave2: case slave3: case slave4:
-            processSlaveData(key, value, module, statusMessage);
-            break;
-        default:
-            break;
-    }
-}
-
-void processSlaveData(String key, String value, int module, String &statusMessage) {
+void processSlaveData(String key, String value, int module, String &) {
     int dataValue = value.toInt();
 
-    if (key == "ht1") {
+    if ((key == "ht1" || key == "ht2") && gameState == IN_GAME) {
+        if(module == slave3) {
+            points += pointsBumper * multiplier;
+        }
+        else if(module == slave3) {
+            points += pointsSlingsshots * multiplier;
+        }
         points += dataValue * multiplier;
-        Serial.println("Module " + String(module) + " ht1: " + dataValue);
     }
-    else if (key == "ht2") {
-        points += dataValue * multiplier;
-        Serial.println("Module " + String(module) + " ht2: " + dataValue);
-    }
-    else if (key == "ht3") {
-        Serial.println("Module " + String(module) + " ht3: " + dataValue);
-    }
-    else if (key == "err") {
-        statusMessage += "err:" + value + "|";
-        Serial.println("Module " + String(module) + " error: " + value);
-    }
-    else if (key == "text") {
-        Serial.println("Module " + String(module) + " text: " + value);
+    else if(key == "err") {
+        Serial.println("[ERROR] Fehler von Modul " + String(module) + ": Code " + String(dataValue));
     }
     else if (key == "ballingame") {
-        ballInGame = (dataValue == 1);
-    }
-    else {
-        Serial.println("Module " + String(module) + " unknown key: " + key);
+        if(dataValue == 1)
+            ballInGame = 1;
     }
 }
 
-// ───────────────────── Game State Logik ─────────────────────
-void checkGameState() {
-    if (gameState == RESET || gameState == DEBUG) return;
-
-    if (ballInGame) {
-        gameState = IN_GAME;
-    }
-    else if (points > 0) {
-        gameState = GAME_OVER;
-    }
-    else {
-        gameState = WAIT_FOR_BALL;
-    }
-
-    if (gameState != lastGameState) {
-        handleLCDDisplay();
-        lastGameState = gameState;
-    }
-
-    if (gameState == GAME_OVER) {
-        delay(10000);
-        resetGame();
-    }
-}
-
-// ───────────────────── Reset ─────────────────────
-void resetGame() {
-    gameState = RESET;
-
-    points = 0;
-    ballInGame = false;
-
-    for (int i = 0; i < moduleCount; i++) {
-        int addr = moduleSlaves[i];
-        if (!isSlaveAlive(addr)) continue;
-
-        Wire.beginTransmission(addr);
-        Wire.write("resetGame");
-        Wire.endTransmission();
-    }
-
-    delay(5000);
-    gameState = WAIT_FOR_BALL;
-    lastGameState = WAIT_FOR_BALL;
-}
-
-// ───────────────────── LCD Display ─────────────────────
+// ───────────────────── LCD ─────────────────────
 void displayLCDDisplay(String line1, String line2) {
     lcd.clear();
-    
-    // Erste Zeile
     lcd.setCursor(0, 0);
-    lcd.print(line1.substring(0, 16)); // Maximal 16 Zeichen
-    
-    // Zweite Zeile
+    lcd.print(line1.substring(0, 16));
     lcd.setCursor(0, 1);
-    lcd.print(line2.substring(0, 16)); // Maximal 16 Zeichen
-    
-    Serial.println("LCD: " + line1 + " | " + line2);
+    lcd.print(line2.substring(0, 16));
 }
 
 void handleLCDDisplay() {
     switch (gameState) {
-
         case WAIT_FOR_BALL:
             displayLCDDisplay("Flipper bereit", "Kugel einwerfen");
             break;
-
         case IN_GAME:
             displayLCDDisplay("Punkte:", String(points));
             break;
-
         case GAME_OVER:
             displayLCDDisplay("Game Over", "Score: " + String(points));
             break;
-
         case RESET:
-            displayLCDDisplay("Game Over", "Resetting...");
+            displayLCDDisplay("Resetting...", "Bitte warten");
             break;
         case DEBUG:
             displayLCDDisplay("DEBUG MODE", "Game Paused!");
             break;
     }
 }
-
-// ───────────────────── Hilfsfunktionen ─────────────────────
-//Hier logik für die funktionen der sling shots, finger und verloren mit laser ding da
