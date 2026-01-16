@@ -7,8 +7,12 @@ const int scoring2 = 3; // Zweiter Slingshot Sensor
 const int BallEject1 = 4; // Spule Erster Slingshot
 const int BallEject2 = 5; // Spule Zweiter Slingshot
 
-int HitGoal1
-int HitGoal2
+int HitGoal1;
+int HitGoal2;
+
+int onHitEjectPowerTime = 50;
+int HitGoal1Time;
+int HitGoal2Time;
 
 char message[50];
 
@@ -27,18 +31,26 @@ void setup() {
   attachInterupt(digitalPinToInterrupt(scoring2), HitGoal2, Rising);
 }
 
+void loop() {
+  if (HitGoal1Time + onHitEjectPowerTime < millis()) {
+    digitalWrite(BallEject1, LOW);
+    HitGoal1Time = max();
+  }
+  if(HitGoal2Time + onHitEjectPowerTime < millis()) {
+    digitalWrite(BallEject2, LOW);
+    HitGoal2Time = max(); 
+  }
+}
 
 void HitGoal1() {
-  Serial.print(Hit/Slingshot1);
+  Serial.println("Hit/Slingshot1");
   digital.Write(BallEject1, HIGH);
-  millis(50);
-  digital.Write(BallEject1, LOW);
+  HitGoal1Time = millis();
 }
 void HitGoal2() {
- Searial.print(Hit/Slingshot2);
+ Searial.println("Hit/Slingshot2");
  digital.Write(BallEject2, High);
- millis(50);
- digital.Write(BallEject2, LOW);
+ HitGoal2Time = millis();
 }
 
 void requestEvent() {
