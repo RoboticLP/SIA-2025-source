@@ -14,6 +14,8 @@ int onHitEjectPowerTime = 50;
 int HitGoal1Time;
 int HitGoal2Time;
 
+int scoredTimes = 0; // Treffer Zähler für den Main
+
 char message[50];
 
 void setup() {
@@ -46,16 +48,23 @@ void HitGoal1() {
   Serial.println("Hit/Slingshot1");
   digital.Write(BallEject1, HIGH);
   HitGoal1Time = millis(); // überschreibt die unendliche Zahl
+  scoredTimes = scoredTimes + 1; // fügt die Info ausgelöst zur Variable "scoredTimes" hinzu
 }
 void HitGoal2() {
  Searial.println("Hit/Slingshot2");
  digital.Write(BallEject2, High);
  HitGoal2Time = millis(); // überschreibt die unendliche Zahl
+ scoredTimes = scoredTimes + 1; // fügt die Info ausgelöst zur Variable "scoredTimes" hinzu
 }
 
 void requestEvent() {
-  sprintf(message, "ht1:%d|", hits_goals);
-  hits_goals = 0;
+  sprintf(message, "ht1:%d|", scoredTimes);
   Wire.write(message);
   Serial.println("Daten gesendet");
 }
+// int SlingshotReader = 0;
+// if(scoredTimes > SlingshotReader) {
+// digital.println ("Slingshot wurde ausgelöst"); ?Sollten wir die Slingshots übersichtshalber einzelnt verarbeiten?
+//  (restlicher Code);
+// scored Times = SlingshotTimer;
+//}
