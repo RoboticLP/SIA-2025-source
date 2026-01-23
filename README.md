@@ -34,6 +34,7 @@ ht1:%d|ht2:%d|err:%s
 ```
 > *Die **Reihenfolge der Keys+Werte ist egal**, genau wie ihre **Vorhandenheit** - es werden nur erhaltene Daten verarbeitet und es sind keine speziellen Daten notwendig. Allerdings **muss** jeder versendete Key einen zugehörigen Wert haben*
 
+<span style="color:orange">*prototyping*: ht1 und ht2 werden archiviert und bald gegen neue keys ersetzt</span>
 |  Key-Name  | Wertetyp | Bedeutung                                            |
 |------------|----------|------------------------------------------------------|
 | ```\|```   | /        | Trennzeichen zwischen den Daten                      |
@@ -59,25 +60,24 @@ gs:%d| irgendwas kommt hier noch
 | Key-Name | Wertetyp | Bedeutung |
 |----------|----------|-----------|
 | ```\|``` | /        | Trennzeichen zwischen den Daten |
-| ```gs``` | int?? | Gamestate (aktueller Zustand des Flippers) |
+| ```gs``` | int | [Gamestate](docs/error-codes.md#gamestate-id) (aktueller Zustand des Flippers) |
 | `````` | int | Id eines Logs/Errors für das Frontend |
 
 ---
 
 ##### ESP > Mega
 
-<span style="color:orange">*prototyping*:</span>
 ```c
-mtpl:%f|pbu:%d|psl:%d
+mtple:%d|mtpl:%s|pbu:%d|psl:%d
 ```
 
 | Key-Name | Wertetyp | Bedeutung |
 |----------|----------|-----------|
 | ```\|``` | /        | Trennzeichen zwischen den Daten |
-| ```mtpl``` | float  | Der aktuelle Punkte-Multiplier |
+| ```mtpl``` | String(float) (2 Kommastellen)  | Der aktuelle Punkte-Multiplier. *Wird intern für I²C in String umgewandelt* |
 | ```pbu``` | int | Trefferpunktzahl für die Bumper-tower |
 | ```psl``` | int | Trefferpunktzahl für die Slingshots |
-| `````` |  |  |
+| ```tar``` | int | Trefferpunktzahl für die Targets |
 
 ---
 

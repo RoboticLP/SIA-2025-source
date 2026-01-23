@@ -279,12 +279,6 @@ const char* webpage_main = R"=====(
       
       <div class="section-subtitle">Game settings</div>
       <div class="controls-grid">
-        <div class="toggle-container">
-          <div id="point-modifiers-enabled-toggle" class="toggle active" onclick="toggleSetting(this);">
-            <div class="toggle-thumb"></div>
-          </div>
-          Point multipliers enabled
-        </div>
         <!-- Neues Number Input für Multiplier Amount -->
         <div class="input-container">
           <label class="input-label">Multiplier amount</label>
@@ -306,9 +300,9 @@ const char* webpage_main = R"=====(
             id="point-amount-bumper" 
             class="number-input" 
             min="1" 
-            max="500" 
-            step="1" 
-            value="50"
+            max="50000" 
+            step="10" 
+            value="100"
             placeholder="1">
         </div>
         <div class="input-container">
@@ -318,9 +312,9 @@ const char* webpage_main = R"=====(
             id="point-amount-slingshot" 
             class="number-input" 
             min="1" 
-            max="500" 
-            step="1" 
-            value="50"
+            max="50000" 
+            step="10" 
+            value="1000"
             placeholder="1">
         </div>
       </div>
@@ -393,17 +387,20 @@ const char* webpage_main = R"=====(
       //** Apply settings
       // Alle eingegebenen Einstellungen auf ihren Weg schicken
       function applySettings() {
-        const enablePointMultipliers = document.getElementById('point-modifiers-enabled-toggle').classList.contains('active');
         const multiplierAmount = document.getElementById('multiplier-amount').value; // Neuer Wert wird ausgelesen
         const points_bumper = document.getElementById('point-amount-bumper').value;
         const points_slingshot = document.getElementById('point-amount-slingshot').value;
+        const light_enableRainbow = document.getElementById('rainbow-toggle').classList.contains('active');
+        const light_enableStrobe = document.getElementById('strobe-toggle').classList.contains('active');
           
         var xhttp = new XMLHttpRequest();
         // Multiplier Amount wird jetzt auch an den Server gesendet
-        xhttp.open("PUT", "SETTINGS?enable_point_multipliers=" + enablePointMultipliers +
+        xhttp.open("PUT",
           "&multiplierAmount=" + multiplierAmount +
           "&points_bumper=" + points_bumper + 
           "&points_slingshot=" + points_slingshot,
+          "&light_enableRainbow=" + light_enableRainbow,
+          "&light_enableStrobe=" + light_enableStrobe,
           true);
         xhttp.send();
 
