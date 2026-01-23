@@ -8,14 +8,17 @@
 #define interrupt_2 3
 #define normal_pin_3 4
 
-int numberOfBumpers = 3;
+volatile int writeConsoleThatBumperTriggered = -1;
+
+volatile unsigned long lastInterruptTime[3] = {0,0,0};
+
+volatile int totalTriggerAmountInRuntime = 0; //hauptsächlich zum debuggen, um neue nachrichten im serial erkennen zu können
+
+
 int light[3] = {BumperLight_1,BumperLight_2,BumperLight_3};
-long lightDuration = 1000;
+long lightDuration = 2000;
 boolean lightActive[3] = {false,false,false};
-
-boolean didBumperThreeTriggerAlready = false; //Da es nur 2 Interrupt-Pins gibt, muss Bumper 3 mit einem normalen Pin und dieser Variable gesteuert werden
-
-int bumperHits = 0;
+unsigned long lightOffTime[3]; //hier wird der cooldown für die lichter gespeichert (als millis() timestamp)
 
 String error_module3 = ""; // String that is send to the master with I2C  in case an error occurs
 
@@ -30,16 +33,36 @@ char command[20];   // für empfangene Kommandos
 // ───────────────────── Bumper Methods ─────────────────────
 //each bumper needs an extra method, because attachInterrupt doesn't allow methods with parameters
 void triggerBumperOne(){ 
+    unsigned long now = millis();
+    if (now - lastInterruptTime[0] > 200) { // 200 ms entprellen
     hitpoints++;
+    lightActive[0] = true;
+    totalTriggerAmountInRuntime++; //wird in der Nachricht zu Serial benutzt
+    writeConsoleThatBumperTriggered = 1; //volatile um eine Nachricht zum Serial zu triggern
+    lastInterruptTime[0] = now;
+    }
 }
 
 void triggerBumperTwo(){
+    unsigned long now = millis();
+    if (now - lastInterruptTime[1] > 200) { // 200 ms entprellen
     hitpoints++;
-    
+    lightActive[1] = true;
+    totalTriggerAmountInRuntime++; //wird in der Nachricht zu Serial benutzt
+    writeConsoleThatBumperTriggered = 2; //volatile um eine Nachricht zum Serial zu triggern
+    lastInterruptTime[1] = now;
+    }
 }
 
 void triggerBumperThree(){
+    unsigned long now = millis();
+    if (now - lastInterruptTime[2] > 200) { // 200 ms entprellen
     hitpoints++;
+    lightActive[2] = true;
+    totalTriggerAmountInRuntime++; //wird in der Nachricht zu Serial benutzt
+    writeConsoleThatBumperTriggered = 3; //volatile um eine Nachricht zum Serial zu triggern
+    lastInterruptTime[2] = now;
+    }
 }
 
 
@@ -54,10 +77,10 @@ void setup() {
     handleReset();
     //–––Interrupt 1––– (Bumper 1)
     pinMode(interrupt_1, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(interrupt_1), triggerBumperOne, RISING);
+    attachInterrupt(digitalPinToInterrupt(interrupt_1), triggerBumperOne, FALLING);
     //–––Interrupt 2––– (Bumper 2)
-    pinMode(interrupt_1, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(interrupt_2), triggerBumperTwo, RISING);
+    pinMode(interrupt_2, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(interrupt_2), triggerBumperTwo, FALLING);
     //–––Pin 4–– (Bumper 3)
     pinMode(normal_pin_3, INPUT_PULLUP);
     
@@ -68,17 +91,33 @@ void setup() {
 
 // ───────────────────── Loop ─────────────────────
 void loop() {
-    //Bumper 3 Abfragen, da es keinen dritten Interrupt-Pin gibt
-    if(didBumperThreeTriggerAlready){
-        if(digitalRead(normal_pin_3)){
-        didBumperThreeTriggerAlready = true;
-        triggerBumperThree;
-        }
-        else didBumperThreeTriggerAlready = false;
+    //——————————————–Konsole schreiben (Serial.println geht nicht im Interrupt)————————————————
+    if(writeConsoleThatBumperTriggered != -1){
+        int dummy = writeConsoleThatBumperTriggered; //um sicherzustellen, dass die nachricht nicht mehrmals gesendet wird
+        writeConsoleThatBumperTriggered = -1;
+        Serial.println(String("Triggered Bumper ") + dummy + String(" [") + totalTriggerAmountInRuntime + String("]"));
     }
+
+    //–––––––Bumper 3 Abfragen, da es keinen dritten Interrupt-Pin gibt–––––––
+    static bool lastState = HIGH; // static --> wird nicht jedesmal neu gesetzt
+    bool currentState = digitalRead(normal_pin_3);
+
+    if (lastState == HIGH && currentState == LOW) {
+        triggerBumperThree();
+    }
+    lastState = currentState;
+
+    //––––––––Lichter––––––––
     for(int i = 0; i<3; i++){
+        //Abfragen, ob eins der Interrupts oder Bumper 3 eine Lichteraktivierung angefragt hat
         if(lightActive[i]){
-            d
+            digitalWrite(light[i], HIGH);
+            lightOffTime[i] = millis() + lightDuration;
+            lightActive[i] = false;
+        }
+        //Abfragen, ob ein Licht seinen Timestamp erreicht hat und ausgeschaltet werden muss
+        if (digitalRead(light[i]) == HIGH && millis() > lightOffTime[i]) { //turn off light if millis() timestamp is reached
+            digitalWrite(light[i], LOW);
         }
     }
 }
@@ -112,5 +151,6 @@ void receiveEvent(int howMany) {
     // Kommando auswerten
     if (strcmp(command, "resetGame") == 0) {
         handleReset();
+        Serial.println("resetting...");
     }
 }
