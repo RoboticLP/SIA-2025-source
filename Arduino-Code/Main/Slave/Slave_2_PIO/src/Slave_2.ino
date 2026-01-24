@@ -7,7 +7,7 @@ const int scoring2 = 3; // Zweiter Slingshot Sensor
 const int BallEject1 = 4; // Spule Erster Slingshot
 const int BallEject2 = 5; // Spule Zweiter Slingshot
 
-int onHitEjectPowerTime = 50;
+int onHitEjectPowerTime = 10000;
 unsigned long HitGoal1Time = 0;
 unsigned long HitGoal2Time = 0;
 
@@ -44,13 +44,13 @@ void loop() {
 void HitGoalOne() {
   Serial.println("Hit/Slingshot1");
   digitalWrite(BallEject1, HIGH);
-  HitGoal1Time = 0; // überschreibt die unendliche Zahl
+  HitGoal1Time = millis(); // überschreibt die unendliche Zahl
   scoredTimes = scoredTimes + 1; // fügt die Info ausgelöst zur Variable "scoredTimes" hinzu
 }
 void HitGoalTwo() {
  Serial.println("Hit/Slingshot2");
  digitalWrite(BallEject2, HIGH);
- HitGoal2Time = 0; // überschreibt die unendliche Zahl
+ HitGoal2Time = millis(); // überschreibt die unendliche Zahl
  scoredTimes = scoredTimes + 1; // fügt die Info ausgelöst zur Variable "scoredTimes" hinzu
 }
 
