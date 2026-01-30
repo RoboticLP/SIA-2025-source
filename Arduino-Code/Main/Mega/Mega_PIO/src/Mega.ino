@@ -181,7 +181,7 @@ void reciveMessagesFromAdminPanel() {
     Wire.requestFrom(adminpanel, 50);
     String answer = "";
     while (Wire.available()) answer += (char)Wire.read();
-    //Serial.println("Admin Panel says: " + answer);
+    Serial.println("Admin Panel says: " + answer);
 }
 
 // ───────────────────── Slaves ─────────────────────

@@ -396,7 +396,7 @@ const char* webpage_main = R"=====(
         var xhttp = new XMLHttpRequest();
         // Multiplier Amount wird jetzt auch an den Server gesendet
         xhttp.open("PUT",
-          "&multiplierAmount=" + multiplierAmount +
+          "SETTINGS?multiplierAmount=" + multiplierAmount +
           "&points_bumper=" + points_bumper + 
           "&points_slingshot=" + points_slingshot,
           "&light_enableRainbow=" + light_enableRainbow,
