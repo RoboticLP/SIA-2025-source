@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include <Arduino.h>
 #define BumperLight_1 6
 #define BumperLight_2 7
 #define BumperLight_3 8
@@ -8,21 +7,22 @@
 #define interrupt_2 3
 #define normal_pin_3 4
 
-volatile int writeConsoleThatBumperTriggered = -1;
-
-volatile unsigned long lastInterruptTime[3] = {0,0,0};
-
-volatile int totalTriggerAmountInRuntime = 0; //hauptsächlich zum debuggen, um neue nachrichten im serial erkennen zu können
 
 
 int light[3] = {BumperLight_1,BumperLight_2,BumperLight_3};
-long lightDuration = 2000;
+long lightDuration = 2000; //Wie lange eine Bumper-LED anbleibt, in ms
 boolean lightActive[3] = {false,false,false};
 unsigned long lightOffTime[3]; //hier wird der cooldown für die lichter gespeichert (als millis() timestamp)
 
 String error_module3 = ""; // String that is send to the master with I2C  in case an error occurs
 
 char requestEventAnswer[50]; //text thats 50 bytes long to send the master module
+
+volatile int writeConsoleThatBumperTriggered = -1;
+
+volatile unsigned long lastInterruptTime[3] = {0,0,0};
+
+volatile int totalTriggerAmountInRuntime = 0; //hauptsächlich zum debuggen, um neue nachrichten im serial erkennen zu können
 
 // ───────────────────── Globale Variablen ─────────────────────
 volatile int hitpoints = 0;
