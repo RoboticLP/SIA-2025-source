@@ -37,19 +37,3 @@ void switchlight(){
   pixels.show();
 }
 
-
-void heartBeatTwice(){ //fade in and out fast, twice
-  for(int i = 0; i<2; i++){
-    for(int number = 0; number < NUMPIXELS; number++){
-      for(int level = 255; level > 0; level--){
-        pixels.setPixelColor(number,pixels.Color(level,level,level));
-      }
-    }
-    for(int number = 0; number < NUMPIXELS; number++){
-      for(int level = 0; level > 255; level++){
-        pixels.setPixelColor(number,pixels.Color(level,level,level));
-      }
-    }
-  }
-}
-
