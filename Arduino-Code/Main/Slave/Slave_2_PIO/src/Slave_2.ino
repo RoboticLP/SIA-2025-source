@@ -8,8 +8,8 @@ const int BallEject1 = 4; // Spule Erster Slingshot
 const int BallEject2 = 5; // Spule Zweiter Slingshot
 
 int onHitEjectPowerTime = 10000;
-unsigned long HitGoal1Time = 0;
-unsigned long HitGoal2Time = 0;
+unsigned long HitGoal1Time = 42949295;
+unsigned long HitGoal2Time = 42949295;
 
 int scoredTimes = 0; // Treffer Zähler für den Main
 
@@ -22,35 +22,39 @@ void setup() {
 
   pinMode(BallEject1, OUTPUT);
   pinMode(BallEject2, OUTPUT);
+  digitalWrite(BallEject1, LOW);
+  digitalWrite(BallEject2, LOW);
 
   Wire.begin(2);  // Arduino als I2C-Slave mit Adresse 2
   Wire.onRequest(requestEvent);  // registriere den Event für Datenanforderungen
 
-  attachInterrupt(digitalPinToInterrupt(scoring1), HitGoalOne,RISING);
-  attachInterrupt(digitalPinToInterrupt(scoring2), HitGoalTwo, RISING);
+  attachInterrupt(digitalPinToInterrupt(scoring1), HitGoalOne,FALLING);
+  attachInterrupt(digitalPinToInterrupt(scoring2), HitGoalTwo, FALLING);
 }
 
 void loop() {
   if (HitGoal1Time + onHitEjectPowerTime < millis()) {
     digitalWrite(BallEject1, LOW);
+    Serial.println("Bestätigung1LOW");
     HitGoal1Time = 42949295; // Somit wird der Befehl (digitalWrite(BallEject1, LOW) bis zu einem gewissen Punkt nicht ausgeführt
   }
   if(HitGoal2Time + onHitEjectPowerTime < millis()) {
     digitalWrite(BallEject2, LOW);
+      Serial.println("Bestätigung2LOW");
     HitGoal2Time = 42949295; // Somit wird der Befehl (digitalWrite(BallEject2, LOW) bis zu einen gewissen Punkt nicht ausgeführt
   }
 }
 
 void HitGoalOne() {
-  Serial.println("Hit/Slingshot1");
   digitalWrite(BallEject1, HIGH);
-  HitGoal1Time = millis(); // überschreibt die unendliche Zahl
+  
+  HitGoal1Time = millis(); // Millis zählen in der interrupt Funktion nicht hoch (funktioniert)
   scoredTimes = scoredTimes + 1; // fügt die Info ausgelöst zur Variable "scoredTimes" hinzu
 }
 void HitGoalTwo() {
  Serial.println("Hit/Slingshot2");
  digitalWrite(BallEject2, HIGH);
- HitGoal2Time = millis(); // überschreibt die unendliche Zahl
+ HitGoal2Time = millis(); // Millis zählen in der interrupt Funktion nich hoch (funktionier)
  scoredTimes = scoredTimes + 1; // fügt die Info ausgelöst zur Variable "scoredTimes" hinzu
 }
 
