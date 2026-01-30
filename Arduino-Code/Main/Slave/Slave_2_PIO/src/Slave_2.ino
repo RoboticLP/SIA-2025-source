@@ -47,12 +47,12 @@ void loop() {
 
 void HitGoalOne() {
   digitalWrite(BallEject1, HIGH);
-  
+// Variable die durch Veränderung mir ein Signal gibt?
   HitGoal1Time = millis(); // Millis zählen in der interrupt Funktion nicht hoch (funktioniert)
   scoredTimes = scoredTimes + 1; // fügt die Info ausgelöst zur Variable "scoredTimes" hinzu
 }
 void HitGoalTwo() {
- Serial.println("Hit/Slingshot2");
+ Serial.println("Hit/Slingshot2"); // unzuverlässlich
  digitalWrite(BallEject2, HIGH);
  HitGoal2Time = millis(); // Millis zählen in der interrupt Funktion nich hoch (funktionier)
  scoredTimes = scoredTimes + 1; // fügt die Info ausgelöst zur Variable "scoredTimes" hinzu
