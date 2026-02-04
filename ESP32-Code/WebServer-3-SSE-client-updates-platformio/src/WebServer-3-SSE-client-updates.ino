@@ -114,6 +114,9 @@ void wireRequestEvent() {
     settingsChanged = false;
 
     Serial.print("[I²C] Sent settings update to master"); Serial.println(settingsDataString);
+  } else {
+    Serial.println("[I²C] No new settings to send to master");
+    Wire.write("");
   }
 }
 
