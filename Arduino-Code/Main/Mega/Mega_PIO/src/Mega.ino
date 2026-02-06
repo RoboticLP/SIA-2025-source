@@ -12,6 +12,7 @@ LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 #define slave2      2
 #define slave3      3
 #define slave4      4
+#define slave5      5
 #define adminpanel  6
 
 // ───────────────────── Globale Variablen ─────────────────────
@@ -19,14 +20,17 @@ auto timer = timer_create_default();
 int backlightPin = 6;
 int ballLostSensor = A0;
 
-int moduleCount = 3;
-int moduleSlaves[3] = { slave2, slave3, slave4 };
+int moduleCount = 4;
+int moduleSlaves[4] = { slave2, slave3, slave4, slave5 };
 
 long points = 0;
-double multiplier = 1.5;
-int targets = 20;
+float multiplier = 1.00;
+int pointsTargets = 20;
 int pointsBumper = 50;
 int pointsSlingsshots = 50;
+
+float lightSpeed = 1.0;
+int lightState = 1;
 
 int ballInGame = 0;
 
@@ -100,7 +104,9 @@ void loop() {
 void handleDebugInput() {
     if (!Serial.available()) return;
     char c = Serial.read();
-    if (c == '0') ballInGame = 1;
+    if (c == '0'){ 
+        ballInGame = 1;
+    }
     else if (c == '1') ballInGame = 0;
 }
 
@@ -114,11 +120,6 @@ void setDebugMode(bool enable) {
 // ───────────────────── Game State Logik ─────────────────────
 void checkGameState() {
     if (gameState == DEBUG || gameState == RESET) return;
-
-    if (gameState == WAIT_FOR_BALL && ballInGame == 1) {
-        gameState = IN_GAME;
-        pointsTask = timer.every(1000, addRandomPoints);
-    }
 
     if (gameState != lastGameState) {
         handleLCDDisplay();
@@ -144,16 +145,7 @@ void startGameOver() {
 bool finishGameOver(void *) {
     gameState = RESET;
     handleLCDDisplay();
-    resetTask = timer.in(5000, finishReset);
-    return false;
-}
-
-bool finishReset(void *) {
-    points = 0;
-    ballInGame = 0;
-    gameState = WAIT_FOR_BALL;
-    lastGameState = WAIT_FOR_BALL;
-    handleLCDDisplay();
+    resetTask = timer.in(5000, resetGame);
     return false;
 }
 
@@ -181,7 +173,54 @@ void reciveMessagesFromAdminPanel() {
     Wire.requestFrom(adminpanel, 50);
     String answer = "";
     while (Wire.available()) answer += (char)Wire.read();
-    Serial.println("Admin Panel says: " + answer);
+
+        int dataCount;
+        String* data = splitString(answer, '|', dataCount);
+
+        for (int j = 0; j < dataCount; j++) {
+            if (data[j].indexOf(':') == -1) continue;
+
+            int count;
+            String* dataset = splitString(data[j], ':', count);
+
+            if (count == 2) {
+                processESPData(dataset[0], dataset[1]);
+            }
+
+            delete[] dataset;
+        }
+        delete[] data;
+}
+
+void processESPData(String key, String value) {
+    float dataValueF = value.toFloat();
+    int dataValueI = value.toInt();
+    if (key == "mtpl") {
+        multiplier = dataValueF;
+        Serial.println("Admin Panel setzt Multiplier auf " + String(dataValueF));
+    }else if(key == "pbu"){
+        pointsBumper = dataValueI;
+        Serial.println("Admin Panel setzt Punkte für Bumper auf " + String(dataValueI));
+    }else if(key == "psl"){
+        pointsSlingsshots = dataValueI;
+        Serial.println("Admin Panel setzt Punkte für Slingshots auf " + String(dataValueI));
+    }else if(key == "pta"){
+        pointsTargets = dataValueI;
+        Serial.println("Admin Panel setzt Punkte für Targets auf " + String(dataValueI));
+    }else if(key == "rst"){
+        if(dataValueI == 1){
+            resetTask = timer.in(0, resetGame);
+            Serial.println("Admin Panel startet Reset");
+        }
+    }else if(key == "lsp"){
+        lightSpeed = dataValueF;
+        Serial.println("Admin Panel setzt Lichtgeschwindigkeit auf " + String(dataValueF));
+    }else if(key == "len"){
+        lightSpeed = dataValueI;
+        Serial.println("Admin Panel setzt LichtState auf " + String(dataValueI));
+    }else{
+        Serial.println("Unbekannter Key: " + key + " = " + value);
+    }
 }
 
 // ───────────────────── Slaves ─────────────────────
@@ -189,6 +228,7 @@ long updateBeginTime;
 void printConnectionFromSlaves() {
     updateBeginTime = millis();
 
+    //Sende status an esp mit error codes und so
     String statusMessage = "gs:" + String(gameState) + "|pts:" + String(points) + "|";
 
     for (int i = 0; i < moduleCount; i++) {
@@ -249,6 +289,8 @@ void processSlaveData(String key, String value, int module, String &statusMessag
     else if (key == "ballingame") {
         if(ballInGame == 0 && dataValue == 1 && gameState == WAIT_FOR_BALL) {
             ballInGame = 1;
+            gameState = IN_GAME;
+            pointsTask = timer.every(1000, addRandomPoints);
             Serial.println(">>> Module " + String(module) + " meldet Kugel im Spiel.");
         }
     }
@@ -297,4 +339,20 @@ void checkBallLost(){
         startGameOver();
     }
     
+}
+
+bool resetGame(void *) {
+    points = 0;
+    ballInGame = 0;
+    gameState = WAIT_FOR_BALL;
+    lastGameState = WAIT_FOR_BALL;
+    for(int i = 0; i < moduleCount; i++) {
+        int addr = moduleSlaves[i];
+        if (isSlaveAlive(addr)) {
+            Wire.beginTransmission(addr);
+            Wire.write("resetGame");
+            Wire.endTransmission();
+        }
+    }
+    return false;
 }
