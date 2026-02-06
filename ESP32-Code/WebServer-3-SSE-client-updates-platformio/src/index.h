@@ -251,6 +251,55 @@ const char* webpage_main = R"=====(
         color: #666;
         font-weight: 500;
       }
+
+      /* Slider Styles */
+      .slider-container {
+        font-size: 14px;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .slider {
+        flex: 1;
+        height: 6px;
+        border-radius: 3px;
+        background: #e0e0e0;
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+        cursor: pointer;
+      }
+
+      .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #5c6bc0;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #5c6bc0;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .slider-value {
+        min-width: 50px;
+        text-align: right;
+        font-weight: 500;
+        color: #5c6bc0;
+      }
     </style>
   </head>
   
@@ -333,19 +382,23 @@ const char* webpage_main = R"=====(
 
       <div class="section-subtitle">Lighting Controls</div>
       <div class="controls-grid">
+        <!-- Toggle für Lighting -->
         <div class="toggle-container">
-          <div id="rainbow-toggle" class="toggle" onclick="toggleSetting(this);">
+          <div id="strobe-toggle" class="toggle active" onclick="toggleSetting(this);">
             <div class="toggle-thumb"></div>
           </div>
-          Rainbow
+          Lighting enabled
         </div>
-        <div class="toggle-container">
-          <div id="strobe-toggle" class="toggle" onclick="toggleSetting(this);">
-            <div class="toggle-thumb"></div>
-          </div>
-          Strobe
+        <!-- Slider für Lichgeschwindigkeit -->
+        <div class="slider-container">
+          <label class="input-label" style="min-width: 120px;">Light Effect Speed</label>
+          <input type="range" id="light-speed-slider" class="slider" min="0" max="2" step="0.01" value="1.00">
+          <span class="slider-value" id="light-speed-display">1.00</span>
         </div>
       </div>
+
+      
+
       <div class="setting-item">
         <button class="btn btn-danger" onclick="resetGame()">Reset Game</button>
       </div>
@@ -395,6 +448,12 @@ const char* webpage_main = R"=====(
       function toggleSetting(element) {
         element.classList.toggle('active');
       }
+
+      //** Slider Value Update Display
+      document.getElementById('light-speed-slider').addEventListener('input', function() {
+        const value = parseFloat(this.value).toFixed(2);
+        document.getElementById('light-speed-display').textContent = value;
+      });
   
       //** Apply settings
       // Alle eingegebenen Einstellungen auf ihren Weg schicken
@@ -403,8 +462,8 @@ const char* webpage_main = R"=====(
         const points_bumper = document.getElementById('point-amount-bumper').value;
         const points_slingshot = document.getElementById('point-amount-slingshot').value;
         const points_targets = document.getElementById('point-amount-targets').value;
-        const light_enableRainbow = document.getElementById('rainbow-toggle').classList.contains('active');
-        const light_enableStrobe = document.getElementById('strobe-toggle').classList.contains('active');
+        const lights_enabled = document.getElementById('strobe-toggle').classList.contains('active') ? 1 : 0; // Toggle-Status wird in 1 oder 0 umgewandelt
+        const lightSpeed = document.getElementById('light-speed-slider').value;
           
         var xhttp = new XMLHttpRequest();
         // Multiplier Amount wird jetzt auch an den Server gesendet
@@ -412,9 +471,9 @@ const char* webpage_main = R"=====(
           "SETTINGS?multiplierAmount=" + multiplierAmount +
           "&points_bumper=" + points_bumper + 
           "&points_slingshot=" + points_slingshot +
-          "&points_targets=" + points_targets,
-          "&light_enableRainbow=" + light_enableRainbow,
-          "&light_enableStrobe=" + light_enableStrobe,
+          "&points_targets=" + points_targets +
+          "&lights_enabled=" + lights_enabled +
+          "&light_speed=" + lightSpeed,
           true);
         xhttp.send();
 

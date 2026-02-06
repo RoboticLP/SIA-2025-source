@@ -68,16 +68,18 @@ mtpl:%s|pbu:%d|psl:%d
 ##### ESP > Mega
 
 ```c
-mtple:%d|mtpl:%s|pbu:%d|psl:%d
+mtpl:%.2f|pbu:%d|psl:%d|pta:%d|len:%.2f|lsp:%.2f|rst:%d
 ```
 
 | Key-Name | Wertetyp | Bedeutung |
 |----------|----------|-----------|
 | ```\|``` | /        | Trennzeichen zwischen den Daten |
-| ```mtpl``` | String(float) (2 Kommastellen)  | Der aktuelle Punkte-Multiplier. *Wird intern für I²C in String umgewandelt* |
+| ```mtpl``` | float (2 Kommastellen)  | Der aktuelle Punkte-Multiplier. *Wird intern für I²C in String umgewandelt* |
 | ```pbu``` | int | Trefferpunktzahl für die Bumper-tower |
 | ```psl``` | int | Trefferpunktzahl für die Slingshots |
 | ```pta``` | int | Trefferpunktzahl für die Targets |
+| ```len``` | bit | "1" wenn Lichter an sein sollen, "0" wenn aus|
+| ```lsp``` | float (2 Kommastellen) | Geschwindigkeit der Lichteffekte von 0-200% (0.0-2.0) |
 | ```rst``` | bit | "1" wenn Spiel resetted werden soll |
 
 ---
