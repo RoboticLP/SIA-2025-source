@@ -46,10 +46,7 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| 2 | Slingshot Sensor | Nein | Ja | Taster | Digital | Input_Pullup |
-| 3 | Slingshot Sensor | Nein | Ja | Taster | Digital | Input_Pullup |
-| 4 | Ball Eject | Nein | Nein | Spule | Digital | Output |
-| 5 | Ball Eject | Nein | Nein | Spule | Digital | Output |
+| 6 | Slingshot Sensor | Nein | Nein | Taster | Digital | Input_Pullup |
 
 Ball Eject ist akutell ausgenommen.
 
