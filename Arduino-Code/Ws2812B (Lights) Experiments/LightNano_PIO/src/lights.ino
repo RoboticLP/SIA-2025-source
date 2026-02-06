@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
+#include <Wire.h>
+
 
 #define PIN 6
 #define NUMPIXELS 24
@@ -54,7 +56,13 @@ Led allLights[NUMPIXELS];
 int allLightInts[NUMPIXELS];
 
 void setup() {
-   Serial.begin(9600);
+  Serial.begin(9600);
+
+  Wire.begin(3);                  // I2C Slave Adresse 3
+  Wire.onReceive(receiveEvent);   // Master sendet Daten
+
+
+
   delay(100);              // let everything settle
   pixels.begin();
   pixels.setBrightness(200);
@@ -267,4 +275,19 @@ void rainBow(int leds[], int listLength){
     delay(delayMS);
   }
   effectOngoing = false;
+}
+
+void receiveEvent(int howMany) {
+    int i = 0;
+
+    while (Wire.available() && i < sizeof(command) - 1) {
+        command[i++] = Wire.read();
+    }
+    command[i] = '\0'; // String terminieren
+
+    // Kommando auswerten
+    if (strcmp(command, "resetGame") == 0) {
+        handleReset();
+        Serial.println("resetting...");
+    }
 }
