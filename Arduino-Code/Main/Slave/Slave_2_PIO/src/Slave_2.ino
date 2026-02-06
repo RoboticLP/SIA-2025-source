@@ -1,7 +1,7 @@
 #include <Wire.h>
 #include <Arduino.h>
 
-const int scoring = 6;
+int scoring = 6;
 int SlingshotReader = 0;
 int scoredTimes = 0;
 
@@ -10,6 +10,7 @@ char message[50];
 void setup() {
   Wire.begin(2);  
   Wire.onRequest(requestEvent); 
+  Serial.begin(9600);
  
   pinMode(scoring, INPUT_PULLUP);
 
@@ -18,13 +19,14 @@ void setup() {
 //___________________________void Loop______________________________
 void loop() {
   if(digitalRead(scoring) == LOW) {
-    scoredTimes++;
+    scoredTimes = scoredTimes + 1;
+    Serial.println("ja");
   }
   if(scoredTimes > SlingshotReader) {
     Serial.println ("Slingshots wurden ausgelöst");
     Serial.println(scoredTimes);
     // code...
-    scoredTimes = SlingshotReader;
+    SlingshotReader = scoredTimes;
   }
 }
 //___________________________void requestEvent_______________________
