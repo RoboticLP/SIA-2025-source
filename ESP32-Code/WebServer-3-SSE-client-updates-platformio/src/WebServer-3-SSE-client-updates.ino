@@ -50,6 +50,8 @@ bool settingsChanged = false;
 String mtpl; // float value with two comma digits
 int pbu;
 int psl;
+int pta;
+int shouldReset = 0;
 
 // SSE Clients
 int maxSSEClients = 4;
@@ -93,6 +95,7 @@ void setup() {
   // add server listeners
   server.on("/BUTTON_0", handleButtonPress0);
   server.on("/SETTINGS", handleSettings);
+  server.on("/RESET_GAME", handleResetGame);
 
   server.begin();
 }
@@ -108,12 +111,13 @@ void loop() {
 void wireRequestEvent() {
   if (settingsChanged == true) {
     char settingsDataString[100];
-    sprintf(settingsDataString, "mtpl:%s|pbu:%d|psl:%d", mtpl, pbu, psl);
+    sprintf(settingsDataString, "mtpl:%s|pbu:%d|psl:%d|pta:%d|rst:%d", mtpl, pbu, psl, pta, shouldReset);
 
     Wire.write(settingsDataString);
     settingsChanged = false;
+    shouldReset = 0; // set this back to 0 so game wont reset every time new updates get sent
 
-    Serial.print("[I²C] Sent settings update to master"); Serial.println(settingsDataString);
+    Serial.print("[I²C] Sent settings update to master: "); Serial.println(settingsDataString);
   } else {
     Serial.println("[I²C] No new settings to send to master");
     Wire.write("");
@@ -143,7 +147,7 @@ void wireRecieveEvent(int howMany) {
         M5S = dataset[1];
       }
 
-      Serial.print("[I²C] request recieved "); Serial.println(dataset[0]);
+      // Serial.print("[I²C] request recieved "); Serial.println(dataset[0]);
       
       delete[] dataset;
     }
@@ -172,9 +176,17 @@ void handleSettings() {
 
   pbu = server.arg("points_bumper").toInt();
   psl = server.arg("points_slingshot").toInt();
+  pta = server.arg("points_targets").toInt();
   // String rainbow = server.arg("enable_point_multipliers");  todo: lighting settings
 
-  Serial.print("[HTTP XML] Settings applied pressed "); Serial.print(mtpl); Serial.print(pbu); Serial.print(psl);  Serial.print("\n");
+  Serial.print("[HTTP XML] Settings applied pressed "); Serial.print(mtpl); Serial.print(pbu); Serial.print(psl); Serial.print(pta); Serial.print("\n");
+  settingsChanged = true;
+  server.send(200, "text/plain", "");
+}
+
+void handleResetGame() {
+  shouldReset = 1;
+  Serial.println("[HTTP XML] Reset game pressed");
   settingsChanged = true;
   server.send(200, "text/plain", "");
 }

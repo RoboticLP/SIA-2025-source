@@ -317,6 +317,18 @@ const char* webpage_main = R"=====(
             value="1000"
             placeholder="1">
         </div>
+        <div class="input-container">
+          <label class="input-label">Point amount targets</label>
+          <input 
+            type="number" 
+            id="point-amount-targets" 
+            class="number-input" 
+            min="1" 
+            max="50000" 
+            step="10" 
+            value="100"
+            placeholder="1">
+        </div>
       </div>
 
       <div class="section-subtitle">Lighting Controls</div>
@@ -390,6 +402,7 @@ const char* webpage_main = R"=====(
         const multiplierAmount = document.getElementById('multiplier-amount').value; // Neuer Wert wird ausgelesen
         const points_bumper = document.getElementById('point-amount-bumper').value;
         const points_slingshot = document.getElementById('point-amount-slingshot').value;
+        const points_targets = document.getElementById('point-amount-targets').value;
         const light_enableRainbow = document.getElementById('rainbow-toggle').classList.contains('active');
         const light_enableStrobe = document.getElementById('strobe-toggle').classList.contains('active');
           
@@ -398,7 +411,8 @@ const char* webpage_main = R"=====(
         xhttp.open("PUT",
           "SETTINGS?multiplierAmount=" + multiplierAmount +
           "&points_bumper=" + points_bumper + 
-          "&points_slingshot=" + points_slingshot,
+          "&points_slingshot=" + points_slingshot +
+          "&points_targets=" + points_targets,
           "&light_enableRainbow=" + light_enableRainbow,
           "&light_enableStrobe=" + light_enableStrobe,
           true);
