@@ -67,7 +67,7 @@ NICHT SICHER
 | 2 | Targets | Nein | Ja | Taster | Digital | Input |
 
 ## Nano 5
-### Nano 5 ist für weitere Aktionen in der Zukunft geplant und wird im Falle vom Gebraucht genutzt.
+### Nano 5 ist für die LEDs zuständig und Steuert die LED Bänder. Er bekommt die Einstellungen und Effekt Aufgaben von dem Mega
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
