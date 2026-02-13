@@ -6,9 +6,10 @@
 #define PIN 6
 #define NUMPIXELS 24
 
-//globale Variablen für die Lichter
+//globale Variablen für die Kommunikation zum Nano
 float globalEffectSpeed = 1.0; //ranges from 0-2, multiplyer to in-/decrease speed, accesible in the webpanel
 boolean overrideAllLightsOff = false; //used to deactivate all lights immediately, accesible in the webpanel
+char command[50]; //für empfangene Kommdandos
 
 class rgb {
   public:
@@ -44,8 +45,10 @@ public:
   int effectProgress;
   long timeBetweenProgress;
   long lastProgressTimeStamp;
+  boolean isActive;
 
-  EffectState(int e, long t) : effectProgress(e), timeBetweenProgress(t) {}
+  EffectState(int e, long t, boolean i) : effectProgress(e), timeBetweenProgress(t),isActive(i) {}
+  EffectState(int e, long t) : effectProgress(e), timeBetweenProgress(t),isActive(false) {}
 };
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
@@ -58,7 +61,7 @@ int allLightInts[NUMPIXELS];
 void setup() {
   Serial.begin(9600);
 
-  Wire.begin(3);                  // I2C Slave Adresse 3
+  Wire.begin(5);                  // I2C Slave Adresse 5
   Wire.onReceive(receiveEvent);   // Master sendet Daten
 
 
@@ -80,7 +83,7 @@ void loop() {
   //  lastUpdate = millis();
   //  setPixelsRandomBlueAmbient(allLightInts,NUMPIXELS,0,310);
   //}
-  swoopBallEffect(allLightInts,NUMPIXELS,2,255,0,255);
+  randomTransition(allLightInts,NUMPIXELS,2,"red");
 
   //————————————————LIGHTMANAGER———————————————
   if(!overrideAllLightsOff){
@@ -112,7 +115,42 @@ void loop() {
   pixels.show(); //nachdem alle pixel abgearbeitet wurden, den led-strip aktualisieren
 }
 
+//———————nach Kommunikation mit dem Mega aufgerufen———————
+void handleReset(){
 
+}
+
+void handleSpeedChange(float speed){
+  //bei allen effectstates den cooldown mit dem alten speed multiplizieren und durch den neuen teilen
+  randomTransitionEffectState.timeBetweenProgress = randomTransitionEffectState.timeBetweenProgress*globalEffectSpeed/speed;
+  swoopEffectState.timeBetweenProgress = swoopEffectState.timeBetweenProgress*globalEffectSpeed/speed;
+  blueAmbientEffectState.timeBetweenProgress = blueAmbientEffectState.timeBetweenProgress*globalEffectSpeed/speed;
+  globalEffectSpeed = speed;
+}
+
+void handleLightsOff(boolean off){
+  overrideAllLightsOff = off;
+}
+
+void handleBallIn(){
+
+}
+
+void handleBallOut(){
+
+}
+
+void handleSlaveTwoHit(){
+
+}
+
+void handleSlaveThreeHit(){
+
+}
+
+void handleSlaveFourHit(){
+
+}
 
 void setPixelsEqually(int leds[], int listLength, int R, int G, int B, int priority, int duration){
   for(int number = 0; number < listLength; number ++){
@@ -146,22 +184,6 @@ void setPixelsRandomRedAmbient(int leds[], int listLength, int priority, int dur
   }
 }
 
-void setPixelsRandomBlueAmbient(int leds[], int listLength, int priority, int duration){
-  for(int number = 0; number < listLength; number ++){
-
-    if(leds[number] >= NUMPIXELS) continue; //looking if the number extents the amount of numbers
-    Led& led = allLights[leds[number]];
-    if(priority >= led.PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
-    LightState& ls = led.prio[priority];
-    rgb color = randomBlueColor();
-    ls.r= color.r; //setting given rgb values for the given priority
-    ls.g= color.g;
-    ls.b= color.b;
-    ls.on = true;
-    ls.timeOfShutOff = millis() + duration;
-  }
-}
-
 void setSpecificLed(int LED, int R, int G, int B, int priority, int duration){
 
     if(LED >= NUMPIXELS) return; //looking if the number extents the amount of numbers
@@ -183,21 +205,107 @@ rgb randomColor(){
   return rgb(r,g,b);
 }
 
-rgb randomBlueColor(){
+rgb randomBlueColorWithBrightness(){
+  float brightness = random(50)/100 + 0.5;
   uint8_t c = random(256);
-  return rgb(0,c,255);
+    return rgb(0,c*brightness,255*brightness);
 }
 
 rgb randomRedColor(){
   uint8_t c = random(160); //nur bis grün = 159 => kein richtiges gelb
-  return rgb(255,c,0);
+  if(random() < 0.5){
+    return rgb(255,0,c);
+  }
+  else return rgb(255,c,0);
 }
-
 
 
 //——————————————————————EFFECTS————————————————
 //EffectStates
-EffectState swoopEffectState = EffectState(-5,20 / globalEffectSpeed); //progress 0; timeBetweenProgress 100 ms
+EffectState swoopEffectState = EffectState(-5,20 / globalEffectSpeed); //progress -5 (startet außerhalb des strips); timeBetweenProgress 20 ms
+EffectState blueAmbientEffectState = EffectState(0,50 / globalEffectSpeed); //progress 0; timeBetweenProgress 50 ms
+EffectState randomTransitionEffectState = EffectState(0,50 / globalEffectSpeed); //progress 0;  timeBetweenProgress 20ms
+rgb randomTransitionColor = rgb(0,0,0);
+rgb lastTransitionColor = rgb(0,0,0);
+
+void randomTransition(int leds[], int listLength, int priority, String colorType){
+  long lastTime = randomTransitionEffectState.lastProgressTimeStamp;
+  long cooldown = randomTransitionEffectState.timeBetweenProgress;
+  if(millis() - lastTime < cooldown) return;
+  for(int number = 0; number < listLength; number ++){
+    if(leds[number] >= NUMPIXELS) continue; //looking if the number extents the amount of numbers
+    Led& led = allLights[leds[number]];
+    if(priority >= led.PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
+    LightState& ls = led.prio[priority];
+    int difr= randomTransitionColor.r - ls.r;
+    int difg = randomTransitionColor.g - ls.g;
+    int difb = randomTransitionColor.b - ls.b;
+    if(abs(difr) < 3 && abs(difb) < 3 && abs(difg) < 3){
+      //———————————Zielfarbe erreicht——————————
+      Serial.println("switched color for the transition ambient!");
+      ls.r = randomTransitionColor.r;
+      ls.g = randomTransitionColor.g;
+      ls.b = randomTransitionColor.b;
+      lastTransitionColor = randomTransitionColor;
+      if(colorType.equalsIgnoreCase("blue"))randomTransitionColor = randomBlueColorWithBrightness();
+      else if(colorType.equalsIgnoreCase("red"))randomTransitionColor = randomRedColor();
+      else randomTransitionColor = randomColor();
+      continue;
+    }
+    int stepR = (randomTransitionColor.r - lastTransitionColor.r)*0.05;
+    int stepG = (randomTransitionColor.g - lastTransitionColor.g)*0.05;
+    int stepB = (randomTransitionColor.b - lastTransitionColor.b)*0.05;
+
+    // Mindestschritt erzwingen
+    if(stepR == 0 && difr != 0) stepR = (difr > 0) ? 1 : -1;
+    if(stepG == 0 && difg != 0) stepG = (difg > 0) ? 1 : -1;
+    if(stepB == 0 && difb != 0) stepB = (difb > 0) ? 1 : -1;
+
+    int newR = ls.r + stepR;
+    int newG = ls.g + stepG;
+    int newB = ls.b + stepB;
+
+    //sichertstellen, das die Werte nicht "überlaufen (z.b.245 + 13 --> 255 anstatt 245 + 13 --> 3)"
+    if((stepR > 0 && newR > randomTransitionColor.r) ||
+      (stepR < 0 && newR < randomTransitionColor.r))
+      newR = randomTransitionColor.r;
+
+    if((stepG > 0 && newG > randomTransitionColor.g) ||
+      (stepG < 0 && newG < randomTransitionColor.g))
+      newG = randomTransitionColor.g;
+
+    if((stepB > 0 && newB > randomTransitionColor.b) ||
+      (stepB < 0 && newB < randomTransitionColor.b))
+      newB = randomTransitionColor.b;
+
+    ls.r = newR; //farbwerte setzen
+    ls.g = newG;
+    ls.b = newB;
+
+    ls.on = true;
+    ls.timeOfShutOff = millis() + cooldown + 50;
+  }
+  randomTransitionEffectState.lastProgressTimeStamp = millis();
+}
+
+void randomBlueAmbient(int leds[], int listLength, int priority){
+  long lastTime = blueAmbientEffectState.lastProgressTimeStamp;
+  long cooldown = blueAmbientEffectState.timeBetweenProgress;
+  if(millis() - blueAmbientEffectState.lastProgressTimeStamp < blueAmbientEffectState.timeBetweenProgress) return;
+
+  for(int number = 0; number < listLength; number ++){
+    if(leds[number] >= NUMPIXELS) continue; //looking if the number extents the amount of numbers
+    Led& led = allLights[leds[number]];
+    if(priority >= led.PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
+    LightState& ls = led.prio[priority];
+    rgb color = randomBlueColorWithBrightness();
+    ls.r= color.r; //setting given rgb values for the given priority
+    ls.g= color.g;
+    ls.b= color.b;
+    ls.on = true;
+    ls.timeOfShutOff = millis() + cooldown + 50;
+  }
+}
 
 void swoopBallEffect(int leds[], int listLength, int priority,uint8_t r,uint8_t g,uint8_t b){
   long lastTime = swoopEffectState.lastProgressTimeStamp;
@@ -207,6 +315,7 @@ void swoopBallEffect(int leds[], int listLength, int priority,uint8_t r,uint8_t 
   int swoopProgress = swoopEffectState.effectProgress;
   if(swoopProgress > listLength) {
       swoopEffectState.effectProgress = 0;
+      swoopEffectState.isActive = false;
       Serial.println("Swoop-Effekt komplett durchgelaufen");
   }
 
@@ -230,6 +339,7 @@ void swoopBallEffect(int leds[], int listLength, int priority,uint8_t r,uint8_t 
   swoopEffectState.effectProgress++;
   if(swoopProgress > listLength) {
       swoopEffectState.effectProgress = -5;
+      swoopEffectState.isActive = false;
       Serial.println("Swoop-Effekt komplett durchgelaufen");
   }
   swoopEffectState.lastProgressTimeStamp = millis();
@@ -287,7 +397,6 @@ void receiveEvent(int howMany) {
 
     // Kommando auswerten
     if (strcmp(command, "resetGame") == 0) {
-        handleReset();
         Serial.println("resetting...");
     }
 }
