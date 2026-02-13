@@ -19,6 +19,7 @@ LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 auto timer = timer_create_default();
 int backlightPin = 6;
 int ballLostSensor = A0;
+int outputFinger = 5;
 
 int moduleCount = 4;
 int moduleSlaves[4] = { slave2, slave3, slave4, slave5 };
@@ -40,7 +41,6 @@ GameState lastGameState = WAIT_FOR_BALL;
 // ───────────────────── Timer-Handles ─────────────────────
 Timer<>::Task gameOverTask;
 Timer<>::Task resetTask;
-Timer<>::Task pointsTask;
 
 // ───────────────────── Forward Declarations ─────────────────────
 void handleLCDDisplay();
@@ -66,6 +66,7 @@ void setBacklightPercent(int percent) {
 void setup() {
     pinMode(backlightPin, OUTPUT);
     pinMode(ballLostSensor, INPUT);
+    pinMode(outputFinger, OUTPUT);
 
     setBacklightPercent(30);
 
@@ -88,7 +89,8 @@ void loop() {
     timer.tick();
     handleDebugInput();
     checkGameState();
-    checkBallLost();  
+    checkBallLost();
+    checkFingers();
     
     // Slave-Kommunikation nur alle 2 Sekunden
     static unsigned long lastSlaveCheck = 0;
@@ -96,6 +98,7 @@ void loop() {
         printConnectionFromSlaves();
         sendStatusToAdminPanel();
         reciveMessagesFromAdminPanel();
+        sendLEDUpdates();
         lastSlaveCheck = millis();
     }
 }
@@ -197,30 +200,31 @@ void processESPData(String key, String value) {
     int dataValueI = value.toInt();
     if (key == "mtpl") {
         multiplier = dataValueF;
-        Serial.println("Admin Panel setzt Multiplier auf " + String(dataValueF));
     }else if(key == "pbu"){
         pointsBumper = dataValueI;
-        Serial.println("Admin Panel setzt Punkte für Bumper auf " + String(dataValueI));
     }else if(key == "psl"){
         pointsSlingsshots = dataValueI;
-        Serial.println("Admin Panel setzt Punkte für Slingshots auf " + String(dataValueI));
     }else if(key == "pta"){
         pointsTargets = dataValueI;
-        Serial.println("Admin Panel setzt Punkte für Targets auf " + String(dataValueI));
     }else if(key == "rst"){
         if(dataValueI == 1){
             resetTask = timer.in(0, resetGame);
-            Serial.println("Admin Panel startet Reset");
         }
     }else if(key == "lsp"){
         lightSpeed = dataValueF;
-        Serial.println("Admin Panel setzt Lichtgeschwindigkeit auf " + String(dataValueF));
     }else if(key == "len"){
         lightSpeed = dataValueI;
-        Serial.println("Admin Panel setzt LichtState auf " + String(dataValueI));
     }else{
         Serial.println("Unbekannter Key: " + key + " = " + value);
     }
+}
+
+void sendLEDUpdates() {
+    if (!isSlaveAlive(slave5)) return;
+    String statusMessage = "lsp:" + String(lightSpeed) + "|len:" + String(lightState) + "|";
+    Wire.beginTransmission(slave5);
+    Wire.write(statusMessage.c_str());
+    Wire.endTransmission();
 }
 
 // ───────────────────── Slaves ─────────────────────
@@ -279,19 +283,20 @@ void printConnectionFromSlaves() {
 void processSlaveData(String key, String value, int module, String &statusMessage) {
     int dataValue = value.toInt();
     // Verarbeitung der einzelnen Keys
-    if (key == "ht1") {
-        if (gameState == IN_GAME) {
-            points += dataValue * multiplier;
-            Serial.println(">>> Module " + String(module) + " HIT 1: +" + String(dataValue * multiplier) + " Punkte | Total: " + String(points));
-            handleLCDDisplay();
-        }
-    }
-    else if (key == "ballingame") {
+    //Bumper Tower Hits
+    auto addPoints = [&](const char* type, int basePoints) {
+        if (gameState != IN_GAME) return;
+        points += dataValue * multiplier * basePoints;
+        handleLCDDisplay();
+    };
+
+    if(key == "bth") addPoints("Bumper Hits",   pointsBumper);
+    else if(key == "ssh") addPoints("Slingshot Hits", pointsSlingsshots);
+    else if(key == "tah") addPoints("Target Hits",    pointsTargets);
+    else if(key == "ballingame") {
         if(ballInGame == 0 && dataValue == 1 && gameState == WAIT_FOR_BALL) {
             ballInGame = 1;
             gameState = IN_GAME;
-            pointsTask = timer.every(1000, addRandomPoints);
-            Serial.println(">>> Module " + String(module) + " meldet Kugel im Spiel.");
         }
     }
     else if (key == "err") {
@@ -335,10 +340,18 @@ void handleLCDDisplay() {
 void checkBallLost(){
     int sensorValue = analogRead(ballLostSensor);
     if(sensorValue < 250 && ballInGame == 1 && gameState == IN_GAME){
-        timer.cancel(pointsTask);
+        
         startGameOver();
     }
     
+}
+
+
+void checkFingers(){
+    if(gameState == IN_GAME){
+        digitalWrite(outputFinger,1);
+    }else
+        digitalWrite(outputFinger,1);
 }
 
 bool resetGame(void *) {
