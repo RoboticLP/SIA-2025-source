@@ -1,15 +1,15 @@
 #include <Wire.h>
 #include <Arduino.h>
 
-int scoring = 6;
-int SlingshotReader = 0;
-int scoredTimes = 0;
+int scoring = 6; //Taster Pin
+int SlingshotReader = 0; //Auswertung
+int scoredTimes = 0; //Auswertung
 
 bool tasterZustand = HIGH;   // stabiler Zustand
 bool letzterGelesenerWert = HIGH;   // letzter Rohwert
-unsigned long letzteZeit = 0;
+unsigned long letzteZeit = 0; //gibt an, in welchem Zeitpunkt der Taster getrückt wurde
 
-int entprellZeit = 50; // 50 ms
+int entprellZeit = 100; // 100 ms
 
 
 char message[50];
@@ -25,7 +25,9 @@ void setup() {
 
 //___________________________void Loop______________________________
 void loop() {
-
+if(digitalRead(scoring) == LOW){
+  Serial.println("0.Schritt");
+}
 bool gelesen = digitalRead(scoring);
 
  // Änderung erkannt?
