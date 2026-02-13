@@ -14,6 +14,32 @@ Zur Programmierung des ESP32 der Hochschule müsst ihr einen [Treiber](https://w
 - [Code Snippets](#code-snippets)
 ---
 
+## Datenformat der SSE-Kommunikation
+
+#### Server -> Website:
+|  Key-Name  | Wertetyp | Bedeutung |
+|------------|----------|-----------|
+| ```M2S```  | Bit (true/false) | I²C Erreichbarkeit des Slaves 2 |
+| ```M3S```  | Bit (true/false) | I²C Erreichbarkeit des Slaves 3 |
+| ```M4S```  | Bit (true/false) | I²C Erreichbarkeit des Slaves 4 |
+| ```M5S```  | Bit (true/false) | I²C Erreichbarkeit des Slaves 5 |
+| ```log``` | XML _Container_ | Beinhaltet Log infos |
+| ```logType``` | Log info (String) | "error" oder "info" |
+| ```logMessage``` | Log info (String) | Die anzuzeigende Log-Nachricht |
+| ```logTimestamp``` | Log info (String int) | Zeitpunkt zudem das Log erstellt wurde |
+| ```lastUpdateRecieved``` | Bit (true/false) | Ob ein Update von I²C empfangen wurde |
+
+#### Website -> Server:
+|  Key-Name  | Wertetyp | Bedeutung |
+|------------|----------|-----------|
+| ```multiplierAmount``` | float | Größe des Multipliers |
+| ```points_bumper``` | int | Trefferpunktzahl der Bumper Tower |
+| ```points_slingshot``` | int | Trefferpunktzahl der Slingshots |
+| ```points_targets``` | int | Trefferpunktzahl der Targets |
+| ```lights_enabled``` | Bit (true/false) | Ob Lichteffekte ein/aus geschaltet werden sollen |
+| ```light_speed``` | float | Die Geschwindigkeit der Lichteffekte |
+| ```RESET_GAME``` | / | Wenn das Spiel zurückgesetzt werden soll |
+
 ## WiFi Access Point
 Sobald der ESP32 hochfährt und der WLAN-Modus nicht aktiv ist eröffnet er einen Access Point. Mit diesem können sich **maximal 4 Geräte** verbinden. Alle danach folgenden Geräte werden in eine Warteschlange gesetzt. Das Adminpanel ist immer erreichbar unter der lokalen IP  ```192.168.1.1``` im Browser des mit dem ESP32 verbunden Geräts. Der WLAN Modus ist nur aktiv wenn die ```wifi_credentials.h```-Datei mit den richtigen Variablen vorhanden ist.
 

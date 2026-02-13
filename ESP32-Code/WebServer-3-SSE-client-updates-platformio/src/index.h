@@ -310,6 +310,7 @@ const char* webpage_main = R"=====(
         <div class="section-title">Flipper Adminpanel v.69</div>
         <button class="btn btn-secondary btn-small" onclick="window.location.reload();">Reload window</button>
       </div>
+      <label id="last-update-status" class="input-label">xX Update Text here Xx</label>
     </div>
 
     <div class="section-container">
@@ -425,6 +426,18 @@ const char* webpage_main = R"=====(
         error: 'error',
         info: 'info'
       };
+
+      //** Last update logic
+      let lastUpdate = -1;
+      function handleLastUpdateShow() {
+        if (lastUpdate == -1) {
+          document.getElementById("last-update-status").innerHTML = "No I²C update recieved yet";
+        } else {
+          let updateTimePassed = Date.now() - lastUpdate;
+          document.getElementById("last-update-status").innerHTML = "Last I²C update: " + Math.floor(updateTimePassed / 1000) + " seconds ago";
+        }
+      }
+      setInterval(handleLastUpdateShow, 1000);
 
       //** Fügt neuen Log ganz oben hinzu
       function addLog(type, message, timestamp = new Date().toLocaleTimeString('de-DE')) {
@@ -548,13 +561,6 @@ const char* webpage_main = R"=====(
         return xmlHttp;
       }
       
-      //**     User input handlers     **//
-      function handleButtonPress0() {
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("PUT", "BUTTON_0", true);
-        xhttp.send();
-      }
-      
       //**     SSE stuff (Server send events)     **//
       if(typeof(EventSource) !== "undefined") {
         addLog(logType.info, 'Your Browser supports SSE. Opening connection...');
@@ -579,6 +585,13 @@ const char* webpage_main = R"=====(
         var xml_tag_data;
         var message_data;
 
+        // if new I²C update was recieved before update was send to clients
+        xml_tag_data = xmlData.getElementsByTagName("lastUpdateRecieved");
+        if (xml_tag_data && xml_tag_data.length > 0) {
+          lastUpdate = Date.now();
+        }
+
+        // status of connected modules/slaves
         xml_tag_data = xmlData.getElementsByTagName("M2S");
         if (xml_tag_data && xml_tag_data.length > 0) {
           message_data = xml_tag_data[0].firstChild.nodeValue;
@@ -619,25 +632,6 @@ const char* webpage_main = R"=====(
             status_container.innerHTML = "Module 5: ✅"; // enable toggle
           }
         }
-        
-        // // toggle update
-        // xml_tag_data = xmlData.getElementsByTagName("B0");
-        // if (xml_tag_data && xml_tag_data.length > 0) {
-        //   message_data = xml_tag_data[0].firstChild.nodeValue;
-        //   const ledToggle = document.getElementById("led-toggle");
-        //   if (message_data == 0) {
-        //     ledToggle.classList.remove("active"); // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
-        //   } else {
-        //     ledToggle.classList.add("active"); // enable toggle
-        //   }
-        // }
-
-        // // Multiplier Amount update vom Server (falls der Server den Wert zurückschickt)
-        // xml_tag_data = xmlData.getElementsByTagName("MULT_AMT");
-        // if (xml_tag_data && xml_tag_data.length > 0) {
-        //   message_data = xml_tag_data[0].firstChild.nodeValue;
-        //   document.getElementById("multiplier-amount").value = message_data;
-        // }
 
         // add log
         var logType;
