@@ -39,7 +39,7 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
 | 4 | Ball Lost Laser Schranke | Nein | Nein | Lichtschranke | Digital | Input_Pullup |
-| 5 | Ball entlass in die Startvorrichtung | Nein | Nein | Servo | PWM |
+| 5 | Ball entlass in die Startvorrichtung | Ja | Nein | Spule | Digital | Output |
 
 ## Nano 2
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
