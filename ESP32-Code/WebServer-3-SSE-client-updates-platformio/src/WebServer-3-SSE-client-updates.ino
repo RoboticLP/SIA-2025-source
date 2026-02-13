@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include "utils.h"
 #include "index.h"
+#include "errorcodes.h"
 
 // credentials for wifi
 #define WiFi_SSID ""
@@ -39,7 +40,7 @@ IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress Actual_IP;
 
-// Module statusessss
+// Module status
 String M2S = "0";
 String M3S = "0";
 String M4S = "0";
@@ -149,6 +150,8 @@ void wireRecieveEvent(int howMany) {
         M4S = dataset[1];
       } else if (dataset[0] == "M5") {
         M5S = dataset[1];
+      } else if (dataset[0] == "err") {
+        broadcastSSE_log("error", getErrorMessage(dataset[1].toInt()));
       }
 
       // Serial.print("[I²C] request recieved "); Serial.println(dataset[0]);
@@ -235,7 +238,6 @@ void handleSSEConnect() {
   client.flush();
   Serial.println("[SSE] answer sent. Sending first update packet");
   broadcastSSE_update(); // first update to set all data to current
-  broadcastSSE_log("info", "Ein neuer Client hat sich verbunden", millis()); // nur testweise hier
 }
 
 void broadcastSSE_update() {
@@ -271,11 +273,12 @@ void broadcastSSE_update() {
 //** logType: String - der Typ ("error" oder "info")
 //** logMessage: String - die zu versendende Nachricht (max 95 Zeichen)
 //** logTimestamp: int - der Zeitpunkt des ereignisses, der auf dem Adminpanel angezeigt wird (max 7 Stellen)
-void broadcastSSE_log(String logType, String logMessage, int logTimestamp) {
+// void broadcastSSE_log(String logType, String logMessage, int logTimestamp) {
+void broadcastSSE_log(String logType, String logMessage) {
   String xmlData = "<?xml version='1.0'?><Data><log>";
   xmlData += "<logType>" + logType + "</logType>";
   xmlData += "<logMessage>" + logMessage + "</logMessage>";
-  xmlData += "<logTimestamp>" + String(logTimestamp) + "</logTimestamp>";
+  // xmlData += "<logTimestamp>" + String(logTimestamp) + "</logTimestamp>";
   xmlData += "</log></Data>";
 
   // send data to all clients

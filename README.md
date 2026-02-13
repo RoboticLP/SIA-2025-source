@@ -56,14 +56,14 @@ Hilfreiche Resourcen:
 
 <span style="color:orange">*prototyping*:</span>
 ```c
-mtpl:%s|pbu:%d|psl:%d
+mtpl:%s|pbu:%d|psl:%d|err:%d
 ```
 
 | Key-Name | Wertetyp | Bedeutung |
 |----------|----------|-----------|
 | ```\|``` | /        | Trennzeichen zwischen den Daten |
 | ```gs``` | int | [Gamestate](docs/error-codes.md#gamestate-id) (aktueller Zustand des Flippers) |
-| `````` | int | Id eines Logs/Errors für das Frontend |
+| ```err``` | int | Id eines Logs/Errors für das Frontend |
 
 ---
 
