@@ -5,11 +5,10 @@ int scoring = 6; //Taster Pin
 int SlingshotReader = 0; //Auswertung
 int scoredTimes = 0; //Auswertung
 
-bool tasterZustand = HIGH;   // stabiler Zustand
-bool letzterGelesenerWert = HIGH;   // letzter Rohwert
-unsigned long letzteZeit = 0; //gibt an, in welchem Zeitpunkt der Taster getrückt wurde
+unsigned long TasterZeit = 0; // Zeit beim drücken ders Tasters
+int TasterGedrückt = 0; // If-Clause Bestätigung
 
-int entprellZeit = 100; // 100 ms
+int entprellZeit = 200; // 200 ms
 
 
 char message[50];
@@ -25,35 +24,24 @@ void setup() {
 
 //___________________________void Loop______________________________
 void loop() {
-if(digitalRead(scoring) == LOW){
-  Serial.println("0.Schritt");
-}
-bool gelesen = digitalRead(scoring);
 
- // Änderung erkannt?
-  if (gelesen != letzterGelesenerWert) {
-    letzteZeit = millis(); // Zeit merken
-    letzterGelesenerWert = gelesen;
-    Serial.println("1.Schritt");
-  
-  // Ist der Wert lange genug stabil?
-  if ((millis() - letzteZeit) > entprellZeit) {
-    Serial.println("2.Schritt");
-    // Nur reagieren, wenn stabiler Zustand neu ist
-    if (tasterZustand != gelesen) {
-    tasterZustand = gelesen;
-    Serial.println("3.Schritt");
-    // Aktion beim Drücken (LOW wegen INPUT_PULLUP)
-      if (tasterZustand == LOW) {
-        scoredTimes = scoredTimes + 1;
-      }}}}
-  if(scoredTimes > SlingshotReader) {
+
+ if(digitalRead(scoring) == LOW) {
+ TasterZeit = millis();                // aktualisiert die Tasterzeit
+ TasterGedrückt = TasterGedrückt + 1;  // registriert das Signal und speichert es als Variable
+ }
+ if(millis() - TasterZeit > entprellZeit && TasterGedrückt == 1) {
+ TasterGedrückt = 0;                   // zurücksetzen 
+ scoredTimes = scoredTimes + 1;
+ }
+
+ if(scoredTimes > SlingshotReader) {
     Serial.println ("Slingshots wurden ausgelöst");
     Serial.println(scoredTimes);
     // code...
     SlingshotReader = scoredTimes;
   }
-  }
+ }
 //___________________________void requestEvent_______________________
 void requestEvent() {
   sprintf(message, "ssh:%d|", scoredTimes);
