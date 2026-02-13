@@ -641,12 +641,14 @@ const char* webpage_main = R"=====(
         if (xml_tag_data && xml_tag_data.length > 0) {
           logType = xml_tag_data[0].getElementsByTagName("logType");
           logMessage = xml_tag_data[0].getElementsByTagName("logMessage");
-          logTimestamp = xml_tag_data[0].getElementsByTagName("logTimestamp");
-          if (logType.length > 0 && logMessage.length > 0 && logTimestamp.length > 0) {
+          // logTimestamp = xml_tag_data[0].getElementsByTagName("logTimestamp");
+          // if (logType.length > 0 && logMessage.length > 0 && logTimestamp.length > 0) {
+          if (logType.length > 0 && logMessage.length > 0) {
             logType = logType[0].firstChild.nodeValue;
             logMessage = logMessage[0].firstChild.nodeValue;
-            logTimestamp = logTimestamp[0].firstChild.nodeValue;
-            addLog(logType, logMessage, logTimestamp);
+            // logTimestamp = logTimestamp[0].firstChild.nodeValue;
+            addLog(logType, logMessage);
+            // addLog(logType, logMessage, logTimestamp);
           }
         }
       }
