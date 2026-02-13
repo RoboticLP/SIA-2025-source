@@ -38,9 +38,10 @@ ht1:%d|ht2:%d|err:%s
 |  Key-Name  | Wertetyp | Bedeutung                                            |
 |------------|----------|------------------------------------------------------|
 | ```\|```   | /        | Trennzeichen zwischen den Daten                      |
-| ```ht1```  | int      | Zahl der Treffer (Hits) des **ersten** Ziels (Targets) seit dem letztem Update      |
-| ```ht2```  | int      | Zahl der Treffer (Hits) des **zweiten** Ziels (Targets) seit dem letztem Update      |
-| ```err```  | String (Error-code) | Wird nur versendet wenn error vorhanden ist. Sendet dann einen Error-code der dann vom ESP32 verarbeitet wird. |
+| ```bth```  | int      | Zahl der Treffer (Hits) der Bumper Tower seit dem letzem Update     |
+| ```ssh```  | int      | Zahl der Treffer (Hits) der Sling Shots seit dem letzem Update     |
+| ```tah```  | int      | Zahl der Treffer (Hits) der Targets seit dem letzem Update     |
+| ```err```  | String (Error-code) | Wird nur versendet wenn Error vorhanden ist. Sendet dann einen Error-code der dann vom ESP32 verarbeitet wird. |
 
 > Da es von Arduino selbst keine eigene Lösung für das Splitten von Strings hat benutzen wir folgende eigene Lösung: [splitString](#splitstring)
 
