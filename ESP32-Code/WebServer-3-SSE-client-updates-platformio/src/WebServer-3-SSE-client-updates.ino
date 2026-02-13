@@ -46,6 +46,7 @@ String M4S = "0";
 String M5S = "0";
 
 // FLipper settings get changed by code later; Meaning: error-codes.md
+bool i2cUpdateRecieved = false;
 bool settingsChanged = false;
 float mtpl; // float value with two comma digits
 int pbu;
@@ -157,6 +158,7 @@ void wireRecieveEvent(int howMany) {
   }
   delete[] data;
 
+  i2cUpdateRecieved = true;
   broadcastSSE_update();
 }
 
@@ -242,6 +244,11 @@ void broadcastSSE_update() {
   // xmlData += "<SL_V>" + String(LED1_br) + "</SL_V>";
 
   Serial.println("[SSE] Sent connected modules status: " + M2S + " " + M3S + " " + M4S + " " + M5S);
+
+  if (i2cUpdateRecieved == true) {
+    i2cUpdateRecieved = false;
+    xmlData += "<lastUpdateRecieved>1</lastUpdateRecieved>";
+  }
 
   xmlData += "<M2S>" + M2S + "</M2S>";
   xmlData += "<M3S>" + M3S + "</M3S>";
