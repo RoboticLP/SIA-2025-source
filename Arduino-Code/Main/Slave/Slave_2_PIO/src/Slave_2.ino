@@ -5,6 +5,13 @@ int scoring = 6;
 int SlingshotReader = 0;
 int scoredTimes = 0;
 
+bool tasterZustand        = HIGH;   // stabiler Zustand
+bool letzterGelesenerWert = HIGH;   // letzter Rohwert
+unsigned long letzteZeit  = 0;
+
+const unsigned long entprellZeit = 30; // 30 ms
+
+
 char message[50];
 //____________________________void Setup___________________________
 void setup() {
@@ -18,17 +25,30 @@ void setup() {
 
 //___________________________void Loop______________________________
 void loop() {
-  if(digitalRead(scoring) == LOW) {
-    scoredTimes = scoredTimes + 1;
-    Serial.println("ja");
+
+bool gelesen = digitalRead(scoring);
+
+ // Änderung erkannt?
+  if (gelesen != letzterGelesenerWert) {
+    letzteZeit = millis(); // Zeit merken
+    letzterGelesenerWert = gelesen;
   }
+  // Ist der Wert lange genug stabil?
+  if ((millis() - letzteZeit) > entprellZeit) {
+    // 3️Nur reagieren, wenn stabiler Zustand neu ist
+    if (tasterZustand != gelesen) {
+    tasterZustand = gelesen;
+    // Aktion beim Drücken (LOW wegen INPUT_PULLUP)
+      if (tasterZustand == LOW) {
+        scoredTimes = scoredTimes + 1;
+      }}}
   if(scoredTimes > SlingshotReader) {
     Serial.println ("Slingshots wurden ausgelöst");
     Serial.println(scoredTimes);
     // code...
     SlingshotReader = scoredTimes;
   }
-}
+  }
 //___________________________void requestEvent_______________________
 void requestEvent() {
   sprintf(message, "ht1:%d|", scoredTimes);
