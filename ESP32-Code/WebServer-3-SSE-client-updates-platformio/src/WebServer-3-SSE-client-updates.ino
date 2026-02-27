@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include "utils.h"
 #include "index.h"
+#include "errorcodes.h"
 
 // credentials for wifi
 #define WiFi_SSID ""
@@ -39,18 +40,22 @@ IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress Actual_IP;
 
-// Module statusessss
+// Module status
 String M2S = "0";
 String M3S = "0";
 String M4S = "0";
 String M5S = "0";
 
 // FLipper settings get changed by code later; Meaning: error-codes.md
+bool i2cUpdateRecieved = false;
 bool settingsChanged = false;
-String mtpl; // float value with two comma digits
+float mtpl; // float value with two comma digits
 int pbu;
 int psl;
 int pta;
+int lights_enabled; // 0 or 1, depending on if strobe is enabled or not
+float lightSpeed; // light effect speed (0.0 - 2.0)
+
 int shouldReset = 0;
 
 // SSE Clients
@@ -110,8 +115,8 @@ void loop() {
 // I2C
 void wireRequestEvent() {
   if (settingsChanged == true) {
-    char settingsDataString[100];
-    sprintf(settingsDataString, "mtpl:%s|pbu:%d|psl:%d|pta:%d|rst:%d", mtpl, pbu, psl, pta, shouldReset);
+    char settingsDataString[120];
+    sprintf(settingsDataString, "mtpl:%.2f|pbu:%d|psl:%d|pta:%d|len:%d|lsp:%.2f|rst:%d", mtpl, pbu, psl, pta, lights_enabled, lightSpeed, shouldReset);
 
     Wire.write(settingsDataString);
     settingsChanged = false;
@@ -145,6 +150,8 @@ void wireRecieveEvent(int howMany) {
         M4S = dataset[1];
       } else if (dataset[0] == "M5") {
         M5S = dataset[1];
+      } else if (dataset[0] == "err") {
+        broadcastSSE_log("error", getErrorMessage(dataset[1].toInt()));
       }
 
       // Serial.print("[I²C] request recieved "); Serial.println(dataset[0]);
@@ -154,6 +161,7 @@ void wireRecieveEvent(int howMany) {
   }
   delete[] data;
 
+  i2cUpdateRecieved = true;
   broadcastSSE_update();
 }
 
@@ -168,18 +176,15 @@ void handleButtonPress0() {
 
 void handleSettings() {
 
-  mtpl = server.arg("multiplierAmount"); // remove everything behind second comma digit
-  int dot = mtpl.indexOf('.');
-  if (dot != -1 && mtpl.length() > dot + 3) {
-    mtpl = mtpl.substring(0, dot + 3);
-  }
-
+  mtpl = server.arg("multiplierAmount").toFloat(); 
   pbu = server.arg("points_bumper").toInt();
   psl = server.arg("points_slingshot").toInt();
   pta = server.arg("points_targets").toInt();
-  // String rainbow = server.arg("enable_point_multipliers");  todo: lighting settings
+  lights_enabled = server.arg("lights_enabled").toInt();
+  lightSpeed = server.arg("light_speed").toFloat();
+  // todo: light-settings
 
-  Serial.print("[HTTP XML] Settings applied pressed "); Serial.print(mtpl); Serial.print(pbu); Serial.print(psl); Serial.print(pta); Serial.print("\n");
+  Serial.print("[HTTP XML] Settings applied pressed "); Serial.print(mtpl); Serial.print(" "); Serial.print(pbu); Serial.print(" "); Serial.print(psl); Serial.print(" "); Serial.print(pta); Serial.print(" "); Serial.print(lights_enabled); Serial.print(" "); Serial.print(lightSpeed); Serial.print("\n");
   settingsChanged = true;
   server.send(200, "text/plain", "");
 }
@@ -233,7 +238,6 @@ void handleSSEConnect() {
   client.flush();
   Serial.println("[SSE] answer sent. Sending first update packet");
   broadcastSSE_update(); // first update to set all data to current
-  broadcastSSE_log("info", "Ein neuer Client hat sich verbunden", millis()); // nur testweise hier
 }
 
 void broadcastSSE_update() {
@@ -242,6 +246,11 @@ void broadcastSSE_update() {
   // xmlData += "<SL_V>" + String(LED1_br) + "</SL_V>";
 
   Serial.println("[SSE] Sent connected modules status: " + M2S + " " + M3S + " " + M4S + " " + M5S);
+
+  if (i2cUpdateRecieved == true) {
+    i2cUpdateRecieved = false;
+    xmlData += "<lastUpdateRecieved>1</lastUpdateRecieved>";
+  }
 
   xmlData += "<M2S>" + M2S + "</M2S>";
   xmlData += "<M3S>" + M3S + "</M3S>";
@@ -264,11 +273,12 @@ void broadcastSSE_update() {
 //** logType: String - der Typ ("error" oder "info")
 //** logMessage: String - die zu versendende Nachricht (max 95 Zeichen)
 //** logTimestamp: int - der Zeitpunkt des ereignisses, der auf dem Adminpanel angezeigt wird (max 7 Stellen)
-void broadcastSSE_log(String logType, String logMessage, int logTimestamp) {
+// void broadcastSSE_log(String logType, String logMessage, int logTimestamp) {
+void broadcastSSE_log(String logType, String logMessage) {
   String xmlData = "<?xml version='1.0'?><Data><log>";
   xmlData += "<logType>" + logType + "</logType>";
   xmlData += "<logMessage>" + logMessage + "</logMessage>";
-  xmlData += "<logTimestamp>" + String(logTimestamp) + "</logTimestamp>";
+  // xmlData += "<logTimestamp>" + String(logTimestamp) + "</logTimestamp>";
   xmlData += "</log></Data>";
 
   // send data to all clients

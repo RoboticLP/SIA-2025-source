@@ -39,7 +39,8 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
 | 4 | Ball Lost Laser Schranke | Nein | Nein | Lichtschranke | Digital | Input_Pullup |
-| 5 | Ball entlass in die Startvorrichtung | Nein | Nein | Servo | PWM |
+| 5 | Enable/Disable Fingers While InGame | Nein | Nein | Nix | Digital | Output |
+| 6 | Ball entlass in die Startvorrichtung | Ja | Nein | Spule | Digital | Output |
 
 ## Nano 2
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
@@ -67,7 +68,7 @@ NICHT SICHER
 | 2 | Targets | Nein | Ja | Taster | Digital | Input |
 
 ## Nano 5
-### Nano 5 ist für weitere Aktionen in der Zukunft geplant und wird im Falle vom Gebraucht genutzt.
+### Nano 5 ist für die LEDs zuständig und Steuert die LED Bänder. Er bekommt die Einstellungen und Effekt Aufgaben von dem Mega
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |

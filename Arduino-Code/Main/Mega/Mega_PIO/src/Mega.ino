@@ -12,21 +12,26 @@ LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 #define slave2      2
 #define slave3      3
 #define slave4      4
+#define slave5      5
 #define adminpanel  6
 
 // ───────────────────── Globale Variablen ─────────────────────
 auto timer = timer_create_default();
 int backlightPin = 6;
 int ballLostSensor = A0;
+int outputFinger = 5;
 
-int moduleCount = 3;
-int moduleSlaves[3] = { slave2, slave3, slave4 };
+int moduleCount = 4;
+int moduleSlaves[4] = { slave2, slave3, slave4, slave5 };
 
 long points = 0;
-double multiplier = 1.5;
-int targets = 20;
+float multiplier = 1.00;
+int pointsTargets = 20;
 int pointsBumper = 50;
 int pointsSlingsshots = 50;
+
+float lightSpeed = 1.0;
+int lightState = 1;
 
 int ballInGame = 0;
 
@@ -36,7 +41,6 @@ GameState lastGameState = WAIT_FOR_BALL;
 // ───────────────────── Timer-Handles ─────────────────────
 Timer<>::Task gameOverTask;
 Timer<>::Task resetTask;
-Timer<>::Task pointsTask;
 
 // ───────────────────── Forward Declarations ─────────────────────
 void handleLCDDisplay();
@@ -62,6 +66,7 @@ void setBacklightPercent(int percent) {
 void setup() {
     pinMode(backlightPin, OUTPUT);
     pinMode(ballLostSensor, INPUT);
+    pinMode(outputFinger, OUTPUT);
 
     setBacklightPercent(30);
 
@@ -84,7 +89,8 @@ void loop() {
     timer.tick();
     handleDebugInput();
     checkGameState();
-    checkBallLost();  
+    checkBallLost();
+    checkFingers();
     
     // Slave-Kommunikation nur alle 2 Sekunden
     static unsigned long lastSlaveCheck = 0;
@@ -92,6 +98,7 @@ void loop() {
         printConnectionFromSlaves();
         sendStatusToAdminPanel();
         reciveMessagesFromAdminPanel();
+        sendLEDUpdates();
         lastSlaveCheck = millis();
     }
 }
@@ -100,7 +107,9 @@ void loop() {
 void handleDebugInput() {
     if (!Serial.available()) return;
     char c = Serial.read();
-    if (c == '0') ballInGame = 1;
+    if (c == '0'){ 
+        ballInGame = 1;
+    }
     else if (c == '1') ballInGame = 0;
 }
 
@@ -114,11 +123,6 @@ void setDebugMode(bool enable) {
 // ───────────────────── Game State Logik ─────────────────────
 void checkGameState() {
     if (gameState == DEBUG || gameState == RESET) return;
-
-    if (gameState == WAIT_FOR_BALL && ballInGame == 1) {
-        gameState = IN_GAME;
-        pointsTask = timer.every(1000, addRandomPoints);
-    }
 
     if (gameState != lastGameState) {
         handleLCDDisplay();
@@ -144,16 +148,7 @@ void startGameOver() {
 bool finishGameOver(void *) {
     gameState = RESET;
     handleLCDDisplay();
-    resetTask = timer.in(5000, finishReset);
-    return false;
-}
-
-bool finishReset(void *) {
-    points = 0;
-    ballInGame = 0;
-    gameState = WAIT_FOR_BALL;
-    lastGameState = WAIT_FOR_BALL;
-    handleLCDDisplay();
+    resetTask = timer.in(5000, resetGame);
     return false;
 }
 
@@ -181,7 +176,55 @@ void reciveMessagesFromAdminPanel() {
     Wire.requestFrom(adminpanel, 50);
     String answer = "";
     while (Wire.available()) answer += (char)Wire.read();
-    Serial.println("Admin Panel says: " + answer);
+
+        int dataCount;
+        String* data = splitString(answer, '|', dataCount);
+
+        for (int j = 0; j < dataCount; j++) {
+            if (data[j].indexOf(':') == -1) continue;
+
+            int count;
+            String* dataset = splitString(data[j], ':', count);
+
+            if (count == 2) {
+                processESPData(dataset[0], dataset[1]);
+            }
+
+            delete[] dataset;
+        }
+        delete[] data;
+}
+
+void processESPData(String key, String value) {
+    float dataValueF = value.toFloat();
+    int dataValueI = value.toInt();
+    if (key == "mtpl") {
+        multiplier = dataValueF;
+    }else if(key == "pbu"){
+        pointsBumper = dataValueI;
+    }else if(key == "psl"){
+        pointsSlingsshots = dataValueI;
+    }else if(key == "pta"){
+        pointsTargets = dataValueI;
+    }else if(key == "rst"){
+        if(dataValueI == 1){
+            resetTask = timer.in(0, resetGame);
+        }
+    }else if(key == "lsp"){
+        lightSpeed = dataValueF;
+    }else if(key == "len"){
+        lightSpeed = dataValueI;
+    }else{
+        Serial.println("Unbekannter Key: " + key + " = " + value);
+    }
+}
+
+void sendLEDUpdates() {
+    if (!isSlaveAlive(slave5)) return;
+    String statusMessage = "lsp:" + String(lightSpeed) + "|len:" + String(lightState) + "|";
+    Wire.beginTransmission(slave5);
+    Wire.write(statusMessage.c_str());
+    Wire.endTransmission();
 }
 
 // ───────────────────── Slaves ─────────────────────
@@ -189,6 +232,7 @@ long updateBeginTime;
 void printConnectionFromSlaves() {
     updateBeginTime = millis();
 
+    //Sende status an esp mit error codes und so
     String statusMessage = "gs:" + String(gameState) + "|pts:" + String(points) + "|";
 
     for (int i = 0; i < moduleCount; i++) {
@@ -239,17 +283,20 @@ void printConnectionFromSlaves() {
 void processSlaveData(String key, String value, int module, String &statusMessage) {
     int dataValue = value.toInt();
     // Verarbeitung der einzelnen Keys
-    if (key == "ht1") {
-        if (gameState == IN_GAME) {
-            points += dataValue * multiplier;
-            Serial.println(">>> Module " + String(module) + " HIT 1: +" + String(dataValue * multiplier) + " Punkte | Total: " + String(points));
-            handleLCDDisplay();
-        }
-    }
-    else if (key == "ballingame") {
+    //Bumper Tower Hits
+    auto addPoints = [&](const char* type, int basePoints) {
+        if (gameState != IN_GAME) return;
+        points += dataValue * multiplier * basePoints;
+        handleLCDDisplay();
+    };
+
+    if(key == "bth") addPoints("Bumper Hits",   pointsBumper);
+    else if(key == "ssh") addPoints("Slingshot Hits", pointsSlingsshots);
+    else if(key == "tah") addPoints("Target Hits",    pointsTargets);
+    else if(key == "ballingame") {
         if(ballInGame == 0 && dataValue == 1 && gameState == WAIT_FOR_BALL) {
             ballInGame = 1;
-            Serial.println(">>> Module " + String(module) + " meldet Kugel im Spiel.");
+            gameState = IN_GAME;
         }
     }
     else if (key == "err") {
@@ -293,8 +340,32 @@ void handleLCDDisplay() {
 void checkBallLost(){
     int sensorValue = analogRead(ballLostSensor);
     if(sensorValue < 250 && ballInGame == 1 && gameState == IN_GAME){
-        timer.cancel(pointsTask);
+        
         startGameOver();
     }
     
+}
+
+
+void checkFingers(){
+    if(gameState == IN_GAME){
+        digitalWrite(outputFinger,1);
+    }else
+        digitalWrite(outputFinger,1);
+}
+
+bool resetGame(void *) {
+    points = 0;
+    ballInGame = 0;
+    gameState = WAIT_FOR_BALL;
+    lastGameState = WAIT_FOR_BALL;
+    for(int i = 0; i < moduleCount; i++) {
+        int addr = moduleSlaves[i];
+        if (isSlaveAlive(addr)) {
+            Wire.beginTransmission(addr);
+            Wire.write("resetGame");
+            Wire.endTransmission();
+        }
+    }
+    return false;
 }

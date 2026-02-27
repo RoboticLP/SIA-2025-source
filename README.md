@@ -38,9 +38,11 @@ ht1:%d|ht2:%d|err:%s
 |  Key-Name  | Wertetyp | Bedeutung                                            |
 |------------|----------|------------------------------------------------------|
 | ```\|```   | /        | Trennzeichen zwischen den Daten                      |
-| ```ht1```  | int      | Zahl der Treffer (Hits) des **ersten** Ziels (Targets) seit dem letztem Update      |
-| ```ht2```  | int      | Zahl der Treffer (Hits) des **zweiten** Ziels (Targets) seit dem letztem Update      |
-| ```err```  | String (Error-code) | Wird nur versendet wenn error vorhanden ist. Sendet dann einen Error-code der dann vom ESP32 verarbeitet wird. |
+| ```bth```  | int      | Zahl der Treffer (Hits) der Bumper Tower seit dem letzem Update     |
+| ```ssh```  | int      | Zahl der Treffer (Hits) der Sling Shots seit dem letzem Update     |
+| ```tah```  | int      | Zahl der Treffer (Hits) der Targets seit dem letzem Update     |
+| ```ballingame```  | int      | Meldet die Kugel im Game (Sensor hat Kugel erkannt)     |
+| ```err```  | String (Error-code) | Wird nur versendet wenn Error vorhanden ist. Sendet dann einen Error-code der dann vom ESP32 verarbeitet wird. |
 
 > Da es von Arduino selbst keine eigene Lösung für das Splitten von Strings hat benutzen wir folgende eigene Lösung: [splitString](#splitstring)
 
@@ -54,30 +56,32 @@ Hilfreiche Resourcen:
 
 <span style="color:orange">*prototyping*:</span>
 ```c
-mtpl:%s|pbu:%d|psl:%d
+mtpl:%s|pbu:%d|psl:%d|err:%d
 ```
 
 | Key-Name | Wertetyp | Bedeutung |
 |----------|----------|-----------|
 | ```\|``` | /        | Trennzeichen zwischen den Daten |
 | ```gs``` | int | [Gamestate](docs/error-codes.md#gamestate-id) (aktueller Zustand des Flippers) |
-| `````` | int | Id eines Logs/Errors für das Frontend |
+| ```err``` | int | Id eines Logs/Errors für das Frontend |
 
 ---
 
 ##### ESP > Mega
 
 ```c
-mtple:%d|mtpl:%s|pbu:%d|psl:%d
+mtpl:%.2f|pbu:%d|psl:%d|pta:%d|len:%.2f|lsp:%.2f|rst:%d
 ```
 
 | Key-Name | Wertetyp | Bedeutung |
 |----------|----------|-----------|
 | ```\|``` | /        | Trennzeichen zwischen den Daten |
-| ```mtpl``` | String(float) (2 Kommastellen)  | Der aktuelle Punkte-Multiplier. *Wird intern für I²C in String umgewandelt* |
+| ```mtpl``` | float (2 Kommastellen)  | Der aktuelle Punkte-Multiplier. *Wird intern für I²C in String umgewandelt* |
 | ```pbu``` | int | Trefferpunktzahl für die Bumper-tower |
 | ```psl``` | int | Trefferpunktzahl für die Slingshots |
 | ```pta``` | int | Trefferpunktzahl für die Targets |
+| ```len``` | bit | "1" wenn Lichter an sein sollen, "0" wenn aus|
+| ```lsp``` | float (2 Kommastellen) | Geschwindigkeit der Lichteffekte von 0-200% (0.0-2.0) |
 | ```rst``` | bit | "1" wenn Spiel resetted werden soll |
 
 ---

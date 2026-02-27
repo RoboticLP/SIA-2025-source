@@ -17,7 +17,11 @@ Hier werden alle Message-IDs und deren zugehörige Bedeutungen definiert.
 
 | Error Code | Bedeutung |
 |------------|-----------|
-| x | y |
+| 411 | Unbekannter ESP Datenkey erhalten |
+| 412 | Unbekannter Slave 2 Datenkey erhalten |
+| 413 | Unbekannter Slave 3 Datenkey erhalten |
+| 414 | Unbekannter Slave 4 Datenkey erhalten |
+| 415 | Unbekannter Slave 5 Datenkey erhalten |
 
 ---
 
