@@ -74,16 +74,24 @@ void setup() {
     allLights[i] = Led(i);
     allLightInts[i] = i;
   }
+  doOnePulse(255,0,255);
 }
 
 int color = 0;
 
+//—————————————————variables to handle lighting options in the loop——————————————————
+boolean ballIsOut = true;
+long timeToShutOffPulseEffect;
+rgb activePulseColor(255,0,0);
+
 void loop() {
-  //if (millis() - lastUpdate >= 150) {
-  //  lastUpdate = millis();
-  //  setPixelsRandomBlueAmbient(allLightInts,NUMPIXELS,0,310);
-  //}
-  randomTransition(allLightInts,NUMPIXELS,2,"red");
+
+  randomTransition(allLightInts,NUMPIXELS,0,"blue");
+  if(ballIsOut){
+  }
+  if(millis() < timeToShutOffPulseEffect){ //so kann ein vollständiger pulse-effekt durchlaufen werden, mithilfe eines passenden timestamps und der activepulsecolor
+    pulse(allLightInts,NUMPIXELS,2,activePulseColor.r,activePulseColor.g,activePulseColor.b);
+  }
 
   //————————————————LIGHTMANAGER———————————————
   if(!overrideAllLightsOff){
@@ -120,28 +128,20 @@ void handleReset(){
 
 }
 
-void handleSpeedChange(float speed){
-  //bei allen effectstates den cooldown mit dem alten speed multiplizieren und durch den neuen teilen
-  randomTransitionEffectState.timeBetweenProgress = randomTransitionEffectState.timeBetweenProgress*globalEffectSpeed/speed;
-  swoopEffectState.timeBetweenProgress = swoopEffectState.timeBetweenProgress*globalEffectSpeed/speed;
-  blueAmbientEffectState.timeBetweenProgress = blueAmbientEffectState.timeBetweenProgress*globalEffectSpeed/speed;
-  globalEffectSpeed = speed;
-}
-
 void handleLightsOff(boolean off){
   overrideAllLightsOff = off;
 }
 
 void handleBallIn(){
-
+  ballIsOut = false;
 }
 
 void handleBallOut(){
-
+  ballIsOut = true;
 }
 
 void handleSlaveTwoHit(){
-
+  doOnePulse(255,0,0);
 }
 
 void handleSlaveThreeHit(){
@@ -225,8 +225,61 @@ rgb randomRedColor(){
 EffectState swoopEffectState = EffectState(-5,20 / globalEffectSpeed); //progress -5 (startet außerhalb des strips); timeBetweenProgress 20 ms
 EffectState blueAmbientEffectState = EffectState(0,50 / globalEffectSpeed); //progress 0; timeBetweenProgress 50 ms
 EffectState randomTransitionEffectState = EffectState(0,50 / globalEffectSpeed); //progress 0;  timeBetweenProgress 20ms
+EffectState pulseEffectState = EffectState(0,15 / globalEffectSpeed);
+rgb colorAtStartOfPulse = rgb(0,0,0);
 rgb randomTransitionColor = rgb(0,0,0);
 rgb lastTransitionColor = rgb(0,0,0);
+
+void doOnePulse(uint8_t r,uint8_t g,uint8_t b){
+  timeToShutOffPulseEffect = millis() + pulseEffectState.timeBetweenProgress * 19;
+  activePulseColor.r = r;
+  activePulseColor.g = g;
+  activePulseColor.b = b;
+}
+
+void pulse(int leds[], int listLength, int priority, uint8_t r,uint8_t g,uint8_t b){
+  long lastTime = pulseEffectState.lastProgressTimeStamp;
+  long cooldown = pulseEffectState.timeBetweenProgress;
+  if(millis() - lastTime < cooldown) return;
+  int effectProgress = pulseEffectState.effectProgress;
+
+  if(effectProgress == 0){ //wenn der Effekt beginnt, wird die prio 0 vom ersten licht in der liste als startpunkt für die "pulse-transistion" genommen
+    Led exampleLight = allLights[leds[0]];
+    LightState exampleLightState = exampleLight.prio[0];
+    colorAtStartOfPulse.r = exampleLightState.r;
+    colorAtStartOfPulse.g = exampleLightState.g;
+    colorAtStartOfPulse.b = exampleLightState.b;
+  }
+
+  int multiplyer;
+    if(effectProgress <= 10) multiplyer = effectProgress; 
+    else multiplyer = 20 - effectProgress;
+    //---> 0,1,2,3,4,5,6 bis 19 effectprogress wird zu 0,1,2,3,...8,9,10,9,8,...,2,1,0 multiplyer --> pulsieren
+
+  for(int number = 0; number < listLength; number ++){
+    if(leds[number] >= NUMPIXELS) continue; //looking if the number extents the amount of numbers
+    Led& led = allLights[leds[number]];
+    if(priority >= led.PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
+    LightState& ls = led.prio[priority];
+    int diffR = r - colorAtStartOfPulse.r;
+    int diffG = g - colorAtStartOfPulse.g;
+    int diffB = b - colorAtStartOfPulse.b;
+
+    ls.r = colorAtStartOfPulse.r + diffR / 10 * multiplyer;
+    ls.g = colorAtStartOfPulse.g + diffG / 10 * multiplyer;
+    ls.b = colorAtStartOfPulse.b + diffB / 10 * multiplyer;
+    ls.on = true;
+    ls.timeOfShutOff = millis() + cooldown + 10;
+  }
+
+  pulseEffectState.effectProgress++;
+  if(effectProgress > 19) {
+      pulseEffectState.effectProgress = 0;
+      pulseEffectState.isActive = false;
+      Serial.println("Pulse-Effekt komplett durchgelaufen");
+  }
+  pulseEffectState.lastProgressTimeStamp = millis();
+}
 
 void randomTransition(int leds[], int listLength, int priority, String colorType){
   long lastTime = randomTransitionEffectState.lastProgressTimeStamp;
@@ -399,4 +452,17 @@ void receiveEvent(int howMany) {
     if (strcmp(command, "resetGame") == 0) {
         Serial.println("resetting...");
     }
+    if (strcmp(command, "slaveTwo") == 0) {
+        Serial.println("slaveTwo got hit...");
+        handleSlaveTwoHit();
+    }
+}
+void handleSpeedChange(float speed){
+  //bei allen effectstates den cooldown mit dem alten speed multiplizieren und durch den neuen teilen
+  if(speed!= 0){
+    randomTransitionEffectState.timeBetweenProgress = randomTransitionEffectState.timeBetweenProgress*globalEffectSpeed/speed;
+    swoopEffectState.timeBetweenProgress = swoopEffectState.timeBetweenProgress*globalEffectSpeed/speed;
+    blueAmbientEffectState.timeBetweenProgress = blueAmbientEffectState.timeBetweenProgress*globalEffectSpeed/speed;
+  }
+  globalEffectSpeed = speed;
 }
