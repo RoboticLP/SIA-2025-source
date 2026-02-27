@@ -38,9 +38,9 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| 4 | Ball Lost Laser Schranke | Nein | Nein | Lichtschranke | Digital | Input_Pullup |
+| 4 | Ball Lost Laser Schranke | Nein | Nein | Digitalschranke | Digital | Input_Pullup |
 | 5 | Enable/Disable Fingers While InGame | Nein | Nein | Nix | Digital | Output |
-| 6 | Ball entlass in die Startvorrichtung | Ja | Nein | Spule | Digital | Output |
+| 6 | Ball entlass in die Startvorrichtung | Ja | Nein | ? | Digital | Output |
 
 ## Nano 2
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
@@ -54,7 +54,6 @@ Ball Eject ist akutell ausgenommen.
 ## Nano 3
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
 
-NICHT SICHER
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
 | 2 | Bumper Tower (3 Stück) | Ja | Ja | Spule | Digital | Input |
@@ -73,4 +72,5 @@ NICHT SICHER
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
+| 6 | LEDs | Nein | Nein | Ledstripe | ? | Output |
 
