@@ -11,9 +11,12 @@ const int gameSensor = 3;      // Ballsensor (Interrupt)
 
 char message[50];
 
+int test = 4;
+
 // ───────────────────── Setup ─────────────────────
 void setup() {
     Serial.begin(9600);
+    pinMode(test, INPUT_PULLUP);
 
     Wire.begin(4);                 // I2C Slave Adresse 4
     Wire.onRequest(requestEvent);  // Anfrage vom Master
@@ -29,6 +32,8 @@ void setup() {
 // ───────────────────── Loop ─────────────────────
 void loop() {
   checkTaster();
+  Serial.println(digitalRead(test));
+  delay(500);
 }
 
 // ───────────────────── Taster funktion ─────────────────────
