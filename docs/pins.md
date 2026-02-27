@@ -1,6 +1,8 @@
 # Pin Belegung
 Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 
+**ALLE PINS WERDEN BEI Dx ANGESCHLOSSEN ALSO BEI EINEM D PIN**
+
 ## Navigation
 > **Seiten**
 - [Hauptseite](../README.md)
