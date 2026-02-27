@@ -50,3 +50,10 @@ void requestEvent() {
   Wire.write(message);
   Serial.println();//Daten gesendet
 }
+void receiveEvent() {
+
+  if (strcmp(command, "resetGame") == 0) {
+      handleReset();
+      Serial.println("resetting...");
+    }
+}
