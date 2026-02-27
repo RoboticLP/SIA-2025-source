@@ -25,13 +25,16 @@ void setup() {
 //___________________________void Loop______________________________
 void loop() {
 
+unsigned long now = millis();
 
 if(digitalRead(scoring) == LOW) {
-TasterZeit = millis();                // aktualisiert die Tasterzeit
-TasterGedrueckt = TasterGedrueckt + 1;  // registriert das Signal und speichert es als Variable
+TasterZeit = now;                // aktualisiert die Tasterzeit
+Serial.println("1");
+TasterGedrueckt = 1;  // registriert das Signal und speichert es als Variable
 }
-if(millis() - TasterZeit > entprellZeit && TasterGedrueckt == 1) {
+if(now - TasterZeit > entprellZeit && TasterGedrueckt == 1) {
 TasterGedrueckt = 0;                   // zurücksetzen 
+Serial.println("2");
 scoredTimes = scoredTimes + 1;
 }
 
@@ -46,4 +49,11 @@ void requestEvent() {
   sprintf(message, "ssh:%d|", scoredTimes);
   Wire.write(message);
   Serial.println();//Daten gesendet
+}
+void receiveEvent() {
+
+  if (strcmp(command, "resetGame") == 0) {
+      handleReset();
+      Serial.println("resetting...");
+    }
 }
