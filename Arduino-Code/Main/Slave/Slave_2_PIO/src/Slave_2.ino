@@ -25,13 +25,14 @@ void setup() {
 //___________________________void Loop______________________________
 void loop() {
 
+unsigned long now = millis();
 
 if(digitalRead(scoring) == LOW) {
-TasterZeit = millis();                // aktualisiert die Tasterzeit
+TasterZeit = now;                // aktualisiert die Tasterzeit
 Serial.println("1");
-TasterGedrueckt = TasterGedrueckt + 1;  // registriert das Signal und speichert es als Variable
+TasterGedrueckt = 1;  // registriert das Signal und speichert es als Variable
 }
-if(millis() - TasterZeit > entprellZeit && TasterGedrueckt == 1) {
+if(now - TasterZeit > entprellZeit && TasterGedrueckt == 1) {
 TasterGedrueckt = 0;                   // zurücksetzen 
 Serial.println("2");
 scoredTimes = scoredTimes + 1;
