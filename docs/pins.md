@@ -38,7 +38,7 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| 4 | Ball Lost Laser Schranke | Nein | Nein | Digitalschranke | Digital | Input_Pullup |
+| 4 | Ball Lost Schranke | Nein | Nein | Digitalschranke | Digital | Input_Pullup |
 | 5 | Enable/Disable Fingers While InGame | Nein | Nein | Nix | Digital | Output |
 | 6 | Ball entlass in die Startvorrichtung | Ja | Nein | ? | Digital | Output |
 
@@ -65,6 +65,7 @@ Ball Eject ist akutell ausgenommen.
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
 | 2 | Targets | Nein | Ja | Taster | Digital | Input |
+| 4 | Ball In Game Schranke | Nein | Nein | Digitalschranke | Digital | Input_Pullup |
 
 ## Nano 5
 ### Nano 5 ist für die LEDs zuständig und Steuert die LED Bänder. Er bekommt die Einstellungen und Effekt Aufgaben von dem Mega
