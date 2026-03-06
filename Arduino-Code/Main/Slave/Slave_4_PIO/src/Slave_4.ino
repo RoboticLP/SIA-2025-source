@@ -56,7 +56,7 @@ void handleReset() {
     ballingame = false;
     ballReported = false;
     hitpoints = 0;
-    //Hier message das reset fertig bei dem module evt zu adminpanel?
+    //Hier message das reset fertig bei dem module evt zu adminpanel? // nope - adiii
 }
 
 // ISR → so kurz wie möglich!
@@ -75,9 +75,9 @@ void requestEvent() {
     len += snprintf(message + len, sizeof(message) - len,
                         "ballingame:%d|", ballingame);
 
-    // Hitpoints immer sendenS
+    // Hitpoints der targets immer senden
     len += snprintf(message + len, sizeof(message) - len,
-                    "ht1:%d|", hitpoints);
+                    "tah:%d|", hitpoints);
 
     hitpoints = 0;
     ballingame = 0;
