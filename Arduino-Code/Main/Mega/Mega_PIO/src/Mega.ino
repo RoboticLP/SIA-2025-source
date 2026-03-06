@@ -235,6 +235,14 @@ void sendLEDUpdates() {
     Wire.endTransmission();
 }
 
+void sendLEDEffect(int effectCode) {
+    if (!isSlaveAlive(slave5)) return;
+    String statusMessage = "eff:" + String(effectCode)+"|";
+    Wire.beginTransmission(slave5);
+    Wire.write(statusMessage.c_str());
+    Wire.endTransmission();
+}
+
 void sendErrorToESP(int errorCode) {
     if (!isSlaveAlive(adminpanel)) return;
     String statusMessage = "err:" + String(errorCode)+"|";
@@ -302,7 +310,10 @@ void processSlaveData(String key, String value, int module) {
         handleLCDDisplay();
     };
 
-    if(key == "bth") addPoints("Bumper Hits",   pointsBumper);
+    if(key == "bth"){ 
+        addPoints("Bumper Hits",   pointsBumper);
+        sendLEDEffect(1);
+    }
     else if(key == "ssh") addPoints("Slingshot Hits", pointsSlingsshots);
     else if(key == "tah") addPoints("Target Hits",    pointsTargets);
     else if(key == "ballingame") {
