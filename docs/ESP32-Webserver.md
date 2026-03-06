@@ -107,24 +107,6 @@ function handleButtonPress0() {
 }
 ```
 
-#### Slider
-```html
-<input type="range" id="brightness-slider" min="0" max="255" value="0" ininput="handleSliderInput(this.value)"\>
-```
-Die Methode ```handleSliderInput``` wird bei jeder veränderung des Sliders ausgeführt. Diese passt die Größe des farbigen Hintergrunds an, der den Wert des Sliders deutlicher macht. Zusätzlich wird alle 100ms der Wert des Sliders an den Server geschickt, solange dieser Verschoben wird. Der Server hat eine seperate Schnittstelle für den Slider, bei dem als URL-Parameter der Slider-Wert erwartet wird.
-
-Beispielmethoden für Slider-Verarbeitung:
-```javascript
-let sliderTimeout;
-function handleSliderInput(value) {
-    requestAnimationFrame(() => updateSliderProgress()); // aktualisiert Größe des Hintergrunds (zur Vereinfachung hier weggelassen)
-    clearTimeout(sliderTimeout);
-    sliderTimeout = setTimeout(() => {
-        handleUpdateSlider(value); // sendet Daten an Server mit "PUT" "BRIGHTNESS_SLIDER?value="+value
-    }, 100);
-}
-```
-
 #### Buttons
 ##### Primary Button Klasse (Primär)
 ```html

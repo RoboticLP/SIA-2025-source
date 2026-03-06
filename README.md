@@ -30,11 +30,10 @@ Jedes Modul (Arduino Nano) hat bis zu zwei Ziele (Targets) an sich angeschlossen
 Jedes Modul wird mehrmals pro Sekunde nach Updates gefragt, hier definieren wir wie die Antworten Formatiert sein müssen:
 
 ```c
-ht1:%d|ht2:%d|err:%s
+bth:%d|ssh:%d|tah:%d|ballingame:%d|err:%s
 ```
 > *Die **Reihenfolge der Keys+Werte ist egal**, genau wie ihre **Vorhandenheit** - es werden nur erhaltene Daten verarbeitet und es sind keine speziellen Daten notwendig. Allerdings **muss** jeder versendete Key einen zugehörigen Wert haben*
 
-<span style="color:orange">*prototyping*: ht1 und ht2 werden archiviert und bald gegen neue keys ersetzt</span>
 |  Key-Name  | Wertetyp | Bedeutung                                            |
 |------------|----------|------------------------------------------------------|
 | ```\|```   | /        | Trennzeichen zwischen den Daten                      |
@@ -54,9 +53,8 @@ Hilfreiche Resourcen:
 
 ##### Mega > ESP
 
-<span style="color:orange">*prototyping*:</span>
 ```c
-mtpl:%s|pbu:%d|psl:%d|err:%d
+gs:%d|err:%d
 ```
 
 | Key-Name | Wertetyp | Bedeutung |
