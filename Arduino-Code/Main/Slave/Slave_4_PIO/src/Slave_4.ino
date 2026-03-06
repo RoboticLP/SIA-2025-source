@@ -11,9 +11,12 @@ const int gameSensor = 3;      // Ballsensor (Interrupt)
 
 char message[50];
 
+int test = 4;
+
 // ───────────────────── Setup ─────────────────────
 void setup() {
     Serial.begin(9600);
+    pinMode(test, INPUT_PULLUP);
 
     Wire.begin(4);                 // I2C Slave Adresse 4
     Wire.onRequest(requestEvent);  // Anfrage vom Master
@@ -29,6 +32,8 @@ void setup() {
 // ───────────────────── Loop ─────────────────────
 void loop() {
   checkTaster();
+  Serial.println(digitalRead(test));
+  delay(500);
 }
 
 // ───────────────────── Taster funktion ─────────────────────
@@ -51,7 +56,7 @@ void handleReset() {
     ballingame = false;
     ballReported = false;
     hitpoints = 0;
-    //Hier message das reset fertig bei dem module evt zu adminpanel?
+    //Hier message das reset fertig bei dem module evt zu adminpanel? // nope - adiii
 }
 
 // ISR → so kurz wie möglich!
@@ -70,9 +75,9 @@ void requestEvent() {
     len += snprintf(message + len, sizeof(message) - len,
                         "ballingame:%d|", ballingame);
 
-    // Hitpoints immer sendenS
+    // Hitpoints der targets immer senden
     len += snprintf(message + len, sizeof(message) - len,
-                    "ht1:%d|", hitpoints);
+                    "tah:%d|", hitpoints);
 
     hitpoints = 0;
     ballingame = 0;

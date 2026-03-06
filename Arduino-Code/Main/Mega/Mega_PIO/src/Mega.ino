@@ -17,9 +17,12 @@ LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 
 // ───────────────────── Globale Variablen ─────────────────────
 auto timer = timer_create_default();
-int backlightPin = 6;
-int ballLostSensor = A0;
-int outputFinger = 5;
+int backlightPin = 13;
+
+int singalForBallStart = 3; // Knopf der gedrückt wird wenn ball in startvorrichtung ist muss
+int ballLostSensor = 4; // Pin für ball lost sensor (done)
+int outputFinger = 5; // Pin um Finger zu aktivieren oder deaktivieren
+int ballInStart = 6; // Ball instartvorrichtung lassen
 
 int moduleCount = 4;
 int moduleSlaves[4] = { slave2, slave3, slave4, slave5 };
@@ -54,6 +57,7 @@ void handleDebugInput();
 void sendStatusToAdminPanel();
 void reciveMessagesFromAdminPanel();
 bool playMusic(void *);
+void sendErrorToESP(int);
 
 // ───────────────────── Backlight ─────────────────────
 void setBacklightPercent(int percent) {
@@ -64,9 +68,12 @@ void setBacklightPercent(int percent) {
 
 // ───────────────────── Setup / Loop ─────────────────────
 void setup() {
-    pinMode(backlightPin, OUTPUT);
-    pinMode(ballLostSensor, INPUT);
-    pinMode(outputFinger, OUTPUT);
+    pinMode(backlightPin, OUTPUT); // Hintergrund ist Pin 13
+    pinMode(ballLostSensor, INPUT_PULLUP); // Ball Lost Sensor ist Pin 4
+    pinMode(outputFinger, OUTPUT); // Output für Finger ist Pin 5
+    pinMode(singalForBallStart, INPUT_PULLUP); // Knopf für Ball Start ist Pin 3
+    pinMode(ballInStart, OUTPUT); // Ball in Startvorrichtung lassen ist Pin 6
+    attachInterrupt(digitalPinToInterrupt(singalForBallStart), checkBallInStart, CHANGE); // PRÜFEN!!!
 
     setBacklightPercent(30);
 
@@ -89,8 +96,9 @@ void loop() {
     timer.tick();
     handleDebugInput();
     checkGameState();
-    checkBallLost();
     checkFingers();
+    checkBallLost();
+    sendFingerUpdate();
     
     // Slave-Kommunikation nur alle 2 Sekunden
     static unsigned long lastSlaveCheck = 0;
@@ -215,7 +223,7 @@ void processESPData(String key, String value) {
     }else if(key == "len"){
         lightSpeed = dataValueI;
     }else{
-        Serial.println("Unbekannter Key: " + key + " = " + value);
+        sendErrorToESP(411);
     }
 }
 
@@ -227,13 +235,26 @@ void sendLEDUpdates() {
     Wire.endTransmission();
 }
 
+void sendLEDEffect(int effectCode) {
+    if (!isSlaveAlive(slave5)) return;
+    String statusMessage = "eff:" + String(effectCode)+"|";
+    Wire.beginTransmission(slave5);
+    Wire.write(statusMessage.c_str());
+    Wire.endTransmission();
+}
+
+void sendErrorToESP(int errorCode) {
+    if (!isSlaveAlive(adminpanel)) return;
+    String statusMessage = "err:" + String(errorCode)+"|";
+    Wire.beginTransmission(adminpanel);
+    Wire.write(statusMessage.c_str());
+    Wire.endTransmission();
+}
+
 // ───────────────────── Slaves ─────────────────────
 long updateBeginTime;
 void printConnectionFromSlaves() {
     updateBeginTime = millis();
-
-    //Sende status an esp mit error codes und so
-    String statusMessage = "gs:" + String(gameState) + "|pts:" + String(points) + "|";
 
     for (int i = 0; i < moduleCount; i++) {
         int addr = moduleSlaves[i];
@@ -251,7 +272,6 @@ void printConnectionFromSlaves() {
         }
 
         if (answer.length() == 0) {
-            Serial.println("Module " + String(addr) + " keine Antwort");
             continue;
         }
 
@@ -266,8 +286,8 @@ void printConnectionFromSlaves() {
             String* dataset = splitString(data[j], ':', count);
 
             if (count == 2) {
-                // Key-Value Pair verarbeiten (z.B. "ht1:5" oder "balllost:1")
-                processSlaveData(dataset[0], dataset[1], addr, statusMessage);
+                // Key-Value Pair verarbeiten (z.B. "ssh:5" oder "balllost:1")
+                processSlaveData(dataset[0], dataset[1], addr);
             }
 
             delete[] dataset;
@@ -280,7 +300,7 @@ void printConnectionFromSlaves() {
     //Serial.println(" Sekunden");
 }
 
-void processSlaveData(String key, String value, int module, String &statusMessage) {
+void processSlaveData(String key, String value, int module) {
     int dataValue = value.toInt();
     // Verarbeitung der einzelnen Keys
     //Bumper Tower Hits
@@ -290,7 +310,10 @@ void processSlaveData(String key, String value, int module, String &statusMessag
         handleLCDDisplay();
     };
 
-    if(key == "bth") addPoints("Bumper Hits",   pointsBumper);
+    if(key == "bth"){ 
+        addPoints("Bumper Hits",   pointsBumper);
+        sendLEDEffect(1);
+    }
     else if(key == "ssh") addPoints("Slingshot Hits", pointsSlingsshots);
     else if(key == "tah") addPoints("Target Hits",    pointsTargets);
     else if(key == "ballingame") {
@@ -300,11 +323,11 @@ void processSlaveData(String key, String value, int module, String &statusMessag
         }
     }
     else if (key == "err") {
-        statusMessage += "err:" + value + "|";
+        sendErrorToESP(dataValue);
         Serial.println("!!! Module " + String(module) + " ERROR: " + value + " !!!");
     }
     else {
-        Serial.println("Module " + String(module) + " Unbekannter Key: " + key + " = " + value);
+        sendErrorToESP(410+module);
     }
 }
 
@@ -337,21 +360,12 @@ void handleLCDDisplay() {
     }
 }
 
-void checkBallLost(){
-    int sensorValue = analogRead(ballLostSensor);
-    if(sensorValue < 250 && ballInGame == 1 && gameState == IN_GAME){
-        
-        startGameOver();
-    }
-    
-}
-
 
 void checkFingers(){
     if(gameState == IN_GAME){
         digitalWrite(outputFinger,1);
     }else
-        digitalWrite(outputFinger,1);
+        digitalWrite(outputFinger,0);
 }
 
 bool resetGame(void *) {
@@ -368,4 +382,26 @@ bool resetGame(void *) {
         }
     }
     return false;
+}
+
+void checkBallLost(){
+    if(gameState == IN_GAME && digitalRead(ballLostSensor) == LOW){
+        ballInGame = 0;
+    }
+}
+
+void sendFingerUpdate(){
+    if(gameState == IN_GAME){
+        digitalWrite(outputFinger,1);
+    }else{
+        digitalWrite(outputFinger,0);
+    }
+}
+
+void checkBallInStart(){
+    if(digitalRead(singalForBallStart) == LOW){
+        digitalWrite(ballInStart, HIGH);
+    }else{
+        digitalWrite(ballInStart, LOW);
+    }
 }

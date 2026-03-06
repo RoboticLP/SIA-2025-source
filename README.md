@@ -30,18 +30,17 @@ Jedes Modul (Arduino Nano) hat bis zu zwei Ziele (Targets) an sich angeschlossen
 Jedes Modul wird mehrmals pro Sekunde nach Updates gefragt, hier definieren wir wie die Antworten Formatiert sein müssen:
 
 ```c
-ht1:%d|ht2:%d|err:%s
+bth:%d|ssh:%d|tah:%d|ballingame:%d|err:%s
 ```
 > *Die **Reihenfolge der Keys+Werte ist egal**, genau wie ihre **Vorhandenheit** - es werden nur erhaltene Daten verarbeitet und es sind keine speziellen Daten notwendig. Allerdings **muss** jeder versendete Key einen zugehörigen Wert haben*
 
-<span style="color:orange">*prototyping*: ht1 und ht2 werden archiviert und bald gegen neue keys ersetzt</span>
 |  Key-Name  | Wertetyp | Bedeutung                                            |
 |------------|----------|------------------------------------------------------|
 | ```\|```   | /        | Trennzeichen zwischen den Daten                      |
-| ```bth```  | int      | Zahl der Treffer (Hits) der Bumper Tower seit dem letzem Update     |
-| ```ssh```  | int      | Zahl der Treffer (Hits) der Sling Shots seit dem letzem Update     |
-| ```tah```  | int      | Zahl der Treffer (Hits) der Targets seit dem letzem Update     |
-| ```ballingame```  | int      | Meldet die Kugel im Game (Sensor hat Kugel erkannt)     |
+| ```bth```  | int      | Zahl der Treffer (Hits) der Bumper Tower seit dem letzem Update |
+| ```ssh```  | int      | Zahl der Treffer (Hits) der Sling Shots seit dem letzem Update |
+| ```tah```  | int      | Zahl der Treffer (Hits) der Targets seit dem letzem Update |
+| ```ballingame``` | int | Meldet die Kugel im Game (Sensor hat Kugel erkannt) |
 | ```err```  | String (Error-code) | Wird nur versendet wenn Error vorhanden ist. Sendet dann einen Error-code der dann vom ESP32 verarbeitet wird. |
 
 > Da es von Arduino selbst keine eigene Lösung für das Splitten von Strings hat benutzen wir folgende eigene Lösung: [splitString](#splitstring)
@@ -54,9 +53,8 @@ Hilfreiche Resourcen:
 
 ##### Mega > ESP
 
-<span style="color:orange">*prototyping*:</span>
 ```c
-mtpl:%s|pbu:%d|psl:%d|err:%d
+gs:%d|err:%d
 ```
 
 | Key-Name | Wertetyp | Bedeutung |
@@ -83,6 +81,20 @@ mtpl:%.2f|pbu:%d|psl:%d|pta:%d|len:%.2f|lsp:%.2f|rst:%d
 | ```len``` | bit | "1" wenn Lichter an sein sollen, "0" wenn aus|
 | ```lsp``` | float (2 Kommastellen) | Geschwindigkeit der Lichteffekte von 0-200% (0.0-2.0) |
 | ```rst``` | bit | "1" wenn Spiel resetted werden soll |
+
+---
+
+#### Datenformat von Mega zu Nano 5 (Lichteffekte)
+Wir senden die Effekte in Integer, wo der Nano 5 dann weis bei welchem Inegerwert er welchen Effekt abspielen soll. So weis er immer welches Ziel getroffen wurde und zu was er einen Effekt spielen soll.
+
+|  Key-Name  | Wertetyp | Bedeutung                                            |
+|------------|----------|------------------------------------------------------|
+| ```\|```   | /        | Trennzeichen zwischen den Daten                      |
+| ```lsp```  | float      | Lightspeed, vom ESP32 |
+| ```len```  | int      | Light-State (Sagt ob die Lichter an oder aus sein sollen |
+| ```eff:1```  | int      | Treffer für BumperTower |
+
+> Da es von Arduino selbst keine eigene Lösung für das Splitten von Strings hat benutzen wir folgende eigene Lösung: [splitString](#splitstring)
 
 ---
 

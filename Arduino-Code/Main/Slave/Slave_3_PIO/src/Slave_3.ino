@@ -95,7 +95,7 @@ void loop() {
     if(writeConsoleThatBumperTriggered != -1){
         int dummy = writeConsoleThatBumperTriggered; //um sicherzustellen, dass die nachricht nicht mehrmals gesendet wird
         writeConsoleThatBumperTriggered = -1;
-        Serial.println(String("Triggered Bumper ") + dummy + String(" [") + totalTriggerAmountInRuntime + String("]"));
+        //Serial.println(String("Triggered Bumper ") + dummy + String(" [") + totalTriggerAmountInRuntime + String("]"));
     }
 
     //–––––––Bumper 3 Abfragen, da es keinen dritten Interrupt-Pin gibt–––––––
@@ -131,7 +131,7 @@ void handleReset() {
 void requestEvent() {
     // String bauen
     snprintf(message, sizeof(message),
-             "ht1:%d|",
+             "bth:%d|",
              hitpoints);
 
     hitpoints = 0; // nach dem Senden zurücksetzen
@@ -151,6 +151,6 @@ void receiveEvent(int howMany) {
     // Kommando auswerten
     if (strcmp(command, "resetGame") == 0) {
         handleReset();
-        Serial.println("resetting...");
+        //Serial.println("resetting...");
     }
 }

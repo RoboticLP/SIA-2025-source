@@ -10,12 +10,16 @@ int TasterGedrueckt = 0; // If-Clause Bestätigung
 
 int entprellZeit = 200; // 200 ms
 
+char command[20];   // für empfangene Kommandos
+
 
 char message[50];
 //____________________________void Setup___________________________
 void setup() {
   Wire.begin(2);  
-  Wire.onRequest(requestEvent); 
+  Wire.onRequest(requestEvent);  // Master fragt Daten an
+  Wire.onReceive(recieveEvent);  // Master sendet Daten
+  
   Serial.begin(9600);
  
   pinMode(scoring, INPUT_PULLUP);
@@ -29,12 +33,10 @@ unsigned long now = millis();
 
 if(digitalRead(scoring) == LOW) {
 TasterZeit = now;                // aktualisiert die Tasterzeit
-Serial.println("1");
 TasterGedrueckt = 1;  // registriert das Signal und speichert es als Variable
 }
 if(now - TasterZeit > entprellZeit && TasterGedrueckt == 1) {
 TasterGedrueckt = 0;                   // zurücksetzen 
-Serial.println("2");
 scoredTimes = scoredTimes + 1;
 }
 
@@ -44,13 +46,18 @@ if(scoredTimes > SlingshotReader) {
     // code...
     SlingshotReader = scoredTimes;
  } }
+
+void handleReset() {
+scoredTimes = 0;
+SlingshotReader = 0;
+}
 //___________________________void requestEvent_______________________
 void requestEvent() {
   sprintf(message, "ssh:%d|", scoredTimes);
   Wire.write(message);
   Serial.println();//Daten gesendet
 }
-void receiveEvent() {
+void recieveEvent(int numBytes) {
 
   if (strcmp(command, "resetGame") == 0) {
       handleReset();
