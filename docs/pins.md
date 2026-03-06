@@ -40,6 +40,7 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
+| 3 | Ball In Start Knopf | Nein | Ja | Button | Digital | Input_Pullup |
 | 4 | Ball Lost Schranke | Nein | Nein | Digitalschranke | Digital | Input_Pullup |
 | 5 | Enable/Disable Fingers While InGame | Nein | Nein | Nix | Digital | Output |
 | 6 | Ball entlass in die Startvorrichtung | Ja | Nein | ? | Digital | Output |
