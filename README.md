@@ -84,6 +84,20 @@ mtpl:%.2f|pbu:%d|psl:%d|pta:%d|len:%.2f|lsp:%.2f|rst:%d
 
 ---
 
+#### Datenformat von Mega zu Nano 5 (Lichteffekte)
+Wir senden die Effekte in Integer, wo der Nano 5 dann weis bei welchem Inegerwert er welchen Effekt abspielen soll. So weis er immer welches Ziel getroffen wurde und zu was er einen Effekt spielen soll.
+
+|  Key-Name  | Wertetyp | Bedeutung                                            |
+|------------|----------|------------------------------------------------------|
+| ```\|```   | /        | Trennzeichen zwischen den Daten                      |
+| ```lsp```  | float      | Lightspeed, vom ESP32 |
+| ```len```  | int      | Light-State (Sagt ob die Lichter an oder aus sein sollen |
+| ```eff:1```  | int      | Treffer für BumperTower |
+
+> Da es von Arduino selbst keine eigene Lösung für das Splitten von Strings hat benutzen wir folgende eigene Lösung: [splitString](#splitstring)
+
+---
+
 ## sprintf
 Formatierung von Strings
 - [Online Tutorial für sprintf](https://www.programmingelectronics.com/sprintf-arduino/)
