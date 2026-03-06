@@ -5,11 +5,17 @@
 
 #define PIN 6
 #define NUMPIXELS 24
+#define interrupt_1 2 //used for a button to test light effects, sounds etc.
 
 //globale Variablen für die Kommunikation zum Nano
 float globalEffectSpeed = 1.0; //ranges from 0-2, multiplyer to in-/decrease speed, accesible in the webpanel
 boolean overrideAllLightsOff = false; //used to deactivate all lights immediately, accesible in the webpanel
 char command[50]; //für empfangene Kommdandos
+
+volatile int writeConsoleThatTestButtonTriggered = -1; //used for testing out individual sound- or lighteffects
+int totalTriggerAmountInRuntime = 0; //used to bring the console messages for the button in order
+
+volatile unsigned long lastInterruptTime = 0;
 
 class rgb {
   public:
@@ -57,7 +63,8 @@ bool effectOngoing = false;
 
 Led allLights[NUMPIXELS];
 int allLightInts[NUMPIXELS];
-
+int firstHalfLightInts[NUMPIXELS/2];
+int secondHalfLightInts[NUMPIXELS/2];
 void setup() {
   Serial.begin(9600);
 
@@ -70,11 +77,31 @@ void setup() {
   pixels.begin();
   pixels.setBrightness(200);
 
+    pinMode(interrupt_1, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(interrupt_1), testButtonTriggered, FALLING);
+    //–––Interrupt 2––– (Bumper 2)
+
   for(int i = 0; i < NUMPIXELS; i++){
     allLights[i] = Led(i);
     allLightInts[i] = i;
   }
+  for(int i = 0; i < NUMPIXELS/2; i++){
+    firstHalfLightInts[i] = NUMPIXELS/2 - 1 - i;
+  }
+  for(int i = 0; i < NUMPIXELS/2; i++){
+    secondHalfLightInts[i] = NUMPIXELS/2 - 1 + i;
+  }
   doOnePulse(255,0,255);
+}
+
+void testButtonTriggered(){ 
+    unsigned long now = millis();
+    if (now - lastInterruptTime > 200) { // 200 ms entprellen
+      doOnePulse(255,0,0);
+      totalTriggerAmountInRuntime++;
+      writeConsoleThatTestButtonTriggered = 1;
+      lastInterruptTime = now;
+    }
 }
 
 int color = 0;
@@ -86,8 +113,12 @@ rgb activePulseColor(255,0,0);
 
 void loop() {
 
-  randomTransition(allLightInts,NUMPIXELS,0,"blue");
+  randomTransition(allLightInts,NUMPIXELS,0,"random");
   if(ballIsOut){
+    multipleSwoopsEffect(1,10,0,255,2,4);
+  }
+  else{
+
   }
   if(millis() < timeToShutOffPulseEffect){ //so kann ein vollständiger pulse-effekt durchlaufen werden, mithilfe eines passenden timestamps und der activepulsecolor
     pulse(allLightInts,NUMPIXELS,2,activePulseColor.r,activePulseColor.g,activePulseColor.b);
@@ -121,35 +152,12 @@ void loop() {
   }
   }
   pixels.show(); //nachdem alle pixel abgearbeitet wurden, den led-strip aktualisieren
-}
 
-//———————nach Kommunikation mit dem Mega aufgerufen———————
-void handleReset(){
-
-}
-
-void handleLightsOff(boolean off){
-  overrideAllLightsOff = off;
-}
-
-void handleBallIn(){
-  ballIsOut = false;
-}
-
-void handleBallOut(){
-  ballIsOut = true;
-}
-
-void handleSlaveTwoHit(){
-  doOnePulse(255,0,0);
-}
-
-void handleSlaveThreeHit(){
-
-}
-
-void handleSlaveFourHit(){
-
+  //——————————————–Konsole schreiben (Serial.println geht nicht im Interrupt)————————————————
+    if(writeConsoleThatTestButtonTriggered != -1){
+        writeConsoleThatTestButtonTriggered = -1;
+        Serial.println(String("Triggered Test Button ") + String(" [") + totalTriggerAmountInRuntime + String("]"));
+    }
 }
 
 void setPixelsEqually(int leds[], int listLength, int R, int G, int B, int priority, int duration){
@@ -223,12 +231,63 @@ rgb randomRedColor(){
 //——————————————————————EFFECTS————————————————
 //EffectStates
 EffectState swoopEffectState = EffectState(-5,20 / globalEffectSpeed); //progress -5 (startet außerhalb des strips); timeBetweenProgress 20 ms
+EffectState multiSwoopEffectState = EffectState(0,40 / globalEffectSpeed); //progress -5 (startet außerhalb des strips); timeBetweenProgress 20 ms
 EffectState blueAmbientEffectState = EffectState(0,50 / globalEffectSpeed); //progress 0; timeBetweenProgress 50 ms
 EffectState randomTransitionEffectState = EffectState(0,50 / globalEffectSpeed); //progress 0;  timeBetweenProgress 20ms
 EffectState pulseEffectState = EffectState(0,15 / globalEffectSpeed);
 rgb colorAtStartOfPulse = rgb(0,0,0);
 rgb randomTransitionColor = rgb(0,0,0);
 rgb lastTransitionColor = rgb(0,0,0);
+
+void multipleSwoopsEffect(int priority,uint8_t r,uint8_t g,uint8_t b, int length, int distance){
+  long lastTime = multiSwoopEffectState.lastProgressTimeStamp;
+  long cooldown = multiSwoopEffectState.timeBetweenProgress;
+  if(millis() - multiSwoopEffectState.lastProgressTimeStamp < multiSwoopEffectState.timeBetweenProgress) return;
+
+  int swoopProgress = multiSwoopEffectState.effectProgress;
+
+  int entlength = length + distance;
+
+
+    for(int e=0; e< (NUMPIXELS/2)/entlength; e++){
+      int maxLight = swoopProgress + e * entlength;
+      for(int i = 0; i< length; i++){
+        float mult = 1 - (float)i/length;
+        if(maxLight - i < 0) continue;
+        Led& led = allLights[firstHalfLightInts[maxLight - i]];
+        if(priority >= led.PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
+        LightState& ls = led.prio[priority];
+
+        ls.r= r * mult; //setting given rgb values for the given priority
+        ls.g= g * mult;
+        ls.b= b * mult;
+        ls.on = true;
+        ls.timeOfShutOff = millis() + cooldown + 10;
+      }
+    }
+    for(int e=0; e< (NUMPIXELS/2)/entlength; e++){
+      int maxLight = swoopProgress + e * entlength;
+      for(int i = 0; i< length; i++){
+        float mult = 1 - (float)i/length;
+        if(maxLight - i < 0) continue;
+        Led& led = allLights[secondHalfLightInts[maxLight - i]];
+        if(priority >= led.PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
+        LightState& ls = led.prio[priority];
+
+        ls.r= r * mult; //setting given rgb values for the given priority
+        ls.g= g * mult;
+        ls.b= b * mult;
+        ls.on = true;
+        ls.timeOfShutOff = millis() + cooldown + 10;
+      }
+    }
+  multiSwoopEffectState.effectProgress++;
+  if(swoopProgress >= length + distance) {
+      multiSwoopEffectState.effectProgress = 0;
+      multiSwoopEffectState.isActive = false;
+  }
+  multiSwoopEffectState.lastProgressTimeStamp = millis();
+}
 
 void doOnePulse(uint8_t r,uint8_t g,uint8_t b){
   timeToShutOffPulseEffect = millis() + pulseEffectState.timeBetweenProgress * 19;
@@ -276,7 +335,7 @@ void pulse(int leds[], int listLength, int priority, uint8_t r,uint8_t g,uint8_t
   if(effectProgress > 19) {
       pulseEffectState.effectProgress = 0;
       pulseEffectState.isActive = false;
-      Serial.println("Pulse-Effekt komplett durchgelaufen");
+      //Serial.println("Pulse-Effekt komplett durchgelaufen");
   }
   pulseEffectState.lastProgressTimeStamp = millis();
 }
@@ -295,7 +354,7 @@ void randomTransition(int leds[], int listLength, int priority, String colorType
     int difb = randomTransitionColor.b - ls.b;
     if(abs(difr) < 3 && abs(difb) < 3 && abs(difg) < 3){
       //———————————Zielfarbe erreicht——————————
-      Serial.println("switched color for the transition ambient!");
+      //Serial.println("switched color for the transition ambient!");
       ls.r = randomTransitionColor.r;
       ls.g = randomTransitionColor.g;
       ls.b = randomTransitionColor.b;
@@ -360,7 +419,7 @@ void randomBlueAmbient(int leds[], int listLength, int priority){
   }
 }
 
-void swoopBallEffect(int leds[], int listLength, int priority,uint8_t r,uint8_t g,uint8_t b){
+void swoopBallEffect(int leds[], int listLength, int priority,uint8_t r,uint8_t g,uint8_t b, boolean overwriteWithBlack){
   long lastTime = swoopEffectState.lastProgressTimeStamp;
   long cooldown = swoopEffectState.timeBetweenProgress;
   if(millis() - swoopEffectState.lastProgressTimeStamp < swoopEffectState.timeBetweenProgress) return;
@@ -376,18 +435,19 @@ void swoopBallEffect(int leds[], int listLength, int priority,uint8_t r,uint8_t 
     if(leds[number] >= NUMPIXELS) continue; //looking if the number extents the amount of numbers
     Led& led = allLights[leds[number]];
     if(priority >= led.PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
-    LightState& ls = led.prio[priority];
+    LightState& ls = led.prio[priority];  
 
     int dif = abs(number - swoopProgress);
     float multiplyer = 1 - dif * 0.17; //vom mittelpunkt des effektes aus wird jede led 10% schwächer
     if(multiplyer <= 0) multiplyer = 0;
     rgb color = rgb(r * multiplyer,g * multiplyer, b * multiplyer); //final color, some shade of red
-    
-    ls.r= color.r; //setting given rgb values for the given priority
-    ls.g= color.g;
-    ls.b= color.b;
-    ls.on = true;
-    ls.timeOfShutOff = millis() + cooldown + 10;
+    if(multiplyer != 0 || overwriteWithBlack == true){ //if the values would be 0 0 0 and overwrite... is turned off, the values aren't applied
+      ls.r= color.r; //setting given rgb values for the given priority
+      ls.g= color.g;
+      ls.b= color.b;
+      ls.on = true;
+      ls.timeOfShutOff = millis() + cooldown + 10;
+    } 
   } 
   swoopEffectState.effectProgress++;
   if(swoopProgress > listLength) {
@@ -450,13 +510,43 @@ void receiveEvent(int howMany) {
 
     // Kommando auswerten
     if (strcmp(command, "resetGame") == 0) {
-        Serial.println("resetting...");
+        Serial.println("resetting... but because this is the lights manager, there is nothing to reset:D");
     }
     if (strcmp(command, "slaveTwo") == 0) {
         Serial.println("slaveTwo got hit...");
         handleSlaveTwoHit();
     }
 }
+
+//———————nach Kommunikation mit dem Mega aufgerufen———————
+void handleReset(){
+
+}
+
+void handleLightsOff(boolean off){
+  overrideAllLightsOff = off;
+}
+
+void handleBallIn(){
+  ballIsOut = false;
+}
+
+void handleBallOut(){
+  ballIsOut = true;
+}
+
+void handleSlaveTwoHit(){
+  doOnePulse(255,0,0);
+}
+
+void handleSlaveThreeHit(){
+
+}
+
+void handleSlaveFourHit(){
+
+}
+
 void handleSpeedChange(float speed){
   //bei allen effectstates den cooldown mit dem alten speed multiplizieren und durch den neuen teilen
   if(speed!= 0){
