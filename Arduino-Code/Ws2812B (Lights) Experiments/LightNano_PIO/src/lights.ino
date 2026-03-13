@@ -4,13 +4,13 @@
 
 
 #define PIN 6
-#define NUMPIXELS 28
+#define NUMPIXELS 31
 #define interrupt_1 2 //used for a button to test light effects, sounds etc.
 
 //globale Variablen für die Kommunikation zum Nano
 float globalEffectSpeed = 1.0; //ranges from 0-2, multiplyer to in-/decrease speed, accesible in the webpanel
 boolean overrideAllLightsOff = false; //used to deactivate all lights immediately, accesible in the webpanel
-char command[50]; //für empfangene Kommdandos
+char command[20]; //für empfangene Kommdandos
 
 volatile int writeConsoleThatTestButtonTriggered = -1; //used for testing out individual sound- or lighteffects
 int totalTriggerAmountInRuntime = 0; //used to bring the console messages for the button in order
@@ -34,12 +34,12 @@ public:
   uint8_t r = 0, g = 0, b = 0;
   long timeOfShutOff;
 };
+uint8_t PRIORITY_COUNT = 3;
 
 class Led {
 public:
   uint8_t ledNumber;
-  static const uint8_t PRIORITY_COUNT = 3;
-  LightState prio[PRIORITY_COUNT];
+  LightState prio[3];
 
   Led() : ledNumber(0) {}
 
@@ -114,8 +114,7 @@ long timeToShutOffPulseEffect;
 rgb activePulseColor(255,0,0);
 
 void loop() {
-
-  randomTransition(allLightInts,NUMPIXELS,0,"random");
+  randomTransition(allLightInts,NUMPIXELS,0,"red");
   if(ballIsOut){
     multipleSwoopsEffect(1,10,0,255,2,4);
   }
@@ -134,7 +133,7 @@ void loop() {
     uint8_t r = 0;
     uint8_t g = 0;
     uint8_t b = 0;
-    for(int i = led.PRIORITY_COUNT -1; i >= 0; i--){
+    for(int i = PRIORITY_COUNT -1; i >= 0; i--){
       if(led.prio[i].on != false){ //nacheinander prioritäten abarbeiten, beginned bei der höchsten:
         r = led.prio[i].r; //wenn die höchste angeschaltene prio gefunden ist,
         g = led.prio[i].g; //werte übertragen und die for-schleife abbrechen.
@@ -160,6 +159,8 @@ void loop() {
         writeConsoleThatTestButtonTriggered = -1;
         Serial.println(String("Triggered Test Button ") + String(" [") + totalTriggerAmountInRuntime + String("]"));
     }
+
+  delay(20);
 }
 
 void setPixelsEqually(int leds[], int listLength, int R, int G, int B, int priority, int duration){
@@ -167,7 +168,7 @@ void setPixelsEqually(int leds[], int listLength, int R, int G, int B, int prior
 
     if(leds[number] >= NUMPIXELS) continue; //looking if the number extents the amount of numbers
     Led& led = allLights[leds[number]];
-    if(priority >= led.PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
+    if(priority >= PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
     LightState& ls = led.prio[priority];
     
     ls.r= R; //setting given rgb values for the given priority
@@ -183,7 +184,7 @@ void setPixelsRandomRedAmbient(int leds[], int listLength, int priority, int dur
 
     if(leds[number] >= NUMPIXELS) continue; //looking if the number extents the amount of numbers
     Led& led = allLights[leds[number]];
-    if(priority >= led.PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
+    if(priority >= PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
     LightState& ls = led.prio[priority];
     rgb color = randomRedColor();
     ls.r= color.r; //setting given rgb values for the given priority
@@ -198,7 +199,7 @@ void setSpecificLed(int LED, int R, int G, int B, int priority, int duration){
 
     if(LED >= NUMPIXELS) return; //looking if the number extents the amount of numbers
     Led& led = allLights[LED];
-    if(priority >= led.PRIORITY_COUNT) return; //looking if the priority is higher than the max. for the led
+    if(priority >= PRIORITY_COUNT) return; //looking if the priority is higher than the max. for the led
     LightState& ls = led.prio[priority];
     
     ls.r= R; //setting given rgb values for the given priority
@@ -219,14 +220,16 @@ rgb randomBlueColorWithBrightness(){
   float brightness = random(50)/100 + 0.5;
   uint8_t c = random(256);
     return rgb(0,c*brightness,255*brightness);
+    //return rgb(255,0,0);
 }
 
 rgb randomRedColor(){
-  uint8_t c = random(160); //nur bis grün = 159 => kein richtiges gelb
+  uint8_t c = random(60); //nur bis grün = 159 => kein richtiges gelb
   if(random() < 0.5){
-    return rgb(255,0,c);
+    //return rgb(255,0,c);
   }
-  else return rgb(255,c,0);
+  //else return rgb(255,c,0);
+  return rgb(255,0,0);
 }
 
 
@@ -257,7 +260,7 @@ void multipleSwoopsEffect(int priority,uint8_t r,uint8_t g,uint8_t b, int length
         float mult = 1 - (float)i/length;
         if(maxLight - i < 0) continue;
         Led& led = allLights[firstHalfLightInts[maxLight - i]];
-        if(priority >= led.PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
+        if(priority >= PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
         LightState& ls = led.prio[priority];
 
         ls.r= r * mult; //setting given rgb values for the given priority
@@ -273,7 +276,7 @@ void multipleSwoopsEffect(int priority,uint8_t r,uint8_t g,uint8_t b, int length
         float mult = 1 - (float)i/length;
         if(maxLight - i < 0) continue;
         Led& led = allLights[secondHalfLightInts[maxLight - i]];
-        if(priority >= led.PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
+        if(priority >= PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
         LightState& ls = led.prio[priority];
 
         ls.r= r * mult; //setting given rgb values for the given priority
@@ -320,7 +323,7 @@ void pulse(int leds[], int listLength, int priority, uint8_t r,uint8_t g,uint8_t
   for(int number = 0; number < listLength; number ++){
     if(leds[number] >= NUMPIXELS) continue; //looking if the number extents the amount of numbers
     Led& led = allLights[leds[number]];
-    if(priority >= led.PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
+    if(priority >= PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
     LightState& ls = led.prio[priority];
     int diffR = r - colorAtStartOfPulse.r;
     int diffG = g - colorAtStartOfPulse.g;
@@ -349,7 +352,7 @@ void randomTransition(int leds[], int listLength, int priority, String colorType
   for(int number = 0; number < listLength; number ++){
     if(leds[number] >= NUMPIXELS) continue; //looking if the number extents the amount of numbers
     Led& led = allLights[leds[number]];
-    if(priority >= led.PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
+    if(priority >= PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
     LightState& ls = led.prio[priority];
     int difr= randomTransitionColor.r - ls.r;
     int difg = randomTransitionColor.g - ls.g;
@@ -410,7 +413,7 @@ void randomBlueAmbient(int leds[], int listLength, int priority){
   for(int number = 0; number < listLength; number ++){
     if(leds[number] >= NUMPIXELS) continue; //looking if the number extents the amount of numbers
     Led& led = allLights[leds[number]];
-    if(priority >= led.PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
+    if(priority >= PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
     LightState& ls = led.prio[priority];
     rgb color = randomBlueColorWithBrightness();
     ls.r= color.r; //setting given rgb values for the given priority
@@ -436,7 +439,7 @@ void swoopBallEffect(int leds[], int listLength, int priority,uint8_t r,uint8_t 
   for(int number = 0; number < listLength; number ++){
     if(leds[number] >= NUMPIXELS) continue; //looking if the number extents the amount of numbers
     Led& led = allLights[leds[number]];
-    if(priority >= led.PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
+    if(priority >= PRIORITY_COUNT) continue; //looking if the priority is higher than the max. for the led
     LightState& ls = led.prio[priority];  
 
     int dif = abs(number - swoopProgress);
@@ -458,48 +461,6 @@ void swoopBallEffect(int leds[], int listLength, int priority,uint8_t r,uint8_t 
       Serial.println("Swoop-Effekt komplett durchgelaufen");
   }
   swoopEffectState.lastProgressTimeStamp = millis();
-}
-
-
-//——————————let all pixels in an array go through one rainbow loop——————————————
-void rainBow(int leds[], int listLength){
-  effectOngoing = true;
-  int rLevel = 255;
-  int gLevel = 0;
-  int bLevel = 0;
-  int delayMS = 3;
-
-  for(int i = 0; i <= 255; i ++){ //g --> 255
-    gLevel = i;
-    setPixelsEqually(leds,listLength,rLevel,gLevel,bLevel,0,100);
-    delay(delayMS);
-  }
-  for(int level = 255; level >= 0; level --){ //r --> 0
-    rLevel = level;
-    setPixelsEqually(leds,listLength,rLevel,gLevel,bLevel,0,100);
-      delay(delayMS);
-  }
-  for(int i = 0; i <= 255; i ++){ //b --> 255
-    bLevel = i;
-    setPixelsEqually(leds,listLength,rLevel,gLevel,bLevel,0,100);
-    delay(delayMS);
-  }
-  for(int level = 255; level >= 0; level --){ //g --> 0
-    gLevel = level;
-    setPixelsEqually(leds,listLength,rLevel,gLevel,bLevel,0,100);
-      delay(delayMS);
-  }
-  for(int i = 0; i <= 255; i ++){ //r --> 255
-    rLevel = i;
-    setPixelsEqually(leds,listLength,rLevel,gLevel,bLevel,0,100);
-    delay(delayMS);
-  }
-  for(int level = 255; level >= 0; level --){ //b --> 0
-    bLevel = level;
-    setPixelsEqually(leds,listLength,rLevel,gLevel,bLevel,0,100);
-    delay(delayMS);
-  }
-  effectOngoing = false;
 }
 
 void receiveEvent(int howMany) {
