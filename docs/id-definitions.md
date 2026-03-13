@@ -1,7 +1,7 @@
 # Message IDs
 Hier werden alle Message-IDs und deren zugehörige Bedeutungen definiert.
 > **Plan**
-> Error-Codes: **0-29**
+> id-definitions: **0-29**
 > Log-IDs: **30-59**
 > GameState-IDs: **60-89**
 
@@ -23,18 +23,9 @@ Hier werden alle Message-IDs und deren zugehörige Bedeutungen definiert.
 | 414 | Unbekannter Slave 4 Datenkey erhalten |
 | 415 | Unbekannter Slave 5 Datenkey erhalten |
 
----
+--
 
-## Log-ID Bedeutungen
+## Lichteffekt-IDs
 
-| Log-ID | Bedeutung |
-|------------|-----------|
-| x | y |
-
----
-
-## GameState-ID
-
-| GameState-ID | Bedeutung |
-|------------|-----------|
-| x | y |
+| Effekt-ID | Effekt-Name |
+|-----------|-------------|

@@ -5,7 +5,7 @@ Alle Source-Codes der diesjährigen SIA.
 > **Seiten**
 - [ESP32 Webserver](docs/ESP32-Webserver.md)
 - [Pin-Belegung](docs/pins.md)
-- [Message IDs](docs/error-codes.md)
+- [ID-Definitions](docs/id-definitions.md)
 
 > **Auf dieser Seite**
 - [I2C Arduino Docs](https://docs.arduino.cc/learn/communication/wire/#arduino-i2c-pins)
@@ -49,7 +49,7 @@ bth:%d|ssh:%d|tah:%d|ballingame:%d|err:%s
 
 ## Datenformat des Admin-Panel Datenstrings (vom ESP32)
 Hilfreiche Resourcen:
-- [Bedeutungen der Message-IDs](docs/error-codes.md)
+- [Bedeutungen der Message-IDs](docs/id-definitions.md)
 
 ##### Mega > ESP
 
@@ -60,7 +60,7 @@ gs:%d|err:%d
 | Key-Name | Wertetyp | Bedeutung |
 |----------|----------|-----------|
 | ```\|``` | /        | Trennzeichen zwischen den Daten |
-| ```gs``` | int | [Gamestate](docs/error-codes.md#gamestate-id) (aktueller Zustand des Flippers) |
+| ```gs``` | int | [Gamestate](docs/id-definitions.md#gamestate-id) (aktueller Zustand des Flippers) |
 | ```err``` | int | Id eines Logs/Errors für das Frontend |
 
 ---
@@ -84,17 +84,15 @@ mtpl:%.2f|pbu:%d|psl:%d|pta:%d|len:%.2f|lsp:%.2f|rst:%d
 
 ---
 
-#### Datenformat von Mega zu Nano 5 (Lichteffekte)
+#### Datenformat Lichteffekte von Mega zu Nano (5)
 Wir senden die Effekte in Integer, wo der Nano 5 dann weis bei welchem Inegerwert er welchen Effekt abspielen soll. So weis er immer welches Ziel getroffen wurde und zu was er einen Effekt spielen soll.
 
-|  Key-Name  | Wertetyp | Bedeutung                                            |
-|------------|----------|------------------------------------------------------|
+|  Key-Name  | Wertetyp | Bedeutung |
+|------------|----------|-----------|
 | ```\|```   | /        | Trennzeichen zwischen den Daten                      |
-| ```lsp```  | float      | Lightspeed, vom ESP32 |
-| ```len```  | int      | Light-State (Sagt ob die Lichter an oder aus sein sollen |
-| ```eff:1```  | int      | Treffer für BumperTower |
-
-> Da es von Arduino selbst keine eigene Lösung für das Splitten von Strings hat benutzen wir folgende eigene Lösung: [splitString](#splitstring)
+| ```lsp```  | float    | Lightspeed, vom ESP32 |
+| ```len```  | int      | Light-State (Sagt ob die Lichter an oder aus sein sollen) |
+| ```eff```  | int      | **WIP** [Lichteffekt-ID](docs/id-definitions.md#gamestate-id) |
 
 ---
 

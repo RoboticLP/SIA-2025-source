@@ -46,7 +46,7 @@ String M3S = "0";
 String M4S = "0";
 String M5S = "0";
 
-// FLipper settings get changed by code later; Meaning: error-codes.md
+// Flipper settings get changed by code later; Meaning: id-definitions.md
 bool i2cUpdateRecieved = false;
 bool settingsChanged = false;
 float mtpl; // float value with two comma digits

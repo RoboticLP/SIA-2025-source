@@ -7,7 +7,7 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 > **Seiten**
 - [Hauptseite](../README.md)
 - [ESP32 Webserver](ESP32-Webserver.md)
-- [Message IDs](error-codes.md)
+- [ID-Definitions](id-definitions.md)
 
 > **Auf dieser Seite**
 - [Mega](#mega)
