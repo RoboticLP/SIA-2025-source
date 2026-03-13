@@ -7,7 +7,7 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 > **Seiten**
 - [Hauptseite](../README.md)
 - [ESP32 Webserver](ESP32-Webserver.md)
-- [Message IDs](error-codes.md)
+- [ID-Definitions](id-definitions.md)
 
 > **Auf dieser Seite**
 - [Mega](#mega)
@@ -63,9 +63,9 @@ Ball Eject ist akutell ausgenommen.
 | 2 | Bumper Tower 1 | Ja | Ja | Spule | Digital | Input |
 | 3 | Bumper Tower 2 | Ja | Ja | Spule | Digital | Input |
 | 4 | Bumper Tower 3 | Ja | Nein | Spule | Digital | Input |
-| 6 | Bumper Tower Light 1 | Ja | Nein | LED | Digital | Input |
-| 7 | Bumper Tower Light 2 | Ja | Nein | LED | Digital | Input |
-| 8 | Bumper Tower Light 3 | Ja | Nein | LED | Digital | Input |
+| 6 | Bumper Tower Light 1 | Ja | Nein | LED | Digital | Output |
+| 7 | Bumper Tower Light 2 | Ja | Nein | LED | Digital | Output |
+| 8 | Bumper Tower Light 3 | Ja | Nein | LED | Digital | Output |
 
 ## Nano 4
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
