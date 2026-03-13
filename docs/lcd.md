@@ -32,7 +32,7 @@ o o o o o o o o o o o o o o o o
 |---------|----------|--------------|--------------|
 | 1       | VSS      | GND          | Ground |
 | 2       | VDD      | 5V           | Stromversorgung |
-| 3       | V0       | Pin 6        | Kontrast (über AdminPanel) |
+| 3       | V0       | Pin 13        | Kontrast (über AdminPanel) |
 | 4       | RS       | Pin 7        | Register Select (Data/Command) |
 | 5       | RW       | GND          | Read/Write (auf GND = nur Schreiben) |
 | 6       | E        | Pin 8        | Enable Signal |
