@@ -4,7 +4,7 @@
 
 
 #define PIN 6
-#define NUMPIXELS 24
+#define NUMPIXELS 28
 #define interrupt_1 2 //used for a button to test light effects, sounds etc.
 
 //globale Variablen für die Kommunikation zum Nano
@@ -65,6 +65,8 @@ Led allLights[NUMPIXELS];
 int allLightInts[NUMPIXELS];
 int firstHalfLightInts[NUMPIXELS/2];
 int secondHalfLightInts[NUMPIXELS/2];
+
+//SETUP
 void setup() {
   Serial.begin(9600);
 
@@ -75,7 +77,7 @@ void setup() {
 
   delay(100);              // let everything settle
   pixels.begin();
-  pixels.setBrightness(200);
+  pixels.setBrightness(20);
 
     pinMode(interrupt_1, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(interrupt_1), testButtonTriggered, FALLING);
@@ -516,17 +518,28 @@ void receiveEvent(int howMany) {
         Serial.println("slaveTwo got hit...");
         handleSlaveTwoHit();
     }
+    if (strcmp(command, "slaveThree") == 0) {
+        Serial.println("slaveThree (Bumpers) got hit...");
+        handleSlaveThreeHit();
+    }
+    if (strcmp(command, "slaveFour") == 0) {
+        Serial.println("slaveFour (Targets) got hit...");
+        handleSlaveFourHit();
+    }
+    if (strcmp(command, "ballOut") == 0) {
+        Serial.println("the ball went out!");
+        handleBallOut();
+    }
+    if (strcmp(command, "ballIn") == 0) {
+        Serial.println("the ball entered the playing field!");
+        handleBallIn();
+    }
+    if (strcmp(command, "switchAllLights") == 0) {
+        handleLightsSwitchedON_OFF();
+    }
 }
 
 //———————nach Kommunikation mit dem Mega aufgerufen———————
-void handleReset(){
-
-}
-
-void handleLightsOff(boolean off){
-  overrideAllLightsOff = off;
-}
-
 void handleBallIn(){
   ballIsOut = false;
 }
@@ -540,11 +553,11 @@ void handleSlaveTwoHit(){
 }
 
 void handleSlaveThreeHit(){
-
+  doOnePulse(0,255,0);
 }
 
 void handleSlaveFourHit(){
-
+  doOnePulse(0,0,255);
 }
 
 void handleSpeedChange(float speed){
@@ -555,4 +568,10 @@ void handleSpeedChange(float speed){
     blueAmbientEffectState.timeBetweenProgress = blueAmbientEffectState.timeBetweenProgress*globalEffectSpeed/speed;
   }
   globalEffectSpeed = speed;
+}
+
+void handleLightsSwitchedON_OFF(){
+  overrideAllLightsOff = !overrideAllLightsOff;
+  if(overrideAllLightsOff) Serial.println("Alle Lichter wurden wieder ANgeschaltet!");
+  else Serial.println("Alle Lichter wurden AUSgeschaltet");
 }
