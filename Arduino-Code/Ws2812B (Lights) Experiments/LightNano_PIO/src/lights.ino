@@ -68,7 +68,7 @@ int allLightInts[NUMPIXELS];
 int firstHalfLightInts[NUMPIXELS / 2];
 int secondHalfLightInts[NUMPIXELS / 2];
 
-// SETUP
+// ——————————————————————————————————————————————————————SETUP——————————————————————————————————————————————————————
 void setup()
 {
   Serial.begin(9600);
@@ -119,6 +119,7 @@ boolean ballIsOut = true;
 long timeToShutOffPulseEffect;
 rgb activePulseColor(255, 0, 0);
 
+//———————————————————————————————————————————————————————LOOP——————————————————————————————————————————————————————————————————
 void loop() {
   randomTransition(allLightInts,NUMPIXELS,0,"red");
   if(ballIsOut){
@@ -142,16 +143,16 @@ void loop() {
       uint8_t r = 0;
       uint8_t g = 0;
       uint8_t b = 0;
-      for (int i = led.PRIORITY_COUNT - 1; i >= 0; i--)
+      for (int p = PRIORITY_COUNT - 1; p >= 0; p--)
       {
-        if (led.prio[i].on != false)
+        if (led.prio[p].on != false)
         {                    // nacheinander prioritäten abarbeiten, beginned bei der höchsten:
-          r = led.prio[i].r; // wenn die höchste angeschaltene prio gefunden ist,
-          g = led.prio[i].g; // werte übertragen und die for-schleife abbrechen.
-          b = led.prio[i].b;
-          if (led.prio[i].timeOfShutOff <= millis())
+          r = led.prio[p].r; // wenn die höchste angeschaltene prio gefunden ist,
+          g = led.prio[p].g; // werte übertragen und die for-schleife abbrechen.
+          b = led.prio[p].b;
+          if (led.prio[p].timeOfShutOff <= millis())
           {
-            led.prio[i].on = false;
+            led.prio[p].on = false;
           }
           break;
         }
@@ -163,7 +164,7 @@ void loop() {
   {
     for (int i = 0; i < NUMPIXELS; i++)
     {
-      pixels.setPixelColor(i, pixels.Color(0, 0, 0)); // die übernommenen werte in den led-strip "eintragen"
+      pixels.setPixelColor(i, pixels.Color(0, 0, 0)); //alle Lichter auf Schwarz schalten
     }
   }
   pixels.show(); // nachdem alle pixel abgearbeitet wurden, den led-strip aktualisieren
@@ -184,7 +185,7 @@ void setPixelsEqually(int leds[], int listLength, int R, int G, int B, int prior
     if (leds[number] >= NUMPIXELS)
       continue; // looking if the number extents the amount of numbers
     Led &led = allLights[leds[number]];
-    if (priority >= led.PRIORITY_COUNT)
+    if (priority >= PRIORITY_COUNT)
       continue; // looking if the priority is higher than the max. for the led
     LightState &ls = led.prio[priority];
 
@@ -204,7 +205,7 @@ void setPixelsRandomRedAmbient(int leds[], int listLength, int priority, int dur
     if (leds[number] >= NUMPIXELS)
       continue; // looking if the number extents the amount of numbers
     Led &led = allLights[leds[number]];
-    if (priority >= led.PRIORITY_COUNT)
+    if (priority >= PRIORITY_COUNT)
       continue; // looking if the priority is higher than the max. for the led
     LightState &ls = led.prio[priority];
     rgb color = randomRedColor();
@@ -222,7 +223,7 @@ void setSpecificLed(int LED, int R, int G, int B, int priority, int duration)
   if (LED >= NUMPIXELS)
     return; // looking if the number extents the amount of numbers
   Led &led = allLights[LED];
-  if (priority >= led.PRIORITY_COUNT)
+  if (priority >= PRIORITY_COUNT)
     return; // looking if the priority is higher than the max. for the led
   LightState &ls = led.prio[priority];
 
@@ -291,7 +292,7 @@ void multipleSwoopsEffect(int priority, uint8_t r, uint8_t g, uint8_t b, int len
       if (maxLight - i < 0)
         continue;
       Led &led = allLights[firstHalfLightInts[maxLight - i]];
-      if (priority >= led.PRIORITY_COUNT)
+      if (priority >= PRIORITY_COUNT)
         continue; // looking if the priority is higher than the max. for the led
       LightState &ls = led.prio[priority];
 
@@ -311,7 +312,7 @@ void multipleSwoopsEffect(int priority, uint8_t r, uint8_t g, uint8_t b, int len
       if (maxLight - i < 0)
         continue;
       Led &led = allLights[secondHalfLightInts[maxLight - i]];
-      if (priority >= led.PRIORITY_COUNT)
+      if (priority >= PRIORITY_COUNT)
         continue; // looking if the priority is higher than the max. for the led
       LightState &ls = led.prio[priority];
 
@@ -368,7 +369,7 @@ void pulse(int leds[], int listLength, int priority, uint8_t r, uint8_t g, uint8
     if (leds[number] >= NUMPIXELS)
       continue; // looking if the number extents the amount of numbers
     Led &led = allLights[leds[number]];
-    if (priority >= led.PRIORITY_COUNT)
+    if (priority >= PRIORITY_COUNT)
       continue; // looking if the priority is higher than the max. for the led
     LightState &ls = led.prio[priority];
     int diffR = r - colorAtStartOfPulse.r;
@@ -403,7 +404,7 @@ void randomTransition(int leds[], int listLength, int priority, String colorType
     if (leds[number] >= NUMPIXELS)
       continue; // looking if the number extents the amount of numbers
     Led &led = allLights[leds[number]];
-    if (priority >= led.PRIORITY_COUNT)
+    if (priority >= PRIORITY_COUNT)
       continue; // looking if the priority is higher than the max. for the led
     LightState &ls = led.prio[priority];
     int difr = randomTransitionColor.r - ls.r;
@@ -416,6 +417,12 @@ void randomTransition(int leds[], int listLength, int priority, String colorType
       ls.r = randomTransitionColor.r;
       ls.g = randomTransitionColor.g;
       ls.b = randomTransitionColor.b;
+
+      ls.on = true;
+      ls.timeOfShutOff = millis() + cooldown + 50; 
+      //lichter weiterhin anmachen--> beugt bugs vor (lichter gehen aus), 
+      //die entstehen wenn zufällig die selbe oder eine ähnliche farbe random wieder gepickt wird
+
       lastTransitionColor = randomTransitionColor;
       if (colorType.equalsIgnoreCase("blue"))
         randomTransitionColor = randomBlueColorWithBrightness();
@@ -476,7 +483,7 @@ void randomBlueAmbient(int leds[], int listLength, int priority)
     if (leds[number] >= NUMPIXELS)
       continue; // looking if the number extents the amount of numbers
     Led &led = allLights[leds[number]];
-    if (priority >= led.PRIORITY_COUNT)
+    if (priority >= PRIORITY_COUNT)
       continue; // looking if the priority is higher than the max. for the led
     LightState &ls = led.prio[priority];
     rgb color = randomBlueColorWithBrightness();
@@ -508,7 +515,7 @@ void swoopBallEffect(int leds[], int listLength, int priority, uint8_t r, uint8_
     if (leds[number] >= NUMPIXELS)
       continue; // looking if the number extents the amount of numbers
     Led &led = allLights[leds[number]];
-    if (priority >= led.PRIORITY_COUNT)
+    if (priority >= PRIORITY_COUNT)
       continue; // looking if the priority is higher than the max. for the led
     LightState &ls = led.prio[priority];
 
@@ -690,4 +697,34 @@ void handleSpeedChange(float speed)
     blueAmbientEffectState.timeBetweenProgress = blueAmbientEffectState.timeBetweenProgress * globalEffectSpeed / speed;
   }
   globalEffectSpeed = speed;
+}
+
+String* splitString(String input, char splitter, int &count) {
+  // Count how many splits we'll have
+  count = 1;
+  for (int i = 0; i < input.length(); i++) {
+    if (input.charAt(i) == splitter) {
+      count++;
+    }
+  }
+  
+  // Create array to hold the substrings
+  String* result = new String[count];
+  
+  // Split the string
+  int index = 0;
+  int lastPos = 0;
+  
+  for (int i = 0; i < input.length(); i++) {
+    if (input.charAt(i) == splitter) {
+      result[index] = input.substring(lastPos, i);
+      index++;
+      lastPos = i + 1;
+    }
+  }
+  
+  // Add the last substring
+  result[index] = input.substring(lastPos);
+  
+  return result;
 }
