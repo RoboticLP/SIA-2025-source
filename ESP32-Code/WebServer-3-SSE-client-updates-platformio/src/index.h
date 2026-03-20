@@ -325,7 +325,7 @@ const char* webpage_main = R"=====(
     
     <!-- Settings -->
     <div class="section-container">
-      <div class="section-title">Settings (not yet working probably)</div>
+      <div class="section-title">Settings</div>
       
       <div class="section-subtitle">Game settings</div>
       <div class="controls-grid">
