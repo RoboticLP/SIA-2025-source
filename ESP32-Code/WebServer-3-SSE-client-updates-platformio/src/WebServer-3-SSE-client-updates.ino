@@ -154,7 +154,7 @@ void wireRecieveEvent(int howMany) {
         broadcastSSE_log("error", getErrorMessage(dataset[1].toInt()));
       }
 
-      // Serial.print("[I²C] request recieved "); Serial.println(dataset[0]);
+      Serial.print("[I²C] data recieved "); Serial.println(dataset[0]);
       
       delete[] dataset;
     }

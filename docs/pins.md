@@ -51,7 +51,7 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| 6 | Slingshot Sensor | Nein | Nein | Taster | Digital | Input_Pullup |
+| 2 | Slingshot Sensor | Nein | Nein | Taster | Digital | Input_Pullup |
 
 Ball Eject ist akutell ausgenommen.
 
@@ -77,10 +77,19 @@ Ball Eject ist akutell ausgenommen.
 | 4 | Ball In Game Schranke | Nein | Nein | Digitalschranke | Digital | Input_Pullup |
 
 ## Nano 5
-### Nano 5 ist für die LEDs zuständig und Steuert die LED Bänder. Er bekommt die Einstellungen und Effekt Aufgaben von dem Mega
+### Nano 5 ist für die Musik da
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| 6 | LEDs | Nein | Nein | Ledstripe | ? | Output |
+
+
+## ESP 2
+### ESP 2 ist für die Lichter zuständig
+> Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
+
+| Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
+|----------|----------|----------|----------|----------|----------|----------|
+
+
 

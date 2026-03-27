@@ -1,7 +1,7 @@
 #include <Wire.h>
 #include <Arduino.h>
 
-int scoring = 6; //Taster Pin
+int scoring = 2; //Taster Pin
 int SlingshotReader = 0; //Auswertung
 int scoredTimes = 0; //Auswertung
 
