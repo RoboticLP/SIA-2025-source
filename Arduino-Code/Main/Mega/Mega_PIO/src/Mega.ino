@@ -50,13 +50,10 @@ void handleLCDDisplay();
 void checkGameState();
 void startGameOver();
 bool finishGameOver(void *);
-bool finishReset(void *);
 bool addRandomPoints(void *);
 void printConnectionFromSlaves();
-void handleDebugInput();
 void sendStatusToAdminPanel();
 void reciveMessagesFromAdminPanel();
-bool playMusic(void *);
 void sendErrorToESP(int);
 
 // ───────────────────── Backlight ─────────────────────
@@ -94,7 +91,6 @@ void setup() {
 
 void loop() {
     timer.tick();
-    handleDebugInput();
     checkGameState();
     checkFingers();
     checkBallLost();
@@ -109,16 +105,6 @@ void loop() {
         sendLEDUpdates();
         lastSlaveCheck = millis();
     }
-}
-
-// ───────────────────── Debug Input ─────────────────────
-void handleDebugInput() {
-    if (!Serial.available()) return;
-    char c = Serial.read();
-    if (c == '0'){ 
-        ballInGame = 1;
-    }
-    else if (c == '1') ballInGame = 0;
 }
 
 // ───────────────────── Debug Modus ─────────────────────
@@ -384,6 +370,8 @@ bool resetGame(void *) {
     return false;
 }
 
+
+//Point Methods
 void checkBallLost(){
     if(gameState == IN_GAME && digitalRead(ballLostSensor) == LOW){
         ballInGame = 0;
