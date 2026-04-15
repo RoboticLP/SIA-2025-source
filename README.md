@@ -20,7 +20,7 @@ Alle Source-Codes der diesjährigen SIA.
 | 2        | Arduino Nano | Modul 1 |
 | 3        | Arduino Nano | Modul 2 |
 | 4        | Arduino Nano | Modul 3 |
-| 5        | Arduino Nano | Extra Nano |
+| 5        | ESP32        | WS2812B LEDs |
 | 6        | ESP32        | WebServer       |
 
 ---
