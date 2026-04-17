@@ -77,7 +77,7 @@ Ball Eject ist akutell ausgenommen.
 | 4 | Ball In Game Schranke | Nein | Nein | Digitalschranke | Digital | Input_Pullup |
 
 ## Nano 5
-### Nano 5 ist für die Musik da
+### aktuell keine Verwendung
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
@@ -90,6 +90,4 @@ Ball Eject ist akutell ausgenommen.
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-
-
-
+| 6 | Datenoutput | Nein | Nein | WS2812B Lichtstreifen DIN | Digital | Output |
