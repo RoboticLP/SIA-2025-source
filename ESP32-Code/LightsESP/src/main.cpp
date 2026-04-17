@@ -1,8 +1,6 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 #include <Wire.h>
-#include <DFRobotDFPlayerMini.h>
-#include <SoftwareSerial.h>
 
 class rgb;
 
@@ -18,6 +16,8 @@ rgb randomRedColor();
 String* splitString(String input, char splitter, int &count);
 void processI2CData(String key, String value);
 void handleSpeedChange(float speed);
+void randomBlueAmbient(int leds[], int listLength, int priority);
+void randomYellowAmbient(int leds[], int listLength, int priority);
 
 #define PIN 23
 #define NUMPIXELS 110
@@ -84,6 +84,7 @@ Led allLights[NUMPIXELS];
 int allLightInts[NUMPIXELS];
 int firstHalfLightInts[NUMPIXELS / 2];
 int secondHalfLightInts[NUMPIXELS / 2];
+int beachLightInts[40];
 
 // ——————————————————————————————————————————————————————SETUP——————————————————————————————————————————————————————
 void setup()
@@ -95,7 +96,7 @@ void setup()
 
   delay(100); // let everything settle
   pixels.begin();
-  pixels.setBrightness(60);
+  pixels.setBrightness(90);
 
   pinMode(interrupt_1, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(interrupt_1), testButtonTriggered, FALLING);
@@ -118,6 +119,11 @@ void setup()
   for (int i = 0; i < NUMPIXELS / 2; i++)
   {
     secondHalfLightInts[i] = NUMPIXELS / 2 - 1 + i;
+  }
+  for (int i = 0; i<40; i++){
+    if(i < 12)
+    beachLightInts[i] = i;
+    else beachLightInts[i] = NUMPIXELS + 12 - i;
   }
 }
 
@@ -142,9 +148,13 @@ rgb activePulseColor(255, 0, 0);
 
 //———————————————————————————————————————————————————————LOOP——————————————————————————————————————————————————————————————————
 void loop() {
-  randomTransition(allLightInts,NUMPIXELS,0,"red");
+  randomTransition(allLightInts,NUMPIXELS,0,"specialblue");
   if(ballIsOut){
-    multipleSwoopsEffect(1,0,197,219,2,4);
+    rgb lol = randomRedColor();
+    multipleSwoopsEffect(1,lol.r,lol.g,lol.b,3,5);
+    randomYellowAmbient(beachLightInts,40,2);
+    //braun : 94 55 24
+    //türkis: 0 197 219
   }
   else
   {
@@ -270,6 +280,22 @@ rgb randomBlueColorWithBrightness()
   return rgb(0, c * brightness, 255 * brightness);
 }
 
+rgb randomYellowColorWithBrightness()
+{
+  float brightness = random(50) / 100 + 0.5;
+  uint8_t c = random(106);
+  uint8_t col= 150 + c;
+  uint8_t whitepercentage = random (40);
+  return rgb(255, col + (255-col)/100 * whitepercentage, 255/100 * whitepercentage);
+}
+rgb randomBlueColorWithWhiteLevel()
+{
+  uint8_t c = random(256);
+  uint8_t whitepercentage = random (70);
+
+  return rgb(255/100 * whitepercentage, c + ((255-c)/100 * whitepercentage), 255);
+}
+
 rgb randomRedColor()
 {
   uint8_t c = random(160); // nur bis grün = 159 => kein richtiges gelb
@@ -286,7 +312,8 @@ rgb randomRedColor()
 // EffectStates
 EffectState swoopEffectState = EffectState(-5, 20 / globalEffectSpeed);           // progress -5 (startet außerhalb des strips); timeBetweenProgress 20 ms
 EffectState multiSwoopEffectState = EffectState(0, 40 / globalEffectSpeed);       // progress -5 (startet außerhalb des strips); timeBetweenProgress 20 ms
-EffectState blueAmbientEffectState = EffectState(0, 50 / globalEffectSpeed);      // progress 0; timeBetweenProgress 50 ms
+EffectState blueAmbientEffectState = EffectState(0, 50 / globalEffectSpeed);
+EffectState yellowAmbientEffectState = EffectState(0, 400 /globalEffectSpeed);
 EffectState randomTransitionEffectState = EffectState(0, 50 / globalEffectSpeed); // progress 0;  timeBetweenProgress 20ms
 EffectState pulseEffectState = EffectState(0, 15 / globalEffectSpeed);
 rgb colorAtStartOfPulse = rgb(0, 0, 0);
@@ -449,6 +476,8 @@ void randomTransition(int leds[], int listLength, int priority, String colorType
         randomTransitionColor = randomBlueColorWithBrightness();
       else if (colorType.equalsIgnoreCase("red"))
         randomTransitionColor = randomRedColor();
+        else if (colorType.equalsIgnoreCase("specialblue"))
+        randomTransitionColor = randomBlueColorWithWhiteLevel();
       else
         randomTransitionColor = randomColor();
       continue;
@@ -514,6 +543,31 @@ void randomBlueAmbient(int leds[], int listLength, int priority)
     ls.on = true;
     ls.timeOfShutOff = millis() + cooldown + 50;
   }
+}
+
+void randomYellowAmbient(int leds[], int listLength, int priority)
+{
+  long lastTime = yellowAmbientEffectState.lastProgressTimeStamp;
+  long cooldown = yellowAmbientEffectState.timeBetweenProgress;
+  if (millis() - yellowAmbientEffectState.lastProgressTimeStamp < yellowAmbientEffectState.timeBetweenProgress)
+    return;
+
+  for (int number = 0; number < listLength; number++)
+  {
+    if (leds[number] >= NUMPIXELS)
+      continue; // looking if the number extents the amount of numbers
+    Led &led = allLights[leds[number]];
+    if (priority >= PRIORITY_COUNT)
+      continue; // looking if the priority is higher than the max. for the led
+    LightState &ls = led.prio[priority];
+    rgb color = randomYellowColorWithBrightness();
+    ls.r = color.r; // setting given rgb values for the given priority
+    ls.g = color.g;
+    ls.b = color.b;
+    ls.on = true;
+    ls.timeOfShutOff = millis() + cooldown + 50;
+  }
+  yellowAmbientEffectState.lastProgressTimeStamp = millis();
 }
 
 void swoopBallEffect(int leds[], int listLength, int priority, uint8_t r, uint8_t g, uint8_t b, boolean overwriteWithBlack)
