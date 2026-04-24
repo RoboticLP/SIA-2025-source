@@ -4,9 +4,15 @@
 #include "utils.h"
 #include "GameStates.h"
 #include <arduino-timer.h>
+#include "SoftwareSerial.h"
+#include "DFRobotDFPlayerMini.h"
 
 // ───────────────────── LCD Pins ─────────────────────
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
+
+// ───────────────────── DF PLayer Mini ─────────────────────
+SoftwareSerial mySoftwareSerial(10,11); // RX, TX
+DFRobotDFPlayerMini myDFPlayer;
 
 // ───────────────────── Adressen ─────────────────────
 #define slave2      2
@@ -120,6 +126,14 @@ void checkGameState() {
 
     if (gameState != lastGameState) {
         handleLCDDisplay();
+        
+        // MUSIC
+        if (gameState == IN_GAME) {
+            myDFPlayer.loopFolder(2);
+        } else {
+            myDFPlayer.loopFolder(1);
+        }
+
         lastGameState = gameState;
     }
 }
