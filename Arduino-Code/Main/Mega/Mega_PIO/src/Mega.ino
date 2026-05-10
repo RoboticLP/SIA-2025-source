@@ -8,10 +8,10 @@
 #include "DFRobotDFPlayerMini.h"
 
 // ───────────────────── LCD Pins ─────────────────────
-LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
+LiquidCrystal lcd(A7, A8, A9, A10, A11, A12);
 
 // ───────────────────── DF PLayer Mini ─────────────────────
-SoftwareSerial mySoftwareSerial(10,11); // RX, TX
+//SoftwareSerial mySoftwareSerial(10,11); // RX, TX
 DFRobotDFPlayerMini myDFPlayer;
 
 // ───────────────────── Adressen ─────────────────────
@@ -23,12 +23,12 @@ DFRobotDFPlayerMini myDFPlayer;
 
 // ───────────────────── Globale Variablen ─────────────────────
 auto timer = timer_create_default();
-int backlightPin = 13;
+int backlightPin = A6;
 
-int singalForBallStart = 3; // Knopf der gedrückt wird wenn ball in startvorrichtung ist muss
-int ballLostSensor = 4; // Pin für ball lost sensor (done)
-int outputFinger = 5; // Pin um Finger zu aktivieren oder deaktivieren
-int ballInStart = 6; // Ball instartvorrichtung lassen
+int singalForBallStart = A3; // Knopf der gedrückt wird wenn ball in startvorrichtung ist muss
+int ballLostSensor = A4; // Pin für ball lost sensor (done)
+int outputFinger = A5; // Pin um Finger zu aktivieren oder deaktivieren
+int ballInStart = A13; // Ball instartvorrichtung lassen
 
 int moduleCount = 4;
 int moduleSlaves[4] = { slave2, slave3, slave4, slave5 };
@@ -71,26 +71,29 @@ void setBacklightPercent(int percent) {
 
 // ───────────────────── Setup / Loop ─────────────────────
 void setup() {
-    pinMode(backlightPin, OUTPUT); // Hintergrund ist Pin 13
+    pinMode(backlightPin, OUTPUT); // Hintergrund ist Pin 6
     pinMode(ballLostSensor, INPUT_PULLUP); // Ball Lost Sensor ist Pin 4
     pinMode(outputFinger, OUTPUT); // Output für Finger ist Pin 5
     pinMode(singalForBallStart, INPUT_PULLUP); // Knopf für Ball Start ist Pin 3
-    pinMode(ballInStart, OUTPUT); // Ball in Startvorrichtung lassen ist Pin 6
+    pinMode(ballInStart, OUTPUT); // Ball in Startvorrichtung lassen ist Pin 13
     attachInterrupt(digitalPinToInterrupt(singalForBallStart), checkBallInStart, CHANGE); // PRÜFEN!!!
 
-    setBacklightPercent(30);
+    //setBacklightPercent(30);
+    
 
     Wire.begin();
     Serial.begin(9600);
     Serial.println("Flipper System Starting...");
 
     lcd.begin(16, 2);
+    analogWrite(backlightPin, 50);
     lcd.clear();
     lcd.print("Flipper System");
     lcd.setCursor(0, 1);
     lcd.print("Booting...");
     delay(1500);
     lcd.clear();
+    
 
     setDebugMode(false);
 }
@@ -304,6 +307,7 @@ void processSlaveData(String key, String value, int module) {
     int dataValue = value.toInt();
     // Verarbeitung der einzelnen Keys
     //Bumper Tower Hits
+    Serial.println("Received from M" + String(module) + ": " + key + " = " + value);
     auto addPoints = [&](const char* type, int basePoints) {
         if (gameState != IN_GAME) return;
         points += dataValue * multiplier * basePoints;
