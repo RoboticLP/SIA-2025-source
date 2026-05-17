@@ -11,8 +11,9 @@
 LiquidCrystal lcd(A7, A8, A9, A10, A11, A12);
 
 // ───────────────────── DF PLayer Mini ─────────────────────
-//SoftwareSerial mySoftwareSerial(10,11); // RX, TX
+SoftwareSerial mySoftwareSerial(10,11); // RX, TX
 DFRobotDFPlayerMini myDFPlayer;
+bool dfplayerInitialized = false;
 
 // ───────────────────── Adressen ─────────────────────
 #define slave2      2
@@ -25,7 +26,7 @@ DFRobotDFPlayerMini myDFPlayer;
 auto timer = timer_create_default();
 int backlightPin = A6;
 
-int singalForBallStart = A3; // Knopf der gedrückt wird wenn ball in startvorrichtung ist muss
+int singalForBallStart = A3; // Knopf der gedrückt wird wenn ball in startvorrichtung ist
 int ballLostSensor = A4; // Pin für ball lost sensor (done)
 int outputFinger = A5; // Pin um Finger zu aktivieren oder deaktivieren
 int ballInStart = A13; // Ball instartvorrichtung lassen
@@ -83,10 +84,15 @@ void setup() {
 
     Wire.begin();
     Serial.begin(9600);
+    mySoftwareSerial.begin(9600);
+    dfplayerInitialized = myDFPlayer.begin(mySoftwareSerial);
+    if (!dfplayerInitialized) {
+        Serial.println("DFPlayer init failed");
+    }
     Serial.println("Flipper System Starting...");
 
     lcd.begin(16, 2);
-    analogWrite(backlightPin, 50);
+    analogWrite(backlightPin, 50); // ich werde jeden von euch finden der es wagt, nur zu denken diese Zeile zu verändern
     lcd.clear();
     lcd.print("Flipper System");
     lcd.setCursor(0, 1);
@@ -131,10 +137,12 @@ void checkGameState() {
         handleLCDDisplay();
         
         // MUSIC
-        if (gameState == IN_GAME) {
-            myDFPlayer.loopFolder(2);
-        } else {
-            myDFPlayer.loopFolder(1);
+        if (dfplayerInitialized) {
+            if (gameState == IN_GAME) {
+                myDFPlayer.loopFolder(2);
+            } else {
+                myDFPlayer.loopFolder(1);
+            }
         }
 
         lastGameState = gameState;
@@ -290,6 +298,7 @@ void printConnectionFromSlaves() {
 
             if (count == 2) {
                 // Key-Value Pair verarbeiten (z.B. "ssh:5" oder "balllost:1")
+                // Serial.println(answer);
                 processSlaveData(dataset[0], dataset[1], addr);
             }
 
