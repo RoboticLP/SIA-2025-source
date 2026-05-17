@@ -74,7 +74,7 @@ Ball Eject ist akutell ausgenommen.
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
 | 2 | Targets | Nein | Ja | Taster | Digital | Input |
-| 4 | Ball In Game Schranke | Nein | Nein | Digitalschranke | Digital | Input_Pullup |
+| 3 | Ball In Game Schranke | Nein | Nein | Digitalschranke | Digital | Input_Pullup |
 
 ## Nano 5
 ### aktuell keine Verwendung
