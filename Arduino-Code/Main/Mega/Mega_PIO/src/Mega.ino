@@ -46,7 +46,7 @@ int lightState = 1;
 int ballInGame = 0;
 
 GameState gameState     = WAIT_FOR_BALL;
-GameState lastGameState = WAIT_FOR_BALL;
+GameState lastGameState = RESET;
 
 // ───────────────────── Timer-Handles ─────────────────────
 Timer<>::Task gameOverTask;
@@ -99,6 +99,9 @@ void setup() {
     lcd.print("Booting...");
     delay(1500);
     lcd.clear();
+    if(dfplayerInitialized) {
+        myDFPlayer.loopFolder(1);
+    }
     
 
     setDebugMode(false);
@@ -135,15 +138,6 @@ void checkGameState() {
 
     if (gameState != lastGameState) {
         handleLCDDisplay();
-        
-        // MUSIC
-        if (dfplayerInitialized) {
-            if (gameState == IN_GAME) {
-                myDFPlayer.loopFolder(2);
-            } else {
-                myDFPlayer.loopFolder(1);
-            }
-        }
 
         lastGameState = gameState;
     }
@@ -159,6 +153,10 @@ bool addRandomPoints(void *) {
 
 // ───────────────────── Game Over / Reset ─────────────────────
 void startGameOver() {
+    if(dfplayerInitialized) {
+        myDFPlayer.loopFolder(1);
+    }
+    lastGameState = IN_GAME;
     gameState = GAME_OVER;
     handleLCDDisplay();
     gameOverTask = timer.in(10000, finishGameOver);
@@ -314,9 +312,6 @@ void printConnectionFromSlaves() {
 
 void processSlaveData(String key, String value, int module) {
     int dataValue = value.toInt();
-    // Verarbeitung der einzelnen Keys
-    //Bumper Tower Hits
-    Serial.println("Received from M" + String(module) + ": " + key + " = " + value);
     auto addPoints = [&](const char* type, int basePoints) {
         if (gameState != IN_GAME) return;
         points += dataValue * multiplier * basePoints;
@@ -332,7 +327,11 @@ void processSlaveData(String key, String value, int module) {
     else if(key == "ballingame") {
         if(ballInGame == 0 && dataValue == 1 && gameState == WAIT_FOR_BALL) {
             ballInGame = 1;
+            lastGameState = WAIT_FOR_BALL;
             gameState = IN_GAME;
+            if(dfplayerInitialized) {
+                myDFPlayer.loopFolder(2);
+            }
         }
     }
     else if (key == "err") {
@@ -385,7 +384,8 @@ bool resetGame(void *) {
     points = 0;
     ballInGame = 0;
     gameState = WAIT_FOR_BALL;
-    lastGameState = WAIT_FOR_BALL;
+    lastGameState = RESET;
+    handleLCDDisplay();
     for(int i = 0; i < moduleCount; i++) {
         int addr = moduleSlaves[i];
         if (isSlaveAlive(addr)) {
@@ -402,6 +402,7 @@ bool resetGame(void *) {
 void checkBallLost(){
     if(gameState == IN_GAME && digitalRead(ballLostSensor) == LOW){
         ballInGame = 0;
+        startGameOver();
     }
 }
 
