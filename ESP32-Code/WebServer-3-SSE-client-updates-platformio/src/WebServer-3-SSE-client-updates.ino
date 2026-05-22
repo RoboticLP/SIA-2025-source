@@ -55,6 +55,7 @@ int psl;
 int pta;
 int lights_enabled; // 0 or 1, depending on if strobe is enabled or not
 float lightSpeed; // light effect speed (0.0 - 2.0)
+bool settingsStillEmpty = true;
 
 int shouldReset = 0;
 
@@ -114,13 +115,18 @@ void loop() {
 
 // I2C
 void wireRequestEvent() {
-  if (settingsChanged == true) {
+  if (settingsChanged == true || shouldReset == 1) {
     char settingsDataString[120];
-    sprintf(settingsDataString, "mtpl:%.2f|pbu:%d|psl:%d|pta:%d|len:%d|lsp:%.2f|rst:%d", mtpl, pbu, psl, pta, lights_enabled, lightSpeed, shouldReset);
+    
+    if (shouldReset == 1 && settingsStillEmpty == true) { // game should get resetted, but settings mustnt get overwritten with false data
+      sprintf(settingsDataString, "rst:%d", shouldReset);
+    } else { // normal procedure to send data to master
+      sprintf(settingsDataString, "mtpl:%.2f|pbu:%d|psl:%d|pta:%d|len:%d|lsp:%.2f|rst:%d", mtpl, pbu, psl, pta, lights_enabled, lightSpeed, shouldReset);
+    }
+    shouldReset = 0; // set this back to 0 so game wont reset every time new updates get sent
 
     Wire.write(settingsDataString);
     settingsChanged = false;
-    shouldReset = 0; // set this back to 0 so game wont reset every time new updates get sent
 
     Serial.print("[I²C] Sent settings update to master: "); Serial.println(settingsDataString);
   } else {
@@ -182,7 +188,8 @@ void handleSettings() {
   pta = server.arg("points_targets").toInt();
   lights_enabled = server.arg("lights_enabled").toInt();
   lightSpeed = server.arg("light_speed").toFloat();
-  // todo: light-settings
+  
+  settingsStillEmpty = false;
 
   Serial.print("[HTTP XML] Settings applied pressed "); Serial.print(mtpl); Serial.print(" "); Serial.print(pbu); Serial.print(" "); Serial.print(psl); Serial.print(" "); Serial.print(pta); Serial.print(" "); Serial.print(lights_enabled); Serial.print(" "); Serial.print(lightSpeed); Serial.print("\n");
   settingsChanged = true;
