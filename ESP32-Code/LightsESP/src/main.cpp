@@ -8,7 +8,11 @@ class rgb;
 // ——————— FUNKTIONS-PROTOTYPEN (FIX für deine Fehler) ———————
 void receiveEvent(int);
 void testButtonTriggered();
+void swoopBallEffect(int leds[], int listLength, int priority,
+                     uint8_t r, uint8_t g, uint8_t b,
+                     boolean overwriteWithBlack);
 void doOnePulse(uint8_t r, uint8_t g, uint8_t b);
+void doOneSplitLoad(uint8_t r, uint8_t g, uint8_t b);
 void randomTransition(int leds[], int listLength, int priority, String colorType);
 void multipleSwoopsEffect(int priority, uint8_t r, uint8_t g, uint8_t b, int length, int distance);
 void pulse(int leds[], int listLength, int priority, uint8_t r, uint8_t g, uint8_t b);
@@ -19,6 +23,8 @@ void handleSpeedChange(float speed);
 void randomBlueAmbient(int leds[], int listLength, int priority);
 void randomYellowAmbient(int leds[], int listLength, int priority);
 void handleSlaveThreeHit();
+void loadingEffect(int leds[], int listLength, int priority, uint8_t r, uint8_t g, uint8_t b);
+void loadingSplitEffect(int priority, uint8_t r, uint8_t g, uint8_t b);
 
 #define PIN 23
 #define NUMPIXELS 110
@@ -88,6 +94,8 @@ int allLightInts[NUMPIXELS];
 int firstHalfLightInts[NUMPIXELS / 2];
 int secondHalfLightInts[NUMPIXELS / 2];
 int beachLightInts[40];
+int ballSwoopInts[40];
+int ballOutLoadingInts[80];
 
 // ——————————————————————————————————————————————————————SETUP——————————————————————————————————————————————————————
 void setup()
@@ -128,6 +136,12 @@ void setup()
     beachLightInts[i] = i;
     else beachLightInts[i] = NUMPIXELS + 12 - i;
   }
+  for (int i = 0; i<40; i++){
+    ballSwoopInts[i] = NUMPIXELS  - 1 - i;
+  }
+  for (int i = 0; i < 80; i++){
+    ballOutLoadingInts[i] = NUMPIXELS -41 - i;
+  }
 }
 
 void testButtonTriggered()
@@ -147,20 +161,35 @@ int color = 0;
 boolean ballIsOut = true;
 long timeToShutOffPulseEffect;
 rgb activePulseColor(255, 0, 0);
+long timeToShutOffLoadSplitEffect;
+rgb activeLoadSplitColor(255, 0, 0);
 rgb pulseColor[5]= {rgb(255,45,4),rgb(120, 17, 120),rgb(28, 200, 94),rgb(255,255,0),rgb(255, 0, 255)};
 bool buttonfast;
+bool slingshotHit = false;
+unsigned long timeOfSlingshotHitExpire;
 //———————————————————————————————————————————————————————LOOP——————————————————————————————————————————————————————————————————
 void loop() {
+  //multipleSwoopsEffect(int priority, uint8_t r, uint8_t g, uint8_t b, int length, int distance)
   randomTransition(allLightInts,NUMPIXELS,0,"specialblue");
   if(ballIsOut){
-    rgb lol = randomRedColor();
-    multipleSwoopsEffect(1,lol.r,lol.g,lol.b,3,5);
-    randomYellowAmbient(beachLightInts,40,2);
+    loadingEffect(ballOutLoadingInts,80,1,255,0,255);
+    swoopBallEffect(ballSwoopInts, 40, 1, 255, 255 , 0, true);
     //braun : 94 55 24
     //türkis: 0 197 219
   }
-  else
-  {
+  else{
+    if(slingshotHit){ //---------------------------Slingshot-Hit--------------------------------------
+        multipleSwoopsEffect(1,130,20,130,8,8);
+       if (timeOfSlingshotHitExpire  >= millis()){
+          slingshotHit = false;
+        }
+    }
+    else {
+      //--------------------------------Ball im Spiel, keine Slingshots getroffen--------------------------------------
+      rgb lol = randomRedColor();
+      multipleSwoopsEffect(1,lol.r,lol.g,lol.b,3,5);
+      randomYellowAmbient(beachLightInts,40,2);
+    }
   }
   if (millis() < timeToShutOffPulseEffect)
   { // so kann ein vollständiger pulse-effekt durchlaufen werden, mithilfe eines passenden timestamps und der activepulsecolor
@@ -322,9 +351,129 @@ EffectState blueAmbientEffectState = EffectState(0, 50 / globalEffectSpeed);
 EffectState yellowAmbientEffectState = EffectState(0, 400 /globalEffectSpeed);
 EffectState randomTransitionEffectState = EffectState(0, 50 / globalEffectSpeed); // progress 0;  timeBetweenProgress 20ms
 EffectState pulseEffectState = EffectState(0, 30 / globalEffectSpeed);
+EffectState loadingEffectState = EffectState(0, 30 / globalEffectSpeed);
+EffectState loadingSplitEffectState = EffectState(0,30/globalEffectSpeed);
 rgb colorAtStartOfPulse = rgb(0, 0, 0);
 rgb randomTransitionColor = rgb(0, 0, 0);
 rgb lastTransitionColor = rgb(0, 0, 0);
+
+void loadingEffect(int leds[], int listLength, int priority, uint8_t r, uint8_t g, uint8_t b)
+{
+  long lastTime = loadingEffectState.lastProgressTimeStamp;
+  long cooldown = loadingEffectState.timeBetweenProgress;
+  if (millis() - loadingEffectState.lastProgressTimeStamp < loadingEffectState.timeBetweenProgress)
+    return;
+
+  int loadProgress = loadingEffectState.effectProgress;
+
+  if(loadProgress < listLength){
+    for (int i = 0; i < loadProgress; i++){
+      Led &led = allLights[leds[i]];
+      if (priority >= PRIORITY_COUNT)
+        continue; // looking if the priority is higher than the max. for the led
+      LightState &ls = led.prio[priority];
+
+      ls.r = r;
+      ls.g = g;
+      ls.b = b;
+      ls.on = true;
+      ls.timeOfShutOff = millis() + cooldown + 10;
+    }
+  }
+  else if(loadProgress < 2 * listLength){
+    for (int i = 0; i < (2*listLength - loadProgress); i++){
+      Led &led = allLights[leds[i]];
+      if (priority >= PRIORITY_COUNT)
+        continue; // looking if the priority is higher than the max. for the led
+      LightState &ls = led.prio[priority];
+
+      ls.r = r;
+      ls.g = g;
+      ls.b = b;
+      ls.on = true;
+      ls.timeOfShutOff = millis() + cooldown + 10;
+    }
+  }
+  
+  loadingEffectState.effectProgress++;
+  if (loadProgress >= 2*NUMPIXELS)
+  {
+    loadingEffectState.effectProgress = 0;
+    loadingEffectState.isActive = false;
+  }
+  loadingEffectState.lastProgressTimeStamp = millis();
+}
+
+void loadingSplitEffect(int priority, uint8_t r, uint8_t g, uint8_t b)
+{
+  long lastTime = loadingSplitEffectState.lastProgressTimeStamp;
+  long cooldown = loadingSplitEffectState.timeBetweenProgress;
+  if (millis() - loadingSplitEffectState.lastProgressTimeStamp < loadingSplitEffectState.timeBetweenProgress)
+    return;
+
+  int loadProgress = loadingSplitEffectState.effectProgress;
+
+  if(loadProgress < NUMPIXELS/2){
+    for (int i = 0; i < loadProgress; i++){
+      Led &led = allLights[firstHalfLightInts[i]];
+      if (priority >= PRIORITY_COUNT)
+        continue; // looking if the priority is higher than the max. for the led
+      LightState &ls = led.prio[priority];
+
+      ls.r = r;
+      ls.g = g;
+      ls.b = b;
+      ls.on = true;
+      ls.timeOfShutOff = millis() + cooldown + 10;
+    }
+    for (int i = 0; i < loadProgress; i++){
+      Led &led = allLights[secondHalfLightInts[i]];
+      if (priority >= PRIORITY_COUNT)
+        continue; // looking if the priority is higher than the max. for the led
+      LightState &ls = led.prio[priority];
+
+      ls.r = r;
+      ls.g = g;
+      ls.b = b;
+      ls.on = true;
+      ls.timeOfShutOff = millis() + cooldown + 10;
+    }
+  }
+  else if(loadProgress < NUMPIXELS){
+    for (int i = 0; i < (NUMPIXELS - loadProgress); i++){
+      Led &led = allLights[firstHalfLightInts[i]];
+      if (priority >= PRIORITY_COUNT)
+        continue; // looking if the priority is higher than the max. for the led
+      LightState &ls = led.prio[priority];
+
+      ls.r = r;
+      ls.g = g;
+      ls.b = b;
+      ls.on = true;
+      ls.timeOfShutOff = millis() + cooldown + 10;
+    }
+    for (int i = 0; i < (NUMPIXELS - loadProgress); i++){
+      Led &led = allLights[secondHalfLightInts[i]];
+      if (priority >= PRIORITY_COUNT)
+        continue; // looking if the priority is higher than the max. for the led
+      LightState &ls = led.prio[priority];
+
+      ls.r = r;
+      ls.g = g;
+      ls.b = b;
+      ls.on = true;
+      ls.timeOfShutOff = millis() + cooldown + 10;
+    }
+  }
+  
+  loadingSplitEffectState.effectProgress++;
+  if (loadProgress >= 2*NUMPIXELS)
+  {
+    loadingSplitEffectState.effectProgress = 0;
+    loadingSplitEffectState.isActive = false;
+  }
+  loadingSplitEffectState.lastProgressTimeStamp = millis();
+}
 
 void multipleSwoopsEffect(int priority, uint8_t r, uint8_t g, uint8_t b, int length, int distance)
 {
@@ -392,6 +541,14 @@ void doOnePulse(uint8_t r, uint8_t g, uint8_t b)
   activePulseColor.r = r;
   activePulseColor.g = g;
   activePulseColor.b = b;
+}
+
+void doOneSplitLoad(uint8_t r, uint8_t g, uint8_t b)
+{
+  timeToShutOffLoadSplitEffect = millis() + loadingSplitEffectState.timeBetweenProgress * NUMPIXELS;
+  activeLoadSplitColor.r = r;
+  activeLoadSplitColor.g = g;
+  activeLoadSplitColor.b = b;
 }
 
 void pulse(int leds[], int listLength, int priority, uint8_t r, uint8_t g, uint8_t b)
@@ -625,54 +782,6 @@ void swoopBallEffect(int leds[], int listLength, int priority, uint8_t r, uint8_
   swoopEffectState.lastProgressTimeStamp = millis();
 }
 
-// ——————————let all pixels in an array go through one rainbow loop——————————————
-void rainBow(int leds[], int listLength)
-{
-  effectOngoing = true;
-  int rLevel = 255;
-  int gLevel = 0;
-  int bLevel = 0;
-  int delayMS = 3;
-
-  for (int i = 0; i <= 255; i++)
-  { // g --> 255
-    gLevel = i;
-    setPixelsEqually(leds, listLength, rLevel, gLevel, bLevel, 0, 100);
-    delay(delayMS);
-  }
-  for (int level = 255; level >= 0; level--)
-  { // r --> 0
-    rLevel = level;
-    setPixelsEqually(leds, listLength, rLevel, gLevel, bLevel, 0, 100);
-    delay(delayMS);
-  }
-  for (int i = 0; i <= 255; i++)
-  { // b --> 255
-    bLevel = i;
-    setPixelsEqually(leds, listLength, rLevel, gLevel, bLevel, 0, 100);
-    delay(delayMS);
-  }
-  for (int level = 255; level >= 0; level--)
-  { // g --> 0
-    gLevel = level;
-    setPixelsEqually(leds, listLength, rLevel, gLevel, bLevel, 0, 100);
-    delay(delayMS);
-  }
-  for (int i = 0; i <= 255; i++)
-  { // r --> 255
-    rLevel = i;
-    setPixelsEqually(leds, listLength, rLevel, gLevel, bLevel, 0, 100);
-    delay(delayMS);
-  }
-  for (int level = 255; level >= 0; level--)
-  { // b --> 0
-    bLevel = level;
-    setPixelsEqually(leds, listLength, rLevel, gLevel, bLevel, 0, 100);
-    delay(delayMS);
-  }
-  effectOngoing = false;
-}
-
 char command[20]; // global variable to hold the current command, can be used in the loop to trigger effects based on the last command
 void receiveEvent(int howMany)
 {
@@ -783,6 +892,10 @@ void handleSpeedChange(float speed)
 
     yellowAmbientEffectState.timeBetweenProgress = yellowAmbientEffectState.
     timeBetweenProgress * globalEffectSpeed / speed;
+
+    loadingEffectState.timeBetweenProgress = loadingEffectState.timeBetweenProgress * globalEffectSpeed / speed;
+    loadingSplitEffectState.timeBetweenProgress = loadingSplitEffectState.timeBetweenProgress * globalEffectSpeed / speed;
+
     globalEffectSpeed = speed;
     globalEffectSpeedIsZero = false;
   }
@@ -803,33 +916,36 @@ void processI2CData(String key, String value) {
 
   } else if (key == "eff") {
     switch (dataValueI) {
-      case 1: // Bumper/Tower Hit
-        setPixelsEqually(allLightInts, NUMPIXELS, 255, 255, 255, 2, 80);
-        doOnePulse(255, 0, 0);
+      case 1: {// Bumper/Tower Hit
+        rgb colorforpulse = pulseColor[random(5)];
+        doOnePulse(colorforpulse.r,colorforpulse.g,colorforpulse.b);
         break;
-      case 2: // Slingshot Hit
-        multiSwoopEffectState.timeBetweenProgress = 25;
-        multiSwoopEffectState.effectProgress = 0;
+      }
+      case 2: {// Slingshot Hit
+        doOnePulse(255, 165, 0);
+        slingshotHit = true;
+        timeOfSlingshotHitExpire = millis() + 4000;
         break;
-      case 3: // Taster Hit
+      }
+      case 3: {// Taster Hit
         doOnePulse(168, 0, 219);
         break;
-      case 4: // In Game
+      }
+      case 4: {// In Game
+        doOnePulse(130,230,50);
         ballIsOut = false;
-        multiSwoopEffectState.timeBetweenProgress = 40;
         break;
-      case 5: // Verloren
+      }
+      case 5: {// Verloren
         ballIsOut = true;
-        doOnePulse(200, 0, 0);
+        doOneSplitLoad(200, 120, 0);
         break;
-      case 6: // Start
-        // rainbowSweep läuft im loop – hier nur Flag setzen
-        // (oder direkt rainBow() aufrufen wenn blocking OK ist)
-        doOnePulse(255, 100, 0);
-        break;
-      case 7: // Warten
+      }
+      //case 6 nicht vorhanden
+      case 7: {// Warten
         ballIsOut = false;
         break;
+      }
       default: break;
     }
   }
