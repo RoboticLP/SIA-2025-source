@@ -25,6 +25,8 @@ void randomYellowAmbient(int leds[], int listLength, int priority);
 
 // globale Variablen für die Kommunikation zum Nano
 float globalEffectSpeed = 1.0;        // ranges from 0-2, multiplyer to in-/decrease speed, accesible in the webpanel
+boolean globalEffectSpeedIsZero; //used to shut of effects while keeping the oriinal effect speed for later changes
+//(is needed because otherwise you would need to divide by 0 when changing it later, see handleSpeedchange (at the bottom of the code))
 boolean overrideAllLightsOff = false; // used to deactivate all lights immediately, accesible in the webpanel
 
 volatile int writeConsoleThatTestButtonTriggered = -1; // used for testing out individual sound- or lighteffects
@@ -132,7 +134,6 @@ void testButtonTriggered()
   unsigned long now = millis();
   if (now - lastInterruptTime > 200)
   { // 200 ms entprellen
-    doOnePulse(168, 0, 219);
     totalTriggerAmountInRuntime++;
     writeConsoleThatTestButtonTriggered = 1;
     lastInterruptTime = now;
@@ -145,7 +146,8 @@ int color = 0;
 boolean ballIsOut = true;
 long timeToShutOffPulseEffect;
 rgb activePulseColor(255, 0, 0);
-
+rgb pulseColor[5]= {rgb(255,45,4),rgb(120, 17, 120),rgb(28, 200, 94),rgb(255,255,0),rgb(255, 0, 255)};
+bool buttonfast;
 //———————————————————————————————————————————————————————LOOP——————————————————————————————————————————————————————————————————
 void loop() {
   randomTransition(allLightInts,NUMPIXELS,0,"specialblue");
@@ -165,46 +167,49 @@ void loop() {
   }
 
   // ————————————————LIGHTMANAGER———————————————
-  if (!overrideAllLightsOff)
-  {
-    for (int i = 0; i < NUMPIXELS; i++)
+  if(!globalEffectSpeedIsZero){
+    if (!overrideAllLightsOff)
     {
-
-      Led &led = allLights[i]; //&--> Referenz, echtes Objekt statt Kopie
-      uint8_t r = 0;
-      uint8_t g = 0;
-      uint8_t b = 0;
-      for (int p = PRIORITY_COUNT - 1; p >= 0; p--)
+      for (int i = 0; i < NUMPIXELS; i++)
       {
-        if (led.prio[p].on != false)
-        {                    // nacheinander prioritäten abarbeiten, beginned bei der höchsten:
-          r = led.prio[p].r; // wenn die höchste angeschaltene prio gefunden ist,
-          g = led.prio[p].g; // werte übertragen und die for-schleife abbrechen.
-          b = led.prio[p].b;
-          if (led.prio[p].timeOfShutOff <= millis())
-          {
-            led.prio[p].on = false;
-          }
-          break;
-        }
-      }
-      pixels.setPixelColor(i, pixels.Color(r, g, b)); // die übernommenen werte in den led-strip "eintragen"
-    }
-  }
-  else
-  {
-    for (int i = 0; i < NUMPIXELS; i++)
-    {
-      pixels.setPixelColor(i, pixels.Color(0, 0, 0)); //alle Lichter auf Schwarz schalten
-    }
-  }
-  pixels.show(); // nachdem alle pixel abgearbeitet wurden, den led-strip aktualisieren
 
+        Led &led = allLights[i]; //&--> Referenz, echtes Objekt statt Kopie
+        uint8_t r = 0;
+        uint8_t g = 0;
+        uint8_t b = 0;
+        for (int p = PRIORITY_COUNT - 1; p >= 0; p--)
+        {
+          if (led.prio[p].on != false)
+          {                    // nacheinander prioritäten abarbeiten, beginned bei der höchsten:
+            r = led.prio[p].r; // wenn die höchste angeschaltene prio gefunden ist,
+            g = led.prio[p].g; // werte übertragen und die for-schleife abbrechen.
+            b = led.prio[p].b;
+            if (led.prio[p].timeOfShutOff <= millis())
+            {
+              led.prio[p].on = false;
+            }
+            break;
+          }
+        }
+        pixels.setPixelColor(i, pixels.Color(r, g, b)); // die übernommenen werte in den led-strip "eintragen"
+      }
+    }
+    else
+    {
+      for (int i = 0; i < NUMPIXELS; i++)
+      {
+        pixels.setPixelColor(i, pixels.Color(0, 0, 0)); //alle Lichter auf Schwarz schalten
+      }
+    }
+    pixels.show(); // nachdem alle pixel abgearbeitet wurden, den led-strip aktualisieren
+  }
   // ——————————————–Konsole schreiben (Serial.println geht nicht im Interrupt)————————————————
   if (writeConsoleThatTestButtonTriggered != -1)
   {
     writeConsoleThatTestButtonTriggered = -1;
     Serial.println(String("Triggered Test Button ") + String(" [") + totalTriggerAmountInRuntime + String("]"));
+    rgb colorforpulse = pulseColor[random(5)];
+    doOnePulse(colorforpulse.r,colorforpulse.g,colorforpulse.b);
   }
 }
 
@@ -315,7 +320,7 @@ EffectState multiSwoopEffectState = EffectState(0, 40 / globalEffectSpeed);     
 EffectState blueAmbientEffectState = EffectState(0, 50 / globalEffectSpeed);
 EffectState yellowAmbientEffectState = EffectState(0, 400 /globalEffectSpeed);
 EffectState randomTransitionEffectState = EffectState(0, 50 / globalEffectSpeed); // progress 0;  timeBetweenProgress 20ms
-EffectState pulseEffectState = EffectState(0, 15 / globalEffectSpeed);
+EffectState pulseEffectState = EffectState(0, 30 / globalEffectSpeed);
 rgb colorAtStartOfPulse = rgb(0, 0, 0);
 rgb randomTransitionColor = rgb(0, 0, 0);
 rgb lastTransitionColor = rgb(0, 0, 0);
@@ -749,17 +754,20 @@ void handleBallOut()
 
 void handleSlaveTwoHit()
 {
-  doOnePulse(255, 0, 0);
+  rgb colorforpulse = pulseColor[random(5)];
+    doOnePulse(colorforpulse.r,colorforpulse.g,colorforpulse.b);
 }
 
 void handleSlaveThreeHit()
 {
-  doOnePulse(0, 255, 0);
+  rgb colorforpulse = pulseColor[random(5)];
+    doOnePulse(colorforpulse.r,colorforpulse.g,colorforpulse.b);
 }
 
 void handleSlaveFourHit()
 {
-  doOnePulse(0, 0, 255);
+  rgb colorforpulse = pulseColor[random(5)];
+    doOnePulse(colorforpulse.r,colorforpulse.g,colorforpulse.b);
 }
 
 void handleSpeedChange(float speed)
@@ -767,11 +775,27 @@ void handleSpeedChange(float speed)
   // bei allen effectstates den cooldown mit dem alten speed multiplizieren und durch den neuen teilen
   if (speed != 0)
   {
-    randomTransitionEffectState.timeBetweenProgress = randomTransitionEffectState.timeBetweenProgress * globalEffectSpeed / speed;
-    swoopEffectState.timeBetweenProgress = swoopEffectState.timeBetweenProgress * globalEffectSpeed / speed;
-    blueAmbientEffectState.timeBetweenProgress = blueAmbientEffectState.timeBetweenProgress * globalEffectSpeed / speed;
+    randomTransitionEffectState.timeBetweenProgress = randomTransitionEffectState
+    .timeBetweenProgress * globalEffectSpeed / speed;
+
+    swoopEffectState.timeBetweenProgress = swoopEffectState.
+    timeBetweenProgress * globalEffectSpeed / speed;
+
+    blueAmbientEffectState.timeBetweenProgress = blueAmbientEffectState.
+    timeBetweenProgress * globalEffectSpeed / speed;
+
+    multiSwoopEffectState.timeBetweenProgress = multiSwoopEffectState
+    .timeBetweenProgress * globalEffectSpeed / speed;
+
+    pulseEffectState.timeBetweenProgress = pulseEffectState.
+    timeBetweenProgress * globalEffectSpeed / speed;
+
+    yellowAmbientEffectState.timeBetweenProgress = yellowAmbientEffectState.
+    timeBetweenProgress * globalEffectSpeed / speed;
+    globalEffectSpeed = speed;
+    globalEffectSpeedIsZero = false;
   }
-  globalEffectSpeed = speed;
+  else globalEffectSpeedIsZero = true;
 }
 
 String* splitString(String input, char splitter, int &count) {
