@@ -43,8 +43,8 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 | 3 | Ball In Start Knopf | Nein | Ja | Button | Digital | Input_Pullup |
 | 4 | Ball Lost Schranke | Nein | Nein | Digitalschranke | Digital | Input_Pullup |
 | 5 | Enable/Disable Fingers While InGame | Nein | Nein | Nix | Digital | Output |
-| 6 | Ball entlass in die Startvorrichtung | Ja | Nein | ? | Digital | Output |
-| 13 | Lichteinstellung LCD Display | Nein | Nein | Keins | Analog | Output |
+| 13 | Ball entlass in die Startvorrichtung | Ja | Nein | ? | Digital | Output |
+| 6 | Lichteinstellung LCD Display | Nein | Nein | Keins | Analog | Output |
 
 ## Nano 2
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
@@ -74,7 +74,7 @@ Ball Eject ist akutell ausgenommen.
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
 | 2 | Targets | Nein | Ja | Taster | Digital | Input |
-| 4 | Ball In Game Schranke | Nein | Nein | Digitalschranke | Digital | Input_Pullup |
+| 3 | Ball In Game Schranke | Nein | Nein | Digitalschranke | Digital | Input_Pullup |
 
 ## Nano 5
 ### aktuell keine Verwendung

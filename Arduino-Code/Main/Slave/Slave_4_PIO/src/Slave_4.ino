@@ -9,17 +9,16 @@ volatile int hitpoints = 0;
 const int taster = 2;          // Taster (LOW-aktiv)
 const int gameSensor = 3;      // Ballsensor (Interrupt)
 
-char message[50];
+char message[100];
 
-int test = 4;
 
 // ───────────────────── Setup ─────────────────────
 void setup() {
     Serial.begin(9600);
-    pinMode(test, INPUT_PULLUP);
 
     Wire.begin(4);                 // I2C Slave Adresse 4
     Wire.onRequest(requestEvent);  // Anfrage vom Master
+    Wire.onReceive(recieveEvent); // Empfang vom Master
 
     pinMode(gameSensor, INPUT_PULLUP);
     pinMode(taster, INPUT_PULLUP);
@@ -32,8 +31,6 @@ void setup() {
 // ───────────────────── Loop ─────────────────────
 void loop() {
   checkTaster();
-  Serial.println(digitalRead(test));
-  delay(500);
 }
 
 // ───────────────────── Taster funktion ─────────────────────
@@ -61,7 +58,9 @@ void handleReset() {
 
 // ISR → so kurz wie möglich!
 void ballInGameISR() {
+    Serial.println("Ball Sensor ausgelöst!");
     if (!ballReported) {
+        Serial.println("Ball im Spiel erkannt, sende Update an Master...");
         ballingame = 1;
         ballReported = true;
     }
@@ -79,8 +78,17 @@ void requestEvent() {
     len += snprintf(message + len, sizeof(message) - len,
                     "tah:%d|", hitpoints);
 
+    
+    Wire.write(message);
     hitpoints = 0;
     ballingame = 0;
+    ballReported = false;
+}
 
-    Wire.write(message);
+char command[20];
+void recieveEvent(int numBytes) {
+
+  if (strcmp(command, "resetGame") == 0) {
+      handleReset();
+    }
 }

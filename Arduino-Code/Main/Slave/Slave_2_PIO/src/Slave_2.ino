@@ -41,9 +41,6 @@ scoredTimes = scoredTimes + 1;
 }
 
 if(scoredTimes > SlingshotReader) {
-    Serial.println ("Slingshots wurden ausgelöst");
-    Serial.println(scoredTimes);
-    // code...
     SlingshotReader = scoredTimes;
  } }
 
@@ -55,10 +52,8 @@ SlingshotReader = 0;
 void requestEvent() {
   sprintf(message, "ssh:%d|", scoredTimes);
   Wire.write(message);
-  Serial.println();//Daten gesendet
 }
 void recieveEvent(int numBytes) {
-
   if (strcmp(command, "resetGame") == 0) {
       handleReset();
       Serial.println("resetting...");

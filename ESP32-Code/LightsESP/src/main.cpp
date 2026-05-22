@@ -18,6 +18,7 @@ void processI2CData(String key, String value);
 void handleSpeedChange(float speed);
 void randomBlueAmbient(int leds[], int listLength, int priority);
 void randomYellowAmbient(int leds[], int listLength, int priority);
+void handleSlaveThreeHit();
 
 #define PIN 23
 #define NUMPIXELS 110
@@ -280,14 +281,14 @@ rgb randomColor()
 
 rgb randomBlueColorWithBrightness()
 {
-  float brightness = random(50) / 100 + 0.5;
+  float brightness = random(50) / 100.0 + 0.5;
   uint8_t c = random(256);
   return rgb(0, c * brightness, 255 * brightness);
 }
 
 rgb randomYellowColorWithBrightness()
 {
-  float brightness = random(50) / 100 + 0.5;
+  float brightness = random(50) / 100.0 + 0.5;
   uint8_t c = random(106);
   uint8_t col= 150 + c;
   uint8_t whitepercentage = random (40);
@@ -304,7 +305,7 @@ rgb randomBlueColorWithWhiteLevel()
 rgb randomRedColor()
 {
   uint8_t c = random(160); // nur bis grün = 159 => kein richtiges gelb
-  if (random() < 0.5)
+  if (random(2) == 0)
   {
     return rgb(255, 0, c);
   }
@@ -548,6 +549,7 @@ void randomBlueAmbient(int leds[], int listLength, int priority)
     ls.on = true;
     ls.timeOfShutOff = millis() + cooldown + 50;
   }
+  blueAmbientEffectState.lastProgressTimeStamp = millis();
 }
 
 void randomYellowAmbient(int leds[], int listLength, int priority)
@@ -671,6 +673,7 @@ void rainBow(int leds[], int listLength)
   effectOngoing = false;
 }
 
+char command[20]; // global variable to hold the current command, can be used in the loop to trigger effects based on the last command
 void receiveEvent(int howMany)
 {
   int i = 0;
@@ -699,49 +702,37 @@ void receiveEvent(int howMany)
   }
   delete[] data;
 
-  // // Kommando auswerten
-  // if (strcmp(command, "slaveTwo") == 0)
-  // {
-  //   Serial.println("slaveTwo got hit...");
-  //   handleSlaveTwoHit();
-  // }
-  // if (strcmp(command, "slaveThree") == 0)
-  // {
-  //   Serial.println("slaveThree (Bumpers) got hit...");
-  //   handleSlaveThreeHit();
-  // }
-  // if (strcmp(command, "slaveFour") == 0)
-  // {
-  //   Serial.println("slaveFour (Targets) got hit...");
-  //   handleSlaveFourHit();
-  // }
-  // if (strcmp(command, "ballOut") == 0)
-  // {
-  //   Serial.println("the ball went out!");
-  //   handleBallOut();
-  // }
-  // if (strcmp(command, "ballIn") == 0)
-  // {
-  //   Serial.println("the ball entered the playing field!");
-  //   handleBallIn();
-  // }
-  // if (strcmp(command, "switchAllLights") == 0)
-  // {
-  //   handleLightsSwitchedON_OFF();
-  // }
+  // Kommando auswerten
+  /*if (strcmp(command, "eff") == 0)
+  {
+    Serial.println("slaveTwo got hit...");
+    handleSlaveTwoHit();
+  }
+  if (strcmp(command, "slaveThree") == 0)
+  {
+    Serial.println("slaveThree (Bumpers) got hit...");
+    
+  }
+  if (strcmp(command, "slaveFour") == 0)
+  {
+    Serial.println("slaveFour (Targets) got hit...");
+    handleSlaveFourHit();
+  }
+  if (strcmp(command, "ballOut") == 0)
+  {
+    Serial.println("the ball went out!");
+    handleBallOut();
+  }
+  if (strcmp(command, "ballIn") == 0)
+  {
+    Serial.println("the ball entered the playing field!");
+    handleBallIn();
+  }
+  if (strcmp(command, "switchAllLights") == 0)
+  {
+    //handleLightsSwitchedON_OFF();
+  }*/
 }
-
-void processI2CData(String key, String value) {
-  float dataValueF = value.toFloat();
-  int dataValueI = value.toInt();
-  if (key == "len") {
-    overrideAllLightsOff = dataValueI == 1 ? false : true; // true -> aus; false -> an
-  } else if (key == "lsp") {
-    handleSpeedChange(dataValueF);
-  } // else if (key == "KEYHIER") // TODO
-}
-
-// ———————nach Kommunikation mit dem Mega aufgerufen———————
 void handleBallIn()
 {
   ballIsOut = false;
@@ -797,6 +788,55 @@ void handleSpeedChange(float speed)
   }
   else globalEffectSpeedIsZero = true;
 }
+
+void processI2CData(String key, String value) {
+  key.trim();
+  value.trim();
+  float dataValueF = value.toFloat();
+  int   dataValueI = value.toInt();
+
+  if (key == "len") {
+    overrideAllLightsOff = (dataValueI == 0); // 1=an, 0=aus
+
+  } else if (key == "lsp") {
+    handleSpeedChange(dataValueF);
+
+  } else if (key == "eff") {
+    switch (dataValueI) {
+      case 1: // Bumper/Tower Hit
+        setPixelsEqually(allLightInts, NUMPIXELS, 255, 255, 255, 2, 80);
+        doOnePulse(255, 0, 0);
+        break;
+      case 2: // Slingshot Hit
+        multiSwoopEffectState.timeBetweenProgress = 25;
+        multiSwoopEffectState.effectProgress = 0;
+        break;
+      case 3: // Taster Hit
+        doOnePulse(168, 0, 219);
+        break;
+      case 4: // In Game
+        ballIsOut = false;
+        multiSwoopEffectState.timeBetweenProgress = 40;
+        break;
+      case 5: // Verloren
+        ballIsOut = true;
+        doOnePulse(200, 0, 0);
+        break;
+      case 6: // Start
+        // rainbowSweep läuft im loop – hier nur Flag setzen
+        // (oder direkt rainBow() aufrufen wenn blocking OK ist)
+        doOnePulse(255, 100, 0);
+        break;
+      case 7: // Warten
+        ballIsOut = false;
+        break;
+      default: break;
+    }
+  }
+}
+
+// ———————nach Kommunikation mit dem Mega aufgerufen———————
+
 
 String* splitString(String input, char splitter, int &count) {
   // Count how many splits we'll have

@@ -8,11 +8,12 @@
 #include "DFRobotDFPlayerMini.h"
 
 // ───────────────────── LCD Pins ─────────────────────
-LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
+LiquidCrystal lcd(A7, A8, A9, A10, A11, A12);
 
 // ───────────────────── DF PLayer Mini ─────────────────────
 SoftwareSerial mySoftwareSerial(10,11); // RX, TX
 DFRobotDFPlayerMini myDFPlayer;
+bool dfplayerInitialized = false;
 
 // ───────────────────── Adressen ─────────────────────
 #define slave2      2
@@ -23,12 +24,12 @@ DFRobotDFPlayerMini myDFPlayer;
 
 // ───────────────────── Globale Variablen ─────────────────────
 auto timer = timer_create_default();
-int backlightPin = 13;
+int backlightPin = A6;
 
-int singalForBallStart = 3; // Knopf der gedrückt wird wenn ball in startvorrichtung ist muss
-int ballLostSensor = 4; // Pin für ball lost sensor (done)
-int outputFinger = 5; // Pin um Finger zu aktivieren oder deaktivieren
-int ballInStart = 6; // Ball instartvorrichtung lassen
+int singalForBallStart = A3; // Knopf der gedrückt wird wenn ball in startvorrichtung ist
+int ballLostSensor = A4; // Pin für ball lost sensor (done)
+int outputFinger = A5; // Pin um Finger zu aktivieren oder deaktivieren
+int ballInStart = A13; // Ball instartvorrichtung lassen
 
 int moduleCount = 4;
 int moduleSlaves[4] = { slave2, slave3, slave4, slave5 };
@@ -45,7 +46,7 @@ int lightState = 1;
 int ballInGame = 0;
 
 GameState gameState     = WAIT_FOR_BALL;
-GameState lastGameState = WAIT_FOR_BALL;
+GameState lastGameState = RESET;
 
 // ───────────────────── Timer-Handles ─────────────────────
 Timer<>::Task gameOverTask;
@@ -71,26 +72,38 @@ void setBacklightPercent(int percent) {
 
 // ───────────────────── Setup / Loop ─────────────────────
 void setup() {
-    pinMode(backlightPin, OUTPUT); // Hintergrund ist Pin 13
+    pinMode(backlightPin, OUTPUT); // Hintergrund ist Pin 6
     pinMode(ballLostSensor, INPUT_PULLUP); // Ball Lost Sensor ist Pin 4
     pinMode(outputFinger, OUTPUT); // Output für Finger ist Pin 5
     pinMode(singalForBallStart, INPUT_PULLUP); // Knopf für Ball Start ist Pin 3
-    pinMode(ballInStart, OUTPUT); // Ball in Startvorrichtung lassen ist Pin 6
+    pinMode(ballInStart, OUTPUT); // Ball in Startvorrichtung lassen ist Pin 13
     attachInterrupt(digitalPinToInterrupt(singalForBallStart), checkBallInStart, CHANGE); // PRÜFEN!!!
 
-    setBacklightPercent(30);
+    //setBacklightPercent(30);
+    
 
     Wire.begin();
     Serial.begin(9600);
+    mySoftwareSerial.begin(9600);
+    dfplayerInitialized = myDFPlayer.begin(mySoftwareSerial);
+    if (!dfplayerInitialized) {
+        Serial.println("DFPlayer init failed");
+    }
     Serial.println("Flipper System Starting...");
 
     lcd.begin(16, 2);
+    analogWrite(backlightPin, 50); // ich werde jeden von euch finden der es wagt, nur zu denken diese Zeile zu verändern
     lcd.clear();
     lcd.print("Flipper System");
     lcd.setCursor(0, 1);
     lcd.print("Booting...");
+    sendLEDEffect(7);
     delay(1500);
     lcd.clear();
+    if(dfplayerInitialized) {
+        myDFPlayer.loopFolder(1);
+    }
+    
 
     setDebugMode(false);
 }
@@ -126,28 +139,18 @@ void checkGameState() {
 
     if (gameState != lastGameState) {
         handleLCDDisplay();
-        
-        // MUSIC
-        if (gameState == IN_GAME) {
-            myDFPlayer.loopFolder(2);
-        } else {
-            myDFPlayer.loopFolder(1);
-        }
 
         lastGameState = gameState;
     }
 }
 
-// ───────────────────── Punkte ─────────────────────
-bool addRandomPoints(void *) {
-    if (gameState != IN_GAME) return false;
-    points += random(50, 150);
-    handleLCDDisplay();
-    return true;
-}
-
 // ───────────────────── Game Over / Reset ─────────────────────
 void startGameOver() {
+    if(dfplayerInitialized) {
+        myDFPlayer.loopFolder(1);
+    }
+    sendLEDEffect(5);
+    lastGameState = IN_GAME;
     gameState = GAME_OVER;
     handleLCDDisplay();
     gameOverTask = timer.in(10000, finishGameOver);
@@ -287,6 +290,7 @@ void printConnectionFromSlaves() {
 
             if (count == 2) {
                 // Key-Value Pair verarbeiten (z.B. "ssh:5" oder "balllost:1")
+                // Serial.println(answer);
                 processSlaveData(dataset[0], dataset[1], addr);
             }
 
@@ -302,8 +306,6 @@ void printConnectionFromSlaves() {
 
 void processSlaveData(String key, String value, int module) {
     int dataValue = value.toInt();
-    // Verarbeitung der einzelnen Keys
-    //Bumper Tower Hits
     auto addPoints = [&](const char* type, int basePoints) {
         if (gameState != IN_GAME) return;
         points += dataValue * multiplier * basePoints;
@@ -314,12 +316,23 @@ void processSlaveData(String key, String value, int module) {
         addPoints("Bumper Hits",   pointsBumper);
         sendLEDEffect(1);
     }
-    else if(key == "ssh") addPoints("Slingshot Hits", pointsSlingsshots);
-    else if(key == "tah") addPoints("Target Hits",    pointsTargets);
+    else if(key == "ssh"){
+        addPoints("Slingshot Hits", pointsSlingsshots);
+        sendLEDEffect(2);
+    } 
+    else if(key == "tah"){
+         addPoints("Target Hits",    pointsTargets);
+         sendLEDEffect(3);
+    }
     else if(key == "ballingame") {
         if(ballInGame == 0 && dataValue == 1 && gameState == WAIT_FOR_BALL) {
             ballInGame = 1;
+            lastGameState = WAIT_FOR_BALL;
             gameState = IN_GAME;
+            sendLEDEffect(4);
+            if(dfplayerInitialized) {
+                myDFPlayer.loopFolder(2);
+            }
         }
     }
     else if (key == "err") {
@@ -372,7 +385,9 @@ bool resetGame(void *) {
     points = 0;
     ballInGame = 0;
     gameState = WAIT_FOR_BALL;
-    lastGameState = WAIT_FOR_BALL;
+    lastGameState = RESET;
+    sendLEDEffect(7);
+    handleLCDDisplay();
     for(int i = 0; i < moduleCount; i++) {
         int addr = moduleSlaves[i];
         if (isSlaveAlive(addr)) {
@@ -389,6 +404,7 @@ bool resetGame(void *) {
 void checkBallLost(){
     if(gameState == IN_GAME && digitalRead(ballLostSensor) == LOW){
         ballInGame = 0;
+        startGameOver();
     }
 }
 
