@@ -77,7 +77,6 @@ void setup() {
     pinMode(outputFinger, OUTPUT); // Output für Finger ist Pin 5
     pinMode(singalForBallStart, INPUT_PULLUP); // Knopf für Ball Start ist Pin 3
     pinMode(ballInStart, OUTPUT); // Ball in Startvorrichtung lassen ist Pin 13
-    attachInterrupt(digitalPinToInterrupt(singalForBallStart), checkBallInStart, CHANGE); // PRÜFEN!!!
 
     //setBacklightPercent(30);
     
@@ -114,6 +113,7 @@ void loop() {
     checkFingers();
     checkBallLost();
     sendFingerUpdate();
+    checkBallInStart();
     
     // Slave-Kommunikation nur alle 2 Sekunden
     static unsigned long lastSlaveCheck = 0;
@@ -153,13 +153,13 @@ void startGameOver() {
     lastGameState = IN_GAME;
     gameState = GAME_OVER;
     handleLCDDisplay();
-    gameOverTask = timer.in(10000, finishGameOver);
+    gameOverTask = timer.in(5000, finishGameOver);
 }
 
 bool finishGameOver(void *) {
     gameState = RESET;
     handleLCDDisplay();
-    resetTask = timer.in(5000, resetGame);
+    resetTask = timer.in(2000, resetGame);
     return false;
 }
 
@@ -324,20 +324,8 @@ void processSlaveData(String key, String value, int module) {
          addPoints("Target Hits",    pointsTargets);
          sendLEDEffect(3);
     }
-    else if(key == "ballingame") {
-        if(ballInGame == 0 && dataValue == 1 && gameState == WAIT_FOR_BALL) {
-            ballInGame = 1;
-            lastGameState = WAIT_FOR_BALL;
-            gameState = IN_GAME;
-            sendLEDEffect(4);
-            if(dfplayerInitialized) {
-                myDFPlayer.loopFolder(2);
-            }
-        }
-    }
     else if (key == "err") {
         sendErrorToESP(dataValue);
-        Serial.println("!!! Module " + String(module) + " ERROR: " + value + " !!!");
     }
     else {
         sendErrorToESP(410+module);
@@ -356,7 +344,7 @@ void displayLCDDisplay(String line1, String line2) {
 void handleLCDDisplay() {
     switch (gameState) {
         case WAIT_FOR_BALL:
-            displayLCDDisplay("Flipper bereit", "Kugel einwerfen");
+            displayLCDDisplay("Flipper bereit", "<- druecken");
             break;
         case IN_GAME:
             displayLCDDisplay("Punkte:", String(points));
@@ -402,7 +390,7 @@ bool resetGame(void *) {
 
 //Point Methods
 void checkBallLost(){
-    if(gameState == IN_GAME && digitalRead(ballLostSensor) == LOW){
+    if(gameState == IN_GAME && digitalRead(ballLostSensor) == HIGH){
         ballInGame = 0;
         startGameOver();
     }
@@ -419,6 +407,15 @@ void sendFingerUpdate(){
 void checkBallInStart(){
     if(digitalRead(singalForBallStart) == LOW){
         digitalWrite(ballInStart, HIGH);
+        if(ballInGame == 0 && gameState == WAIT_FOR_BALL) {
+            ballInGame = 1;
+            lastGameState = WAIT_FOR_BALL;
+            gameState = IN_GAME;
+            sendLEDEffect(4);
+            if(dfplayerInitialized) {
+                myDFPlayer.loopFolder(2);
+            }
+        }
     }else{
         digitalWrite(ballInStart, LOW);
     }
