@@ -11,302 +11,52 @@ const char* webpage_main = R"=====(
     <title>Flipper Adminpanel</title>
 
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        padding: 20px;
-        background: #f5f5f5;
-      }
-
-      .section-container {
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        margin-bottom: 16px;
-      }
-
-       /* Grid Layout - 2 Spalten für Controls */
-      .controls-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-      }
-
-      .section-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 16px;
-      }
-
-      /* Button Styles */
-      .btn {
-        width: 100%;
-        height: 50px;
-        border: none;
-        border-radius: 10px;
-        font-size: 16px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        font-family: inherit;
-      }
-
-      .btn-primary {
-        background: #5c6bc0;
-        color: white;
-      }
-
-      .btn-primary:hover {
-        background: #4a5bb5;
-      }
-
-      .btn-primary:active {
-        background: #3949ab;
-        transform: translateY(1px);
-      }
-
-      .btn-secondary {
-        background: white;
-        color: #5c6bc0;
-        border: 2px solid #5c6bc0;
-      }
-
-      .btn-secondary:hover {
-        background: #f5f7ff;
-      }
-
-      .btn-secondary:active {
-        background: #e8ebf9;
-        transform: translateY(1px);
-      }
-
-      .btn-danger {
-        background: white;
-        color: #c62828;
-        border: 2px solid #c62828;
-      }
-
-      .btn-danger:hover {
-        background: #fff5f5;
-      }
-
-      .btn-danger:active {
-        background: #ffebee;
-        transform: translateY(1px);
-      }
-
-      .btn-small {
-        height: auto;
-        padding: 8px 16px;
-        font-size: 13px;
-        width: auto;
-      }
-
-      /* Log Styles */
-      .log-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-      }
-
-      .log-entry {
-        font-size: 13px;
-        padding: 10px 12px;
-        border-radius: 6px;
-        margin-bottom: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .log-entry:last-child {
-        margin-bottom: 0;
-      }
-
-      .log-error {
-        color: #c62828;
-        background: #ffebee;
-        border-left: 3px solid #c62828;
-      }
-
-      .log-info {
-        color: #1565c0;
-        background: #e3f2fd;
-        border-left: 3px solid #1565c0;
-      }
-
-      .log-timestamp {
-        color: #9e9e9e;
-        font-size: 11px;
-        white-space: nowrap;
-        flex-shrink: 0;
-        opacity: 0.8;
-      }
-
-      /* Settings Styles */
-      .setting-item {
-        margin-bottom: 16px;
-      }
-
-      .setting-item:last-child {
-        margin-bottom: 0;
-      }
-
-      .section-subtitle {
-        font-size: 14px;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 8px;
-        display: block;
-      }
-
-      .toggle-container {
-        font-size: 14px;
-        color: #333;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 16px;
-      }
-
-      .toggle {
-        position: relative;
-        width: 50px;
-        height: 28px;
-        background: #e0e0e0;
-        border-radius: 14px;
-        cursor: pointer;
-        transition: background 0.3s;
-      }
-
-      .toggle.active {
-        background: #5c6bc0;
-      }
-
-      .toggle-thumb {
-        position: absolute;
-        top: 3px;
-        left: 3px;
-        width: 22px;
-        height: 22px;
-        background: white;
-        border-radius: 50%;
-        transition: left 0.3s;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      }
-
-      .toggle.active .toggle-thumb {
-        left: 25px;
-      }
-
-      .text-input {
-        width: 100%;
-        padding: 10px 12px;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        font-size: 14px;
-        font-family: inherit;
-        outline: none;
-        transition: border-color 0.2s;
-      }
-
-      .text-input:focus {
-        border-color: #5c6bc0;
-      }
-
-      /* Number Input Styles - ähnlich wie text-input aber mit extra Styling für Zahlen */
-      .number-input {
-        width: 100%;
-        padding: 10px 12px;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        font-size: 14px;
-        font-family: inherit;
-        outline: none;
-        transition: border-color 0.2s;
-      }
-
-      .number-input:focus {
-        border-color: #5c6bc0;
-      }
-
-      /* Input Container für Label + Input */
-      .input-container {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .input-label {
-        font-size: 14px;
-        color: #666;
-        font-weight: 500;
-      }
-
-      /* Slider Styles */
-      .slider-container {
-        font-size: 14px;
-        color: #333;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 16px;
-      }
-
-      .slider {
-        flex: 1;
-        height: 6px;
-        border-radius: 3px;
-        background: #e0e0e0;
-        outline: none;
-        -webkit-appearance: none;
-        appearance: none;
-        cursor: pointer;
-      }
-
-      .slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: #5c6bc0;
-        cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      }
-
-      .slider::-moz-range-thumb {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: #5c6bc0;
-        cursor: pointer;
-        border: none;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      }
-
-      .slider-value {
-        min-width: 50px;
-        text-align: right;
-        font-weight: 500;
-        color: #5c6bc0;
-      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 20px; background: #f5f5f5; }
+      .section-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 16px; }
+      .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+      .section-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 16px; }
+      .btn { width: 100%; height: 50px; border: none; border-radius: 10px; font-size: 16px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; font-family: inherit; }
+      .btn-primary { background: #5c6bc0; color: white; }
+      .btn-primary:hover { background: #4a5bb5; }
+      .btn-primary:active { background: #3949ab; transform: translateY(1px); }
+      .btn-secondary { background: white; color: #5c6bc0; border: 2px solid #5c6bc0; }
+      .btn-secondary:hover { background: #f5f7ff; }
+      .btn-secondary:active { background: #e8ebf9; transform: translateY(1px); }
+      .btn-danger { background: white; color: #c62828; border: 2px solid #c62828; }
+      .btn-danger:hover { background: #fff5f5; }
+      .btn-danger:active { background: #ffebee; transform: translateY(1px); }
+      .btn-small { height: auto; padding: 8px 16px; font-size: 13px; width: auto; }
+      .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+      .log-entry { font-size: 13px; padding: 10px 12px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+      .log-entry:last-child { margin-bottom: 0; }
+      .log-error { color: #c62828; background: #ffebee; border-left: 3px solid #c62828; }
+      .log-info { color: #1565c0; background: #e3f2fd; border-left: 3px solid #1565c0; }
+      .log-timestamp { color: #9e9e9e; font-size: 11px; white-space: nowrap; flex-shrink: 0; opacity: 0.8; }
+      .setting-item { margin-bottom: 16px; }
+      .setting-item:last-child { margin-bottom: 0; }
+      .section-subtitle { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; display: block; }
+      .toggle-container { font-size: 14px; color: #333; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+      .toggle { position: relative; width: 50px; height: 28px; background: #e0e0e0; border-radius: 14px; cursor: pointer; transition: background 0.3s; }
+      .toggle.active { background: #5c6bc0; }
+      .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; background: white; border-radius: 50%; transition: left 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+      .toggle.active .toggle-thumb { left: 25px; }
+      .number-input { width: 100%; padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s; }
+      .number-input:focus { border-color: #5c6bc0; }
+      .input-container { display: flex; flex-direction: column; gap: 8px; }
+      .input-label { font-size: 14px; color: #666; font-weight: 500; }
+      .slider-container { font-size: 14px; color: #333; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+      .slider { flex: 1; height: 6px; border-radius: 3px; background: #e0e0e0; outline: none; -webkit-appearance: none; appearance: none; cursor: pointer; }
+      .slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #5c6bc0; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+      .slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #5c6bc0; cursor: pointer; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+      .slider-value { min-width: 50px; text-align: right; font-weight: 500; color: #5c6bc0; }
     </style>
   </head>
   
   <body>
 
     <div class="section-container">
-      <div class="log-header"> <!-- die Klasse ist n workaround -->
+      <div class="log-header">
         <div class="section-title">Flipper Adminpanel v.69</div>
         <button class="btn btn-secondary btn-small" onclick="window.location.reload();">Reload window</button>
       </div>
@@ -323,74 +73,38 @@ const char* webpage_main = R"=====(
       </div>
     </div>
     
-    <!-- Settings -->
     <div class="section-container">
       <div class="section-title">Settings</div>
       
       <div class="section-subtitle">Game settings</div>
       <div class="controls-grid">
-        <!-- Neues Number Input für Multiplier Amount -->
         <div class="input-container">
           <label class="input-label">Multiplier amount</label>
-          <input 
-          type="number" 
-          id="multiplier-amount" 
-          class="number-input" 
-          min="1" 
-          max="100" 
-          step="0.5" 
-          value="1.0"
-          placeholder="1.0">
+          <input type="number" id="multiplier-amount" class="number-input" min="1" max="100" step="0.5" value="1.0" placeholder="1.0">
         </div>
-
         <div class="input-container">
           <label class="input-label">Point amount bumper tower</label>
-          <input 
-            type="number" 
-            id="point-amount-bumper" 
-            class="number-input" 
-            min="1" 
-            max="50000" 
-            step="10" 
-            value="100"
-            placeholder="1">
+          <input type="number" id="point-amount-bumper" class="number-input" min="1" max="50000" step="10" value="50" placeholder="1">
         </div>
         <div class="input-container">
           <label class="input-label">Point amount slingshot</label>
-          <input 
-            type="number" 
-            id="point-amount-slingshot" 
-            class="number-input" 
-            min="1" 
-            max="50000" 
-            step="10" 
-            value="1000"
-            placeholder="1">
+          <input type="number" id="point-amount-slingshot" class="number-input" min="1" max="50000" step="10" value="25" placeholder="1">
         </div>
         <div class="input-container">
           <label class="input-label">Point amount targets</label>
-          <input 
-            type="number" 
-            id="point-amount-targets" 
-            class="number-input" 
-            min="1" 
-            max="50000" 
-            step="10" 
-            value="100"
-            placeholder="1">
+          <input type="number" id="point-amount-targets" class="number-input" min="1" max="50000" step="10" value="10" placeholder="1">
         </div>
       </div>
 
       <div class="section-subtitle">Lighting Controls</div>
       <div class="controls-grid">
-        <!-- Toggle für Lighting -->
         <div class="toggle-container">
           <div id="strobe-toggle" class="toggle active" onclick="toggleSetting(this);">
             <div class="toggle-thumb"></div>
           </div>
           Lighting enabled
         </div>
-        <!-- Slider für Lichgeschwindigkeit -->
+        <!-- FIX: type="ran+ge" → type="range" -->
         <div class="slider-container">
           <label class="input-label" style="min-width: 120px;">Light Effect Speed</label>
           <input type="range" id="light-speed-slider" class="slider" min="0" max="2" step="0.01" value="1.00">
@@ -398,7 +112,15 @@ const char* webpage_main = R"=====(
         </div>
       </div>
 
-      
+      <div class="section-subtitle">Music Controls</div>
+      <div class="controls-grid">
+        <!-- FIX: value="15" damit Startwert mit Display übereinstimmt -->
+        <div class="slider-container">
+          <label class="input-label" style="min-width: 120px;">Music Volume</label>
+          <input type="range" id="music-volume-slider" class="slider" min="0" max="30" step="1" value="15">
+          <span class="slider-value" id="music-volume-display">15</span>
+        </div>
+      </div>
 
       <div class="setting-item">
         <button class="btn btn-danger" onclick="resetGame()">Reset Game</button>
@@ -419,81 +141,69 @@ const char* webpage_main = R"=====(
     </div>
 
     <script type="text/javascript">
-      
-      //**     Log related stuff     **//
+      const logType = { error: 'error', info: 'info' };
 
-      const logType = {
-        error: 'error',
-        info: 'info'
-      };
-
-      //** Last update logic
       let lastUpdate = -1;
       function handleLastUpdateShow() {
         if (lastUpdate == -1) {
-          document.getElementById("last-update-status").innerHTML = "No I²C update recieved yet";
+          document.getElementById("last-update-status").innerHTML = "No I\u00B2C update recieved yet";
         } else {
           let updateTimePassed = Date.now() - lastUpdate;
-          document.getElementById("last-update-status").innerHTML = "Last I²C update: " + Math.floor(updateTimePassed / 1000) + " seconds ago";
+          document.getElementById("last-update-status").innerHTML = "Last I\u00B2C update: " + Math.floor(updateTimePassed / 1000) + " seconds ago";
         }
       }
       setInterval(handleLastUpdateShow, 1000);
 
-      //** Fügt neuen Log ganz oben hinzu
       function addLog(type, message, timestamp = new Date().toLocaleTimeString('de-DE')) {
         const logContainer = document.getElementById('log-container');
         const logEntry = document.createElement('div');
         logEntry.className = 'log-entry log-' + type;
-          
         const messageSpan = document.createElement('span');
         messageSpan.textContent = message;
-         
         const timestampSpan = document.createElement('span');
         timestampSpan.className = 'log-timestamp';
         timestampSpan.textContent = timestamp;
-         
         logEntry.appendChild(messageSpan);
         logEntry.appendChild(timestampSpan);
         logContainer.prepend(logEntry);
       }
-  
-      //** Für Toggle-Buttons, um deren Aktiv-Status umzuschalten
+
       function toggleSetting(element) {
         element.classList.toggle('active');
       }
 
-      //** Slider Value Update Display
       document.getElementById('light-speed-slider').addEventListener('input', function() {
-        const value = parseFloat(this.value).toFixed(2);
-        document.getElementById('light-speed-display').textContent = value;
+        document.getElementById('light-speed-display').textContent = parseFloat(this.value).toFixed(2);
       });
-  
-      //** Apply settings
-      // Alle eingegebenen Einstellungen auf ihren Weg schicken
+
+      // FIX: parseInt ohne .toFixed(2) — Volume ist ganzzahlig
+      document.getElementById('music-volume-slider').addEventListener('input', function() {
+        document.getElementById('music-volume-display').textContent = parseInt(this.value);
+      });
+
       function applySettings() {
-        const multiplierAmount = document.getElementById('multiplier-amount').value; // Neuer Wert wird ausgelesen
+        const multiplierAmount = document.getElementById('multiplier-amount').value;
         const points_bumper = document.getElementById('point-amount-bumper').value;
         const points_slingshot = document.getElementById('point-amount-slingshot').value;
         const points_targets = document.getElementById('point-amount-targets').value;
-        const lights_enabled = document.getElementById('strobe-toggle').classList.contains('active') ? 1 : 0; // Toggle-Status wird in 1 oder 0 umgewandelt
+        const lights_enabled = document.getElementById('strobe-toggle').classList.contains('active') ? 1 : 0;
         const lightSpeed = document.getElementById('light-speed-slider').value;
-          
+        const volume = document.getElementById('music-volume-slider').value;
+
         var xhttp = new XMLHttpRequest();
-        // Multiplier Amount wird jetzt auch an den Server gesendet
         xhttp.open("PUT",
           "SETTINGS?multiplierAmount=" + multiplierAmount +
-          "&points_bumper=" + points_bumper + 
+          "&points_bumper=" + points_bumper +
           "&points_slingshot=" + points_slingshot +
           "&points_targets=" + points_targets +
           "&lights_enabled=" + lights_enabled +
-          "&light_speed=" + lightSpeed,
+          "&light_speed=" + lightSpeed +
+          "&volume=" + volume,
           true);
         xhttp.send();
-
         addLog(logType.info, 'Settings have been sent.');
       }
-  
-      // Spiel zurücksetzen
+
       function resetGame() {
         if (confirm('Are you sure you want to reset the game?')) {
           var xhttp = new XMLHttpRequest();
@@ -502,35 +212,24 @@ const char* webpage_main = R"=====(
           addLog(logType.info, 'Game reset request has been sent.');
         }
       }
-  
-      // delete info logs
+
       function deleteInfoLogs() {
         if (confirm('Are you sure you want to delete every info log?')) {
-          const logEntries = document.querySelectorAll('.log-entry');
-          
-          logEntries.forEach(entry => {
-            if (entry.classList.contains('log-info')) {
-              entry.remove();
-            } 
-            
+          document.querySelectorAll('.log-entry').forEach(entry => {
+            if (entry.classList.contains('log-info')) entry.remove();
           });
         }
       }
 
-      //** Logs exportieren
       function exportLogs() {
         const logEntries = document.querySelectorAll('.log-entry');
-        let exportText = 'Device Logs Export\n';
-        exportText += '='.repeat(50) + '\n\n';
-        
+        let exportText = 'Device Logs Export\n' + '='.repeat(50) + '\n\n';
         logEntries.forEach(entry => {
           const message = entry.querySelector('span:first-child').textContent;
           const timestamp = entry.querySelector('.log-timestamp').textContent;
           const type = entry.classList.contains('log-error') ? '[ERROR]' : '[INFO]';
-          
           exportText += `${message} ${type} <-- ${timestamp}\n`;
         });
-        
         const blob = new Blob([exportText], { type: 'text/plain' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -541,114 +240,50 @@ const char* webpage_main = R"=====(
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
-        
         addLog(logType.info, 'Logs exported successfully');
       }
-      //** Beispiel Logs
-      // addLog(logType.error, 'Connection timeout - Failed to reach device at 192.168.1.100');
-      // addLog(logType.info, 'Device connected successfully');
-      
-      //**     Kommunikation     **//
-      var xmlHttp = createXmlHttpObject();
-      
-      function createXmlHttpObject(){
-        if(window.XMLHttpRequest){
-          xmlHttp=new XMLHttpRequest();
-        }
-        else{
-          xmlHttp=new ActiveXObject("Microsoft.XMLHTTP");
-        }
-        return xmlHttp;
+
+      var xmlHttp;
+      if (window.XMLHttpRequest) {
+        xmlHttp = new XMLHttpRequest();
+      } else {
+        xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
       }
-      
-      //**     SSE stuff (Server send events)     **//
-      if(typeof(EventSource) !== "undefined") {
+
+      if (typeof(EventSource) !== "undefined") {
         addLog(logType.info, 'Your Browser supports SSE. Opening connection...');
         const eventSource = new EventSource('/sse');
-        eventSource.onmessage = function(event) {
-          onSSEmessage(event);
-        }
-        
-        eventSource.onopen = function() {
-          addLog(logType.info, 'SSE connection established');
-        }
-        eventSource.onerror = function() {
-          addLog(logType.error, 'SSE connection lost, retrying...');
-        }
+        eventSource.onmessage = function(event) { onSSEmessage(event); }
+        eventSource.onopen = function() { addLog(logType.info, 'SSE connection established'); }
+        eventSource.onerror = function() { addLog(logType.error, 'SSE connection lost, retrying...'); }
       } else {
-        addLog(logType.error, 'Your Browser doensn\'t support SSE! Cannot open connection for updating data.');
+        addLog(logType.error, 'Your Browser doesn\'t support SSE! Cannot open connection for updating data.');
       }
 
       function onSSEmessage(event) {
         const parser = new DOMParser();
         const xmlData = parser.parseFromString(event.data, 'text/xml');
-        var xml_tag_data;
-        var message_data;
+        var xml_tag_data, message_data;
 
-        // if new I²C update was recieved before update was send to clients
         xml_tag_data = xmlData.getElementsByTagName("lastUpdateRecieved");
-        if (xml_tag_data && xml_tag_data.length > 0) {
-          lastUpdate = Date.now();
-        }
+        if (xml_tag_data && xml_tag_data.length > 0) lastUpdate = Date.now();
 
-        // status of connected modules/slaves
-        xml_tag_data = xmlData.getElementsByTagName("M2S");
-        if (xml_tag_data && xml_tag_data.length > 0) {
-          message_data = xml_tag_data[0].firstChild.nodeValue;
-          const status_container = document.getElementById("module2-status");
-          if (message_data == 0) {
-            status_container.innerHTML = "Module 2: ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
-          } else {
-            status_container.innerHTML = "Module 2: ✅"; // enable toggle
+        [2, 3, 4, 5].forEach(function(n) {
+          xml_tag_data = xmlData.getElementsByTagName("M" + n + "S");
+          if (xml_tag_data && xml_tag_data.length > 0) {
+            message_data = xml_tag_data[0].firstChild.nodeValue;
+            document.getElementById("module" + n + "-status").innerHTML =
+              "Module " + n + ": " + (message_data == 0 ? "❌" : "✅");
           }
-        }
-        xml_tag_data = xmlData.getElementsByTagName("M3S");
-        if (xml_tag_data && xml_tag_data.length > 0) {
-          message_data = xml_tag_data[0].firstChild.nodeValue;
-          const status_container = document.getElementById("module3-status");
-          if (message_data == 0) {
-            status_container.innerHTML = "Module 3: ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
-          } else {
-            status_container.innerHTML = "Module 3: ✅"; // enable toggle
-          }
-        }
-        xml_tag_data = xmlData.getElementsByTagName("M4S");
-        if (xml_tag_data && xml_tag_data.length > 0) {
-          message_data = xml_tag_data[0].firstChild.nodeValue;
-          const status_container = document.getElementById("module4-status");
-          if (message_data == 0) {
-            status_container.innerHTML = "Module 4: ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
-          } else {
-            status_container.innerHTML = "Module 4: ✅"; // enable toggle
-          }
-        }
-        xml_tag_data = xmlData.getElementsByTagName("M5S");
-        if (xml_tag_data && xml_tag_data.length > 0) {
-          message_data = xml_tag_data[0].firstChild.nodeValue;
-          const status_container = document.getElementById("module5-status");
-          if (message_data == 0) {
-            status_container.innerHTML = "Module 5: ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
-          } else {
-            status_container.innerHTML = "Module 5: ✅"; // enable toggle
-          }
-        }
+        });
 
-        // add log
-        var logType;
-        var logMessage;
-        var logTimestamp;
+        var logTypeVal, logMessage;
         xml_tag_data = xmlData.getElementsByTagName("log");
         if (xml_tag_data && xml_tag_data.length > 0) {
-          logType = xml_tag_data[0].getElementsByTagName("logType");
+          logTypeVal = xml_tag_data[0].getElementsByTagName("logType");
           logMessage = xml_tag_data[0].getElementsByTagName("logMessage");
-          // logTimestamp = xml_tag_data[0].getElementsByTagName("logTimestamp");
-          // if (logType.length > 0 && logMessage.length > 0 && logTimestamp.length > 0) {
-          if (logType.length > 0 && logMessage.length > 0) {
-            logType = logType[0].firstChild.nodeValue;
-            logMessage = logMessage[0].firstChild.nodeValue;
-            // logTimestamp = logTimestamp[0].firstChild.nodeValue;
-            addLog(logType, logMessage);
-            // addLog(logType, logMessage, logTimestamp);
+          if (logTypeVal.length > 0 && logMessage.length > 0) {
+            addLog(logTypeVal[0].firstChild.nodeValue, logMessage[0].firstChild.nodeValue);
           }
         }
       }

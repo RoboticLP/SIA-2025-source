@@ -55,6 +55,7 @@ int psl;
 int pta;
 int lights_enabled; // 0 or 1, depending on if strobe is enabled or not
 float lightSpeed; // light effect speed (0.0 - 2.0)
+int volume;
 bool settingsStillEmpty = true;
 
 int shouldReset = 0;
@@ -121,7 +122,7 @@ void wireRequestEvent() {
     if (shouldReset == 1 && settingsStillEmpty == true) { // game should get resetted, but settings mustnt get overwritten with false data
       sprintf(settingsDataString, "rst:%d", shouldReset);
     } else { // normal procedure to send data to master
-      sprintf(settingsDataString, "mtpl:%.2f|pbu:%d|psl:%d|pta:%d|len:%d|lsp:%.2f|rst:%d", mtpl, pbu, psl, pta, lights_enabled, lightSpeed, shouldReset);
+      sprintf(settingsDataString, "mtpl:%.2f|pbu:%d|psl:%d|pta:%d|len:%d|lsp:%.2f|vol:%d|rst:%d", mtpl, pbu, psl, pta, lights_enabled, lightSpeed, volume, shouldReset);
     }
     shouldReset = 0; // set this back to 0 so game wont reset every time new updates get sent
 
@@ -187,6 +188,7 @@ void handleSettings() {
   psl = server.arg("points_slingshot").toInt();
   pta = server.arg("points_targets").toInt();
   lights_enabled = server.arg("lights_enabled").toInt();
+  volume = server.arg("volume").toInt();
   lightSpeed = server.arg("light_speed").toFloat();
   
   settingsStillEmpty = false;

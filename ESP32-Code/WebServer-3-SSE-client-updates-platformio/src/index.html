@@ -348,7 +348,7 @@
             min="1" 
             max="50000" 
             step="10" 
-            value="100"
+            value="50"
             placeholder="1">
         </div>
         <div class="input-container">
@@ -360,7 +360,7 @@
             min="1" 
             max="50000" 
             step="10" 
-            value="1000"
+            value="25"
             placeholder="1">
         </div>
         <div class="input-container">
@@ -372,7 +372,7 @@
             min="1" 
             max="50000" 
             step="10" 
-            value="100"
+            value="10"
             placeholder="1">
         </div>
       </div>
@@ -391,6 +391,16 @@
           <label class="input-label" style="min-width: 120px;">Light Effect Speed</label>
           <input type="range" id="light-speed-slider" class="slider" min="0" max="2" step="0.01" value="1.00">
           <span class="slider-value" id="light-speed-display">1.00</span>
+        </div>
+      </div>
+
+            <div class="section-subtitle">Music Controls</div>
+      <div class="controls-grid">
+        <!-- Slider für Volume -->
+        <div class="slider-container">
+          <label class="input-label" style="min-width: 120px;">Music Volume</label>
+          <input type="range" id="music-volume-slider" class="slider" min="0" max="30" step="1" value="15">
+          <span class="slider-value" id="music-volume-display">15</span>
         </div>
       </div>
 
@@ -458,10 +468,15 @@
         element.classList.toggle('active');
       }
 
-      //** Slider Value Update Display
+      //** Slider Value Update Display Light Speed
       document.getElementById('light-speed-slider').addEventListener('input', function() {
         const value = parseFloat(this.value).toFixed(2);
         document.getElementById('light-speed-display').textContent = value;
+      });
+
+      //** Slider Value Update Display Volume
+      document.getElementById('music-volume-slider').addEventListener('input', function() {
+        document.getElementById('music-volume-display').textContent = parseInt(this.value);
       });
   
       //** Apply settings
@@ -473,6 +488,7 @@
         const points_targets = document.getElementById('point-amount-targets').value;
         const lights_enabled = document.getElementById('strobe-toggle').classList.contains('active') ? 1 : 0; // Toggle-Status wird in 1 oder 0 umgewandelt
         const lightSpeed = document.getElementById('light-speed-slider').value;
+        const volume = document.getElementById('music-volume-slider').value;
           
         var xhttp = new XMLHttpRequest();
         // Multiplier Amount wird jetzt auch an den Server gesendet
@@ -482,7 +498,8 @@
           "&points_slingshot=" + points_slingshot +
           "&points_targets=" + points_targets +
           "&lights_enabled=" + lights_enabled +
-          "&light_speed=" + lightSpeed,
+          "&light_speed=" + lightSpeed + 
+          "&volume=" + volume,
           true);
         xhttp.send();
 

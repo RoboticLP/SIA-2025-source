@@ -43,6 +43,8 @@ int pointsSlingsshots = 50;
 float lightSpeed = 1.0;
 int lightState = 1;
 
+int volume = 15;
+
 int ballInGame = 0;
 
 GameState gameState     = WAIT_FOR_BALL;
@@ -102,6 +104,7 @@ void setup() {
     if(dfplayerInitialized) {
         myDFPlayer.loopFolder(1);
     }
+    myDFPlayer.volume(volume);
     
 
     setDebugMode(false);
@@ -122,6 +125,7 @@ void loop() {
         sendStatusToAdminPanel();
         reciveMessagesFromAdminPanel();
         sendLEDUpdates();
+        myDFPlayer.volume(volume);
         lastSlaveCheck = millis();
     }
 }
@@ -225,6 +229,8 @@ void processESPData(String key, String value) {
         lightSpeed = dataValueF;
     }else if(key == "len"){
         lightSpeed = dataValueI;
+    }else if(key == "vol"){
+        volume = dataValueI;
     }else{
         sendErrorToESP(411);
     }
@@ -405,7 +411,7 @@ void sendFingerUpdate(){
 }
 
 void checkBallInStart(){
-    if(digitalRead(singalForBallStart) == LOW){
+    if(digitalRead(singalForBallStart) == LOW && gameState == WAIT_FOR_BALL){
         digitalWrite(ballInStart, HIGH);
         if(ballInGame == 0 && gameState == WAIT_FOR_BALL) {
             ballInGame = 1;
