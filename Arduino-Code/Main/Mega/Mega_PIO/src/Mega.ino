@@ -228,7 +228,7 @@ void processESPData(String key, String value) {
     }else if(key == "lsp"){
         lightSpeed = dataValueF;
     }else if(key == "len"){
-        lightSpeed = dataValueI;
+        lightState= dataValueI;
     }else if(key == "vol"){
         volume = dataValueI;
     }else{
