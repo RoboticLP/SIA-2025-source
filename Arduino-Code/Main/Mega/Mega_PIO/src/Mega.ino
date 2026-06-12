@@ -188,7 +188,7 @@ void sendStatusToAdminPanel() {
 
 void reciveMessagesFromAdminPanel() {
     if (!isSlaveAlive(adminpanel)) return;
-    Wire.requestFrom(adminpanel, 50);
+    Wire.requestFrom(adminpanel, 100);
     String answer = "";
     while (Wire.available()) answer += (char)Wire.read();
 
