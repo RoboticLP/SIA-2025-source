@@ -366,8 +366,11 @@ void loadingEffect(int leds[], int listLength, int priority, uint8_t r, uint8_t 
 
   int loadProgress = loadingEffectState.effectProgress;
 
+
   if(loadProgress < listLength){
     for (int i = 0; i < loadProgress; i++){
+      if (leds[i] < 0 || leds[i] >= NUMPIXELS)
+    continue;
       Led &led = allLights[leds[i]];
       if (priority >= PRIORITY_COUNT)
         continue; // looking if the priority is higher than the max. for the led
@@ -382,6 +385,8 @@ void loadingEffect(int leds[], int listLength, int priority, uint8_t r, uint8_t 
   }
   else if(loadProgress < 2 * listLength){
     for (int i = 0; i < (2*listLength - loadProgress); i++){
+      if (leds[i] < 0 || leds[i] >= NUMPIXELS)
+    continue;
       Led &led = allLights[leds[i]];
       if (priority >= PRIORITY_COUNT)
         continue; // looking if the priority is higher than the max. for the led
