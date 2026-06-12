@@ -602,10 +602,10 @@ void receiveEvent(int howMany)
   int dataCount;
   String *data = splitString(answer, '|', dataCount);
 
-  for (int j = 0; j < dataCount; j++)
+  for (int j = 0; j < dataCount; j++) // die einzelnen keys
   {
-    if (data[j].indexOf(':') == -1)
-      continue;
+    if (data[j].indexOf(':') == -1) // wenn : nicht gefunden wird -> -1
+      continue; // schleifendurchlauf skippen
 
     int count;
     String *dataset = splitString(data[j], ':', count);
@@ -655,7 +655,7 @@ void processI2CData(String key, String value) {
   float dataValueF = value.toFloat();
   int dataValueI = value.toInt();
   if (key == "len") {
-    overrideAllLightsOff = dataValueI == 1 ? false : true; // true -> aus; false -> an
+    overrideAllLightsOff = (dataValueI == 1) ? false : true; // true -> aus; false -> an
   } else if (key == "lsp") {
     handleSpeedChange(dataValueF);
   } // else if (key == "KEYHIER") // TODO
