@@ -228,7 +228,7 @@ void processESPData(String key, String value) {
             resetTask = timer.in(0, resetGame);
         }
     }else if(key == "lsp"){
-        lightSpeed = dataValueI/100;
+        lightSpeed = dataValueF/100;
     }else if(key == "len"){
         lightState= dataValueI;
     }else if(key == "vol"){
