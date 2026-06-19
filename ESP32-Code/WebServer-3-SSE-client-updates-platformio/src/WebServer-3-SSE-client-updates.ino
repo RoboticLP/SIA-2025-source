@@ -54,7 +54,7 @@ int pbu;
 int psl;
 int pta;
 int lights_enabled; // 0 or 1, depending on if strobe is enabled or not
-float lightSpeed; // light effect speed (0.0 - 2.0)
+int lightSpeed; // light effect speed (0 - 200)
 int volume;
 bool settingsStillEmpty = true;
 
@@ -115,19 +115,25 @@ void loop() {
 }
 
 // I2C
+int dataSendNumber = 1; // -1 = Point & Multiplier Data; 1 = Light, Volume and Reset
 void wireRequestEvent() {
   if (settingsChanged == true || shouldReset == 1) {
-    char settingsDataString[120];
+    char settingsDataString[32];
     
     if (shouldReset == 1 && settingsStillEmpty == true) { // game should get resetted, but settings mustnt get overwritten with false data
       sprintf(settingsDataString, "rst:%d", shouldReset);
     } else { // normal procedure to send data to master
-      sprintf(settingsDataString, "mtpl:%.2f|pbu:%d|psl:%d|pta:%d|len:%d|lsp:%.2f|vol:%d|rst:%d", mtpl, pbu, psl, pta, lights_enabled, lightSpeed, volume, shouldReset);
+      if (dataSendNumber == 1) { // alternate the data beeing sent
+        sprintf(settingsDataString, "mtpl:%.2f|pbu:%d|psl:%d|pta:%d", mtpl, pbu, psl, pta);
+      } else if (dataSendNumber == -1) {
+        sprintf(settingsDataString, "len:%d|lsp:%d|vol:%d|rst:%d", lights_enabled, lightSpeed, volume, shouldReset);
+        settingsChanged = false; // only set to false after both datasets have been sent
+      }
+      dataSendNumber *= -1;
     }
     shouldReset = 0; // set this back to 0 so game wont reset every time new updates get sent
 
     Wire.write(settingsDataString);
-    settingsChanged = false;
 
     Serial.print("[I²C] Sent settings update to master: "); Serial.println(settingsDataString);
   } else {
@@ -189,7 +195,7 @@ void handleSettings() {
   pta = server.arg("points_targets").toInt();
   lights_enabled = server.arg("lights_enabled").toInt();
   volume = server.arg("volume").toInt();
-  lightSpeed = server.arg("light_speed").toFloat();
+  lightSpeed = server.arg("light_speed").toInt();
   
   settingsStillEmpty = false;
 

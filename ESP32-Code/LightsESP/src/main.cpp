@@ -796,6 +796,8 @@ void receiveEvent(int howMany)
   while (Wire.available())
     answer += (char)Wire.read();
 
+  Serial.print("Data recieved: ");
+  Serial.println(answer);
   int dataCount;
   String *data = splitString(answer, '|', dataCount);
 
