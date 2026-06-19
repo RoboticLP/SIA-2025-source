@@ -186,12 +186,14 @@ void sendStatusToAdminPanel() {
     Wire.endTransmission();
 }
 
-void reciveMessagesFromAdminPanel() {
+void reciveMessagesFromAdminPanel() { // receiving alternating data strings
     if (!isSlaveAlive(adminpanel)) return;
     Wire.requestFrom(adminpanel, 100);
     String answer = "";
     while (Wire.available()) answer += (char)Wire.read();
 
+    Serial.print("Admin Panel Message: ");
+    Serial.println(answer);
         int dataCount;
         String* data = splitString(answer, '|', dataCount);
 
@@ -226,7 +228,7 @@ void processESPData(String key, String value) {
             resetTask = timer.in(0, resetGame);
         }
     }else if(key == "lsp"){
-        lightSpeed = dataValueF;
+        lightSpeed = dataValueI/100;
     }else if(key == "len"){
         lightState= dataValueI;
     }else if(key == "vol"){
