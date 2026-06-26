@@ -107,8 +107,8 @@ const char* webpage_main = R"=====(
         <!-- FIX: type="ran+ge" → type="range" -->
         <div class="slider-container">
           <label class="input-label" style="min-width: 120px;">Light Effect Speed</label>
-          <input type="range" id="light-speed-slider" class="slider" min="0" max="2" step="0.01" value="1.00">
-          <span class="slider-value" id="light-speed-display">1.00</span>
+          <input type="range" id="light-speed-slider" class="slider" min="0" max="200" step="1" value="100">
+          <span class="slider-value" id="light-speed-display">100</span>
         </div>
       </div>
 
@@ -173,7 +173,7 @@ const char* webpage_main = R"=====(
       }
 
       document.getElementById('light-speed-slider').addEventListener('input', function() {
-        document.getElementById('light-speed-display').textContent = parseFloat(this.value).toFixed(2);
+        document.getElementById('light-speed-display').textContent = this.value;
       });
 
       // FIX: parseInt ohne .toFixed(2) — Volume ist ganzzahlig
@@ -187,7 +187,7 @@ const char* webpage_main = R"=====(
         const points_slingshot = document.getElementById('point-amount-slingshot').value;
         const points_targets = document.getElementById('point-amount-targets').value;
         const lights_enabled = document.getElementById('strobe-toggle').classList.contains('active') ? 1 : 0;
-        const lightSpeed = document.getElementById('light-speed-slider').value;
+        const lightSpeed = document.getElementById('light-speed-slider').valueAsNumber;
         const volume = document.getElementById('music-volume-slider').value;
 
         var xhttp = new XMLHttpRequest();

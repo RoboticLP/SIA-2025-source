@@ -59,7 +59,6 @@ void handleLCDDisplay();
 void checkGameState();
 void startGameOver();
 bool finishGameOver(void *);
-bool addRandomPoints(void *);
 void printConnectionFromSlaves();
 void sendStatusToAdminPanel();
 void reciveMessagesFromAdminPanel();
@@ -186,12 +185,14 @@ void sendStatusToAdminPanel() {
     Wire.endTransmission();
 }
 
-void reciveMessagesFromAdminPanel() {
+void reciveMessagesFromAdminPanel() { // receiving alternating data strings
     if (!isSlaveAlive(adminpanel)) return;
     Wire.requestFrom(adminpanel, 100);
     String answer = "";
     while (Wire.available()) answer += (char)Wire.read();
 
+    Serial.print("Admin Panel Message: ");
+    Serial.println(answer);
         int dataCount;
         String* data = splitString(answer, '|', dataCount);
 
@@ -226,7 +227,7 @@ void processESPData(String key, String value) {
             resetTask = timer.in(0, resetGame);
         }
     }else if(key == "lsp"){
-        lightSpeed = dataValueF;
+        lightSpeed = dataValueF/100;
     }else if(key == "len"){
         lightState= dataValueI;
     }else if(key == "vol"){
@@ -263,6 +264,7 @@ void sendErrorToESP(int errorCode) {
 // ───────────────────── Slaves ─────────────────────
 long updateBeginTime;
 void printConnectionFromSlaves() {
+    String collectedSlaveData = ""; // for debugging purposes, not used in the current implementation
     updateBeginTime = millis();
 
     for (int i = 0; i < moduleCount; i++) {
@@ -279,6 +281,8 @@ void printConnectionFromSlaves() {
         while (Wire.available()) {
             answer += (char)Wire.read();
         }
+
+        collectedSlaveData += "Slave " + String(addr) + ": " + answer + "\n";
 
         if (answer.length() == 0) {
             continue;
@@ -305,6 +309,7 @@ void printConnectionFromSlaves() {
         delete[] data;
     }
 
+    Serial.println(collectedSlaveData);
     //Serial.print("Verarbeitung dauerte: ");
     //Serial.print((millis() - updateBeginTime) / 1000.0);
     //Serial.println(" Sekunden");
