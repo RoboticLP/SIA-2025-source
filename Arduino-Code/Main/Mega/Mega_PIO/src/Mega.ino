@@ -332,7 +332,7 @@ void processSlaveData(String key, String value, int module) {
         sendLEDEffect(2);
     } 
     else if(key == "tah"){
-         addPoints("Target Hits",    pointsTargets);
+         addPoints("Target Hits", pointsTargets);
          sendLEDEffect(3);
     }
     else if (key == "err") {
