@@ -50,6 +50,9 @@ void loop() {
 
 // ───────────────────── Hilfsfunktionen ─────────────────────
 void handleReset() {
+    pressed      = false;      
+    lowSince     = 0;           
+    lastHitTime  = 0;
     hitpoints = 0;
 }
 
