@@ -7,6 +7,7 @@ class rgb;
 
 // ——————— FUNKTIONS-PROTOTYPEN (FIX für deine Fehler) ———————
 void receiveEvent(int);
+void requestEvent();
 void testButtonTriggered();
 void swoopBallEffect(int leds[], int listLength, int priority,
                      uint8_t r, uint8_t g, uint8_t b,
@@ -97,13 +98,14 @@ int beachLightInts[40];
 int ballSwoopInts[40];
 int ballOutLoadingInts[80];
 
-// ——————————————————————————————————————————————————————SETUP——————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————SETUP——————————[...]
 void setup()
 {
   Serial.begin(9600);
 
   Wire.begin(5);                // I2C Slave Adresse 5
   Wire.onReceive(receiveEvent); // Master sendet Daten
+  Wire.onRequest(requestEvent); // Master fragt Daten ab
 
   delay(100); // let everything settle
   pixels.begin();
@@ -167,7 +169,7 @@ rgb pulseColor[5]= {rgb(255,45,4),rgb(120, 17, 120),rgb(28, 200, 94),rgb(255,255
 bool buttonfast;
 bool slingshotHit = false;
 unsigned long timeOfSlingshotHitExpire;
-//———————————————————————————————————————————————————————LOOP——————————————————————————————————————————————————————————————————
+//———————————————————————————————————————————————————————LOOP—————————��[...]
 void loop() {
   //multipleSwoopsEffect(int priority, uint8_t r, uint8_t g, uint8_t b, int length, int distance)
   randomTransition(allLightInts,NUMPIXELS,0,"specialblue");
@@ -211,7 +213,7 @@ void loop() {
         {
           if (led.prio[p].on != false)
           {                    // nacheinander prioritäten abarbeiten, beginned bei der höchsten:
-            r = led.prio[p].r; // wenn die höchste angeschaltene prio gefunden ist,
+            r = led.prio[p].r; // wenn die höchste angeschaltete prio gefunden ist,
             g = led.prio[p].g; // werte übertragen und die for-schleife abbrechen.
             b = led.prio[p].b;
             if (led.prio[p].timeOfShutOff <= millis())
@@ -788,6 +790,7 @@ void swoopBallEffect(int leds[], int listLength, int priority, uint8_t r, uint8_
 }
 
 char command[20]; // global variable to hold the current command, can be used in the loop to trigger effects based on the last command
+
 void receiveEvent(int howMany)
 {
   int i = 0;
@@ -817,38 +820,16 @@ void receiveEvent(int howMany)
     delete[] dataset;
   }
   delete[] data;
-
-  // Kommando auswerten
-  /*if (strcmp(command, "eff") == 0)
-  {
-    Serial.println("slaveTwo got hit...");
-    handleSlaveTwoHit();
-  }
-  if (strcmp(command, "slaveThree") == 0)
-  {
-    Serial.println("slaveThree (Bumpers) got hit...");
-    
-  }
-  if (strcmp(command, "slaveFour") == 0)
-  {
-    Serial.println("slaveFour (Targets) got hit...");
-    handleSlaveFourHit();
-  }
-  if (strcmp(command, "ballOut") == 0)
-  {
-    Serial.println("the ball went out!");
-    handleBallOut();
-  }
-  if (strcmp(command, "ballIn") == 0)
-  {
-    Serial.println("the ball entered the playing field!");
-    handleBallIn();
-  }
-  if (strcmp(command, "switchAllLights") == 0)
-  {
-    //handleLightsSwitchedON_OFF();
-  }*/
 }
+
+void requestEvent()
+{
+  // Der Master hat abgefragt, ob wir noch aktiv sind
+  // Antwort: 0xAA (170) = Status OK / Slave ist erreichbar
+  Wire.write(0xAA);
+  Serial.println("Master polling received - Slave is reachable!");
+}
+
 void handleBallIn()
 {
   ballIsOut = false;
