@@ -26,6 +26,7 @@ void randomYellowAmbient(int leds[], int listLength, int priority);
 void handleSlaveThreeHit();
 void loadingEffect(int leds[], int listLength, int priority, uint8_t r, uint8_t g, uint8_t b);
 void loadingSplitEffect(int priority, uint8_t r, uint8_t g, uint8_t b);
+void doStarBurst(uint8_t r, uint8_t g, uint8_t b, uint8_t whiteChance);
 
 #define PIN 23
 #define NUMPIXELS 110
@@ -97,6 +98,10 @@ int secondHalfLightInts[NUMPIXELS / 2];
 int beachLightInts[40];
 int ballSwoopInts[40];
 int ballOutLoadingInts[80];
+uint8_t starBurstBright[NUMPIXELS];
+bool    starBurstWhite[NUMPIXELS];
+uint8_t starGOBright[NUMPIXELS];
+bool    starGOWhite[NUMPIXELS];
 
 // ——————————————————————————————————————————————————————SETUP——————————[...]
 void setup()
@@ -160,42 +165,114 @@ void testButtonTriggered()
 int color = 0;
 
 // —————————————————variables to handle lighting options in the loop——————————————————
-boolean ballIsOut = true;
 long timeToShutOffPulseEffect;
 rgb activePulseColor(255, 0, 0);
-long timeToShutOffLoadSplitEffect;
-rgb activeLoadSplitColor(255, 0, 0);
 rgb pulseColor[5]= {rgb(255,45,4),rgb(120, 17, 120),rgb(28, 200, 94),rgb(255,255,0),rgb(255, 0, 255)};
 bool buttonfast;
-bool slingshotHit = false;
-unsigned long timeOfSlingshotHitExpire;
-//———————————————————————————————————————————————————————LOOP—————————��[...]
-void loop() {
-  //multipleSwoopsEffect(int priority, uint8_t r, uint8_t g, uint8_t b, int length, int distance)
-  randomTransition(allLightInts,NUMPIXELS,0,"specialblue");
-  if(ballIsOut){
-    loadingEffect(ballOutLoadingInts,80,1,255,0,255);
-    swoopBallEffect(ballSwoopInts, 40, 1, 255, 255 , 0, true);
-    //braun : 94 55 24
-    //türkis: 0 197 219
+long timeToShutOffStarBurst;
+rgb  activeStarColor(255, 255, 255);
+uint8_t activeStarWhiteChance = 50;
+
+#define PHASE_WAIT 0
+#define PHASE_GAME 1
+#define PHASE_GAMEOVER 2
+int gamePhase = PHASE_WAIT;   // Start: Warten
+
+EffectState starBurstState    = EffectState(0, 35 / globalEffectSpeed);
+EffectState starGameOverState = EffectState(0, 45 / globalEffectSpeed);
+
+void setPixelsEqually(int leds[], int listLength, int R, int G, int B, int priority, int duration)
+{
+  for (int number = 0; number < listLength; number++)
+  {
+
+    if (leds[number] >= NUMPIXELS)
+      continue; // looking if the number extents the amount of numbers
+    Led &led = allLights[leds[number]];
+    if (priority >= PRIORITY_COUNT)
+      continue; // looking if the priority is higher than the max. for the led
+    LightState &ls = led.prio[priority];
+
+    ls.r = R; // setting given rgb values for the given priority
+    ls.g = G;
+    ls.b = B;
+    ls.on = true;
+    ls.timeOfShutOff = millis() + duration;
   }
-  else{
-    if(slingshotHit){ //---------------------------Slingshot-Hit--------------------------------------
-        multipleSwoopsEffect(1,130,20,130,8,8);
-       if (timeOfSlingshotHitExpire  >= millis()){
-          slingshotHit = false;
-        }
-    }
+}
+
+void starEffect(int leds[], int listLength, int priority,
+                uint8_t r, uint8_t g, uint8_t b, uint8_t whiteChance,
+                int spawnPerTick, uint8_t fadeAmount,
+                EffectState &state, uint8_t bright[], bool whiteBuf[]) {
+  if (millis() - state.lastProgressTimeStamp < state.timeBetweenProgress) return;
+  if (priority >= PRIORITY_COUNT) return;
+  long cooldown = state.timeBetweenProgress;
+
+  for (int i = 0; i < listLength; i++) {                 // 1) ausfaden
+    int idx = leds[i];
+    if (idx < 0 || idx >= NUMPIXELS) continue;
+    if (bright[idx] > fadeAmount) bright[idx] -= fadeAmount; else bright[idx] = 0;
+  }
+  for (int s = 0; s < spawnPerTick; s++) {                // 2) neue Sterne
+    int pick = leds[random(listLength)];
+    if (pick < 0 || pick >= NUMPIXELS) continue;
+    bright[pick] = 255;
+    whiteBuf[pick] = (random(100) < whiteChance);
+  }
+  for (int i = 0; i < listLength; i++) {                  // 3) nur leuchtende schreiben
+    int idx = leds[i];
+    if (idx < 0 || idx >= NUMPIXELS) continue;
+    uint8_t br = bright[idx];
+    if (br == 0) continue;
+    LightState &ls = allLights[idx].prio[priority];
+    if (whiteBuf[idx]) { ls.r = br; ls.g = br; ls.b = br; }
     else {
-      //--------------------------------Ball im Spiel, keine Slingshots getroffen--------------------------------------
-      rgb lol = randomRedColor();
-      multipleSwoopsEffect(1,lol.r,lol.g,lol.b,3,5);
-      randomYellowAmbient(beachLightInts,40,2);
+      ls.r = (uint16_t)r * br / 255;
+      ls.g = (uint16_t)g * br / 255;
+      ls.b = (uint16_t)b * br / 255;
     }
+    ls.on = true;
+    ls.timeOfShutOff = millis() + cooldown + 40;
   }
-  if (millis() < timeToShutOffPulseEffect)
-  { // so kann ein vollständiger pulse-effekt durchlaufen werden, mithilfe eines passenden timestamps und der activepulsecolor
-    pulse(allLightInts, NUMPIXELS, 2, activePulseColor.r, activePulseColor.g, activePulseColor.b);
+  state.lastProgressTimeStamp = millis();
+}
+
+void doStarBurst(uint8_t r, uint8_t g, uint8_t b, uint8_t whiteChance) {
+  timeToShutOffStarBurst = millis() + 600;   // ~0.6 s
+  activeStarColor = rgb(r, g, b);
+  activeStarWhiteChance = whiteChance;
+}
+
+//———————————————————————————————————————————————————————LOOP—————————
+void loop() {
+  switch (gamePhase) {
+    case PHASE_WAIT:                                     // eff:7 — wie bisher
+      randomTransition(allLightInts, NUMPIXELS, 0, "specialblue");
+      { rgb lol = randomRedColor();
+        multipleSwoopsEffect(1, lol.r, lol.g, lol.b, 3, 5); }
+      randomYellowAmbient(beachLightInts, 40, 2);
+      break;
+
+    case PHASE_GAME:                                     // eff:4 — alte ballIsOut-Animation
+      randomTransition(allLightInts, NUMPIXELS, 0, "specialblue");
+      loadingEffect(ballOutLoadingInts, 80, 1, 255, 0, 255);
+      swoopBallEffect(ballSwoopInts, 40, 1, 255, 255, 0, true);
+      break;
+
+    case PHASE_GAMEOVER:                                 // eff:5 — roter Sternenhimmel
+      setPixelsEqually(allLightInts, NUMPIXELS, 45, 0, 0, 0, 120);
+      starEffect(allLightInts, NUMPIXELS, 1, 255, 40, 40, 45,
+                 3, 25, starGameOverState, starGOBright, starGOWhite);
+      break;
+  }
+
+  // kurzer Treffer-Burst über allem (prio 2)
+  if (millis() < timeToShutOffStarBurst) {
+    starEffect(allLightInts, NUMPIXELS, 2,
+               activeStarColor.r, activeStarColor.g, activeStarColor.b,
+               activeStarWhiteChance, 6, 18,
+               starBurstState, starBurstBright, starBurstWhite);
   }
 
   // ————————————————LIGHTMANAGER———————————————
@@ -242,26 +319,6 @@ void loop() {
     Serial.println(String("Triggered Test Button ") + String(" [") + totalTriggerAmountInRuntime + String("]"));
     rgb colorforpulse = pulseColor[random(5)];
     doOnePulse(colorforpulse.r,colorforpulse.g,colorforpulse.b);
-  }
-}
-
-void setPixelsEqually(int leds[], int listLength, int R, int G, int B, int priority, int duration)
-{
-  for (int number = 0; number < listLength; number++)
-  {
-
-    if (leds[number] >= NUMPIXELS)
-      continue; // looking if the number extents the amount of numbers
-    Led &led = allLights[leds[number]];
-    if (priority >= PRIORITY_COUNT)
-      continue; // looking if the priority is higher than the max. for the led
-    LightState &ls = led.prio[priority];
-
-    ls.r = R; // setting given rgb values for the given priority
-    ls.g = G;
-    ls.b = B;
-    ls.on = true;
-    ls.timeOfShutOff = millis() + duration;
   }
 }
 
@@ -550,14 +607,6 @@ void doOnePulse(uint8_t r, uint8_t g, uint8_t b)
   activePulseColor.b = b;
 }
 
-void doOneSplitLoad(uint8_t r, uint8_t g, uint8_t b)
-{
-  timeToShutOffLoadSplitEffect = millis() + loadingSplitEffectState.timeBetweenProgress * NUMPIXELS;
-  activeLoadSplitColor.r = r;
-  activeLoadSplitColor.g = g;
-  activeLoadSplitColor.b = b;
-}
-
 void pulse(int leds[], int listLength, int priority, uint8_t r, uint8_t g, uint8_t b)
 {
   long lastTime = pulseEffectState.lastProgressTimeStamp;
@@ -830,34 +879,6 @@ void requestEvent()
   // Serial.println("Master polling received - Slave is reachable!");<f
 }
 
-void handleBallIn()
-{
-  ballIsOut = false;
-}
-
-void handleBallOut()
-{
-  ballIsOut = true;
-}
-
-void handleSlaveTwoHit()
-{
-  rgb colorforpulse = pulseColor[random(5)];
-    doOnePulse(colorforpulse.r,colorforpulse.g,colorforpulse.b);
-}
-
-void handleSlaveThreeHit()
-{
-  rgb colorforpulse = pulseColor[random(5)];
-    doOnePulse(colorforpulse.r,colorforpulse.g,colorforpulse.b);
-}
-
-void handleSlaveFourHit()
-{
-  rgb colorforpulse = pulseColor[random(5)];
-    doOnePulse(colorforpulse.r,colorforpulse.g,colorforpulse.b);
-}
-
 void handleSpeedChange(float speed)
 {
   // bei allen effectstates den cooldown mit dem alten speed multiplizieren und durch den neuen teilen
@@ -881,6 +902,9 @@ void handleSpeedChange(float speed)
   
       yellowAmbientEffectState.timeBetweenProgress = yellowAmbientEffectState.
       timeBetweenProgress * globalEffectSpeed / speed;
+
+      starBurstState.timeBetweenProgress    = starBurstState.timeBetweenProgress * globalEffectSpeed / speed;
+      starGameOverState.timeBetweenProgress = starGameOverState.timeBetweenProgress * globalEffectSpeed / speed;
   
       loadingEffectState.timeBetweenProgress = loadingEffectState.timeBetweenProgress * globalEffectSpeed / speed;
       loadingSplitEffectState.timeBetweenProgress = loadingSplitEffectState.timeBetweenProgress * globalEffectSpeed / speed;
@@ -906,36 +930,12 @@ void processI2CData(String key, String value) {
 
   } else if (key == "eff") {
     switch (dataValueI) {
-      case 1: {// Bumper/Tower Hit
-        rgb colorforpulse = pulseColor[random(5)];
-        doOnePulse(colorforpulse.r,colorforpulse.g,colorforpulse.b);
-        break;
-      }
-      case 2: {// Slingshot Hit
-        doOnePulse(255, 165, 0);
-        slingshotHit = true;
-        timeOfSlingshotHitExpire = millis() + 4000;
-        break;
-      }
-      case 3: {// Taster Hit
-        doOnePulse(168, 0, 219);
-        break;
-      }
-      case 4: {// In Game
-        doOnePulse(130,230,50);
-        ballIsOut = false;
-        break;
-      }
-      case 5: {// Verloren
-        ballIsOut = true;
-        doOneSplitLoad(200, 120, 0);
-        break;
-      }
-      //case 6 nicht vorhanden
-      case 7: {// Warten
-        ballIsOut = false;
-        break;
-      }
+      case 1: doStarBurst(255, 220, 120, 55); break;  // Bumper/Tower -> weiß-gold
+      case 2: doStarBurst(255, 140, 0,   35); break;  // Slingshot    -> orange
+      case 3: doStarBurst(180, 0,   255, 35); break;  // Taster       -> lila
+      case 4: gamePhase = PHASE_GAME;         break;  // In Game
+      case 5: gamePhase = PHASE_GAMEOVER;     break;  // Verloren
+      case 7: gamePhase = PHASE_WAIT;         break;  // Warten
       default: break;
     }
   }
