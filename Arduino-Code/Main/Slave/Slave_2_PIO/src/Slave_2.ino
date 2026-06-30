@@ -1,79 +1,81 @@
-#include <Wire.h>
 #include <Arduino.h>
+#include <Wire.h>
 
-int scoring = 2;     // Taster Pin
-int scoredTimes = 0; // Auswertung
+// ───────────────────── Pins / Konstanten ─────────────────────
+const int scoring = 2;                   // Taster (LOW-aktiv, INPUT_PULLUP)
+const unsigned long CONFIRM_MS  = 5;     // Pegel muss CONFIRM_MS am Stueck LOW sein
+const unsigned long DEBOUNCE_MS = 200;   // Mindestabstand zwischen Treffern
 
-unsigned long TasterZeit = 0; // Zeit beim drücken ders Tasters
-int TasterGedrueckt = 0;      // If-Clause Bestätigung
-
-int entprellZeit = 200; // 200 ms
-
-char command[20]; // für empfangene Kommandos
+// ───────────────────── Globale Variablen ─────────────────────
+volatile int  scoredTimes = 0;           // bestaetigte Treffer (im I2C-ISR gelesen)
+bool          pressed     = false;       // aktueller bestaetigter Zustand
+unsigned long lowSince    = 0;           // seit wann ist der Pin LOW
+unsigned long lastHitTime = 0;           // letzter gezaehlter Treffer
 
 char message[50];
-//____________________________void Setup___________________________
-void setup()
-{
-  Wire.begin(2);
-  Wire.onRequest(requestEvent); // Master fragt Daten an
-  Wire.onReceive(recieveEvent); // Master sendet Daten
+char command[20];
 
-  Serial.begin(9600);
+// ───────────────────── Setup ─────────────────────
+void setup() {
+    Serial.begin(9600);
 
-  pinMode(scoring, INPUT_PULLUP);
+    Wire.begin(2);                 // I2C Slave Adresse 2
+    Wire.onRequest(requestEvent);
+    Wire.onReceive(receiveEvent);
+
+    pinMode(scoring, INPUT_PULLUP);
 }
 
-//___________________________void Loop______________________________
-void loop()
-{
+// ───────────────────── Loop: Pegel pollen ─────────────────────
+void loop() {
 
-  unsigned long now = millis();
+    bool isLow = (digitalRead(scoring) == LOW);
 
-  if (digitalRead(scoring) == LOW && !TasterGedrueckt)
-  {
-    TasterGedrueckt = 1;
-    TasterZeit = now;
-  }
-
-  if (TasterGedrueckt && now - TasterZeit > entprellZeit)
-  {
-    scoredTimes++;
-    TasterGedrueckt = 0;
-
-    while (digitalRead(scoring) == LOW)
-    {
-      TasterGedrueckt = 0; // zurücksetzen
-      scoredTimes = scoredTimes + 1;
+    Serial.println(isLow);
+    if (isLow) {
+        if (lowSince == 0) {
+            lowSince = millis();           // gerade LOW geworden -> Zeit merken
+        }
+        // Pin lange genug LOW + noch nicht als Treffer gewertet + entprellt?
+        if (!pressed &&
+            (millis() - lowSince > CONFIRM_MS) &&
+            (millis() - lastHitTime > DEBOUNCE_MS)) {
+            scoredTimes++;
+            lastHitTime = millis();
+            pressed = true;                // erst wieder zaehlen nach Loslassen
+        }
+    } else {
+        lowSince = 0;                      // HIGH -> zuruecksetzen (war Glitch oder losgelassen)
+        pressed  = false;
     }
-  }
 }
 
-void handleReset()
-{
-  scoredTimes = 0;
-}
-//___________________________void requestEvent_______________________
-void requestEvent()
-{
-  sprintf(message, "ssh:%d|", scoredTimes);
-  Wire.write(message);
-  scoredTimes = 0;
+// ───────────────────── Hilfsfunktionen ─────────────────────
+void handleReset() {
+    pressed     = false;
+    lowSince    = 0;
+    lastHitTime = 0;
+    scoredTimes = 0;
 }
 
-void recieveEvent(int numBytes)
-{
-  int i = 0;
+// ───────────────────── I2C Callbacks ─────────────────────
+void requestEvent() {
+    int toSend;
+    toSend      = scoredTimes;
+    scoredTimes = 0;
 
-  while (Wire.available() && i < sizeof(command) - 1)
-  {
-    command[i++] = Wire.read();
-  }
+    snprintf(message, sizeof(message), "ssh:%d|", toSend);
+    Wire.write(message);
+}
 
-  command[i] = '\0';
+void receiveEvent(int howMany) {
+    int i = 0;
+    while (Wire.available() && i < (int)sizeof(command) - 1) {
+        command[i++] = Wire.read();
+    }
+    command[i] = '\0';
 
-  if (strcmp(command, "resetGame") == 0)
-  {
-    handleReset();
-  }
+    if (strcmp(command, "resetGame") == 0) {
+        handleReset();
+    }
 }

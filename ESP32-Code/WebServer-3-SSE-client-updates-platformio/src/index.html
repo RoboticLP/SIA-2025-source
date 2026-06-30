@@ -312,10 +312,10 @@
     <div class="section-container">
       <div class="section-title">Module status</div>
       <div class="controls-grid">
-        <label id="module2-status" class="input-label">Module 2: </label>
-        <label id="module3-status" class="input-label">Module 3: </label>
-        <label id="module4-status" class="input-label">Module 4: </label>
-        <label id="module5-status" class="input-label">Module 5: </label>
+        <label id="module2-status" class="input-label">Slingshots (Module 2): </label>
+        <label id="module3-status" class="input-label">Bumper Tower (Module 3): </label>
+        <label id="module4-status" class="input-label">Targets (Module 4): </label>
+        <label id="module5-status" class="input-label">Lichter: </label>
       </div>
     </div>
     
@@ -360,7 +360,7 @@
             min="1" 
             max="50000" 
             step="10" 
-            value="25"
+            value="60"
             placeholder="1">
         </div>
         <div class="input-container">
@@ -609,9 +609,9 @@
           message_data = xml_tag_data[0].firstChild.nodeValue;
           const status_container = document.getElementById("module2-status");
           if (message_data == 0) {
-            status_container.innerHTML = "Module 2: ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
+            status_container.innerHTML = "Slingshots (Module 2): ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
           } else {
-            status_container.innerHTML = "Module 2: ✅"; // enable toggle
+            status_container.innerHTML = "Slingshots (Module 2): ✅"; // enable toggle
           }
         }
         xml_tag_data = xmlData.getElementsByTagName("M3S");
@@ -619,9 +619,9 @@
           message_data = xml_tag_data[0].firstChild.nodeValue;
           const status_container = document.getElementById("module3-status");
           if (message_data == 0) {
-            status_container.innerHTML = "Module 3: ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
+            status_container.innerHTML = "Bumper Tower (Module 3): ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
           } else {
-            status_container.innerHTML = "Module 3: ✅"; // enable toggle
+            status_container.innerHTML = "Bumper Tower (Module 3): ✅"; // enable toggle
           }
         }
         xml_tag_data = xmlData.getElementsByTagName("M4S");
@@ -629,9 +629,9 @@
           message_data = xml_tag_data[0].firstChild.nodeValue;
           const status_container = document.getElementById("module4-status");
           if (message_data == 0) {
-            status_container.innerHTML = "Module 4: ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
+            status_container.innerHTML = "Targets (Module 4): ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
           } else {
-            status_container.innerHTML = "Module 4: ✅"; // enable toggle
+            status_container.innerHTML = "Targets (Module 4): ✅"; // enable toggle
           }
         }
         xml_tag_data = xmlData.getElementsByTagName("M5S");
@@ -639,9 +639,9 @@
           message_data = xml_tag_data[0].firstChild.nodeValue;
           const status_container = document.getElementById("module5-status");
           if (message_data == 0) {
-            status_container.innerHTML = "Module 5: ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
+            status_container.innerHTML = "Lichter: ❌"; // disable toggle (class kann nur 1x pro element eingetragen sein -> mehrfaches ausführen fügt max 1 hinzu)
           } else {
-            status_container.innerHTML = "Module 5: ✅"; // enable toggle
+            status_container.innerHTML = "Lichter: ✅"; // enable toggle
           }
         }
 

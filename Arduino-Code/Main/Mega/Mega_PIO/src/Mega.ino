@@ -19,7 +19,7 @@ bool dfplayerInitialized = false;
 #define slave2      2
 #define slave3      3
 #define slave4      4
-#define slave5      5
+#define light      5
 #define adminpanel  6
 
 // ───────────────────── Globale Variablen ─────────────────────
@@ -32,13 +32,13 @@ int outputFinger = A5; // Pin um Finger zu aktivieren oder deaktivieren
 int ballInStart = A13; // Ball instartvorrichtung lassen
 
 int moduleCount = 4;
-int moduleSlaves[4] = { slave2, slave3, slave4, slave5 };
+int moduleSlaves[4] = { slave2, slave3, slave4, light };
 
 long points = 0;
 float multiplier = 1.00;
 int pointsTargets = 20;
 int pointsBumper = 50;
-int pointsSlingsshots = 50;
+int pointsSlingsshots = 60;
 
 float lightSpeed = 1.0;
 int lightState = 1;
@@ -232,23 +232,26 @@ void processESPData(String key, String value) {
         lightState= dataValueI;
     }else if(key == "vol"){
         volume = dataValueI;
+        myDFPlayer.volume(volume);
     }else{
         sendErrorToESP(411);
     }
 }
 
 void sendLEDUpdates() {
-    if (!isSlaveAlive(slave5)) return;
+    if (!isSlaveAlive(light)) return;
     String statusMessage = "lsp:" + String(lightSpeed) + "|len:" + String(lightState) + "|";
-    Wire.beginTransmission(slave5);
+    Wire.beginTransmission(light);
     Wire.write(statusMessage.c_str());
     Wire.endTransmission();
 }
 
 void sendLEDEffect(int effectCode) {
-    if (!isSlaveAlive(slave5)) return;
+    Serial.println("Sending LED Effect: "+String(effectCode));
+    if (!isSlaveAlive(light)) return;
+    Serial.println("Sending LED Effect: "+String(effectCode));
     String statusMessage = "eff:" + String(effectCode)+"|";
-    Wire.beginTransmission(slave5);
+    Wire.beginTransmission(light);
     Wire.write(statusMessage.c_str());
     Wire.endTransmission();
 }
@@ -325,15 +328,18 @@ void processSlaveData(String key, String value, int module) {
 
     if(key == "bth"){ 
         addPoints("Bumper Hits",   pointsBumper);
-        sendLEDEffect(1);
+        if(dataValue > 0)
+            sendLEDEffect(1);
     }
     else if(key == "ssh"){
         addPoints("Slingshot Hits", pointsSlingsshots);
-        sendLEDEffect(2);
+        if(dataValue > 0)
+            sendLEDEffect(2);
     } 
     else if(key == "tah"){
          addPoints("Target Hits", pointsTargets);
-         sendLEDEffect(3);
+         if(dataValue > 0)
+            sendLEDEffect(3);
     }
     else if (key == "err") {
         sendErrorToESP(dataValue);

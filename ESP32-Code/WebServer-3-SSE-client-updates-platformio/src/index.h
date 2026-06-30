@@ -57,7 +57,7 @@ const char* webpage_main = R"=====(
 
     <div class="section-container">
       <div class="log-header">
-        <div class="section-title">Flipper Adminpanel v.69</div>
+        <div class="section-title">Flipper Adminpanel</div>
         <button class="btn btn-secondary btn-small" onclick="window.location.reload();">Reload window</button>
       </div>
       <label id="last-update-status" class="input-label">xX Update Text here Xx</label>
@@ -66,10 +66,10 @@ const char* webpage_main = R"=====(
     <div class="section-container">
       <div class="section-title">Module status</div>
       <div class="controls-grid">
-        <label id="module2-status" class="input-label">Module 2: </label>
-        <label id="module3-status" class="input-label">Module 3: </label>
-        <label id="module4-status" class="input-label">Module 4: </label>
-        <label id="module5-status" class="input-label">Module 5: </label>
+        <label id="module2-status" class="input-label">Slingshots (Module 2): </label>
+        <label id="module3-status" class="input-label">Bumper Tower (Module 3): </label>
+        <label id="module4-status" class="input-label">Targets (Module 4): </label>
+        <label id="module5-status" class="input-label">Lichter: </label>
       </div>
     </div>
     
@@ -88,7 +88,7 @@ const char* webpage_main = R"=====(
         </div>
         <div class="input-container">
           <label class="input-label">Point amount slingshot</label>
-          <input type="number" id="point-amount-slingshot" class="number-input" min="1" max="50000" step="10" value="25" placeholder="1">
+          <input type="number" id="point-amount-slingshot" class="number-input" min="1" max="50000" step="10" value="60" placeholder="1">
         </div>
         <div class="input-container">
           <label class="input-label">Point amount targets</label>
@@ -268,12 +268,19 @@ const char* webpage_main = R"=====(
         xml_tag_data = xmlData.getElementsByTagName("lastUpdateRecieved");
         if (xml_tag_data && xml_tag_data.length > 0) lastUpdate = Date.now();
 
+        var moduleNames = {
+          2: "Slingshots (Module 2)",
+          3: "Bumper Tower (Module 3)",
+          4: "Targets (Module 4)",
+          5: "Lichter (Module 5)"
+        };
+
         [2, 3, 4, 5].forEach(function(n) {
           xml_tag_data = xmlData.getElementsByTagName("M" + n + "S");
           if (xml_tag_data && xml_tag_data.length > 0) {
             message_data = xml_tag_data[0].firstChild.nodeValue;
             document.getElementById("module" + n + "-status").innerHTML =
-              "Module " + n + ": " + (message_data == 0 ? "❌" : "✅");
+              moduleNames[n] + ": " + (message_data == 0 ? "❌" : "✅");
           }
         });
 
