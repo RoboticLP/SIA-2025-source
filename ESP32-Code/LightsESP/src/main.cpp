@@ -172,6 +172,7 @@ bool buttonfast;
 long timeToShutOffStarBurst;
 rgb  activeStarColor(255, 255, 255);
 uint8_t activeStarWhiteChance = 50;
+long starBurstFlashUntil = 0;
 
 #define PHASE_WAIT 0
 #define PHASE_GAME 1
@@ -239,39 +240,50 @@ void starEffect(int leds[], int listLength, int priority,
 }
 
 void doStarBurst(uint8_t r, uint8_t g, uint8_t b, uint8_t whiteChance) {
-  timeToShutOffStarBurst = millis() + 600;   // ~0.6 s
+  timeToShutOffStarBurst = millis() + 600;
+  starBurstFlashUntil    = millis() + 70;                       // NEU
   activeStarColor = rgb(r, g, b);
   activeStarWhiteChance = whiteChance;
+  for (int i = 0; i < NUMPIXELS; i++) starBurstBright[i] = 0;   // NEU
 }
 
 //———————————————————————————————————————————————————————LOOP—————————
 void loop() {
-  switch (gamePhase) {
-    case PHASE_WAIT:                                     // eff:7 — wie bisher
-      randomTransition(allLightInts, NUMPIXELS, 0, "specialblue");
-      { rgb lol = randomRedColor();
-        multipleSwoopsEffect(1, lol.r, lol.g, lol.b, 3, 5); }
-      randomYellowAmbient(beachLightInts, 40, 2);
-      break;
+  bool burstActive = (millis() < timeToShutOffStarBurst);
 
-    case PHASE_GAME:                                     // eff:4 — alte ballIsOut-Animation
-      randomTransition(allLightInts, NUMPIXELS, 0, "specialblue");
-      loadingEffect(ballOutLoadingInts, 80, 1, 255, 0, 255);
-      swoopBallEffect(ballSwoopInts, 40, 1, 255, 255, 0, true);
-      break;
+  if (!burstActive) {
+    switch (gamePhase) {
+      case PHASE_WAIT:
+        randomTransition(allLightInts, NUMPIXELS, 0, "specialblue");
+        { rgb lol = randomRedColor();
+          multipleSwoopsEffect(1, lol.r, lol.g, lol.b, 3, 5); }
+        randomYellowAmbient(beachLightInts, 40, 2);
+        break;
 
-    case PHASE_GAMEOVER:                                 // eff:5 — roter Sternenhimmel
-      setPixelsEqually(allLightInts, NUMPIXELS, 45, 0, 0, 0, 120);
-      starEffect(allLightInts, NUMPIXELS, 1, 255, 40, 40, 45,
-                 3, 25, starGameOverState, starGOBright, starGOWhite);
-      break;
-  }
+      case PHASE_GAME:
+        randomTransition(allLightInts, NUMPIXELS, 0, "specialblue");
+        loadingEffect(ballOutLoadingInts, 80, 1, 255, 0, 255);
+        swoopBallEffect(ballSwoopInts, 40, 1, 255, 255, 0, true);
+        break;
 
-  // kurzer Treffer-Burst über allem (prio 2)
-  if (millis() < timeToShutOffStarBurst) {
+      case PHASE_GAMEOVER:
+        setPixelsEqually(allLightInts, NUMPIXELS, 45, 0, 0, 0, 120);
+        starEffect(allLightInts, NUMPIXELS, 1, 255, 40, 40, 45,
+                   4, 18, starGameOverState, starGOBright, starGOWhite);
+        break;
+    }
+  } else {
+    // Treffer-Burst: NUR Sterne sichtbar -> untere Prioritaeten ausblenden
+    for (int i = 0; i < NUMPIXELS; i++) {
+      allLights[i].prio[0].on = false;
+      allLights[i].prio[1].on = false;
+    }
+    if (millis() < starBurstFlashUntil)
+      setPixelsEqually(allLightInts, NUMPIXELS,
+                       activeStarColor.r, activeStarColor.g, activeStarColor.b, 2, 60);
     starEffect(allLightInts, NUMPIXELS, 2,
                activeStarColor.r, activeStarColor.g, activeStarColor.b,
-               activeStarWhiteChance, 6, 18,
+               activeStarWhiteChance, 9, 16,
                starBurstState, starBurstBright, starBurstWhite);
   }
 
