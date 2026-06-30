@@ -827,7 +827,7 @@ void requestEvent()
   // Der Master hat abgefragt, ob wir noch aktiv sind
   // Antwort: 0xAA (170) = Status OK / Slave ist erreichbar
   Wire.write(0xAA);
-  Serial.println("Master polling received - Slave is reachable!");
+  // Serial.println("Master polling received - Slave is reachable!");<f
 }
 
 void handleBallIn()
@@ -863,29 +863,31 @@ void handleSpeedChange(float speed)
   // bei allen effectstates den cooldown mit dem alten speed multiplizieren und durch den neuen teilen
   if (speed != 0)
   {
-    randomTransitionEffectState.timeBetweenProgress = randomTransitionEffectState
-    .timeBetweenProgress * globalEffectSpeed / speed;
-
-    swoopEffectState.timeBetweenProgress = swoopEffectState.
-    timeBetweenProgress * globalEffectSpeed / speed;
-
-    blueAmbientEffectState.timeBetweenProgress = blueAmbientEffectState.
-    timeBetweenProgress * globalEffectSpeed / speed;
-
-    multiSwoopEffectState.timeBetweenProgress = multiSwoopEffectState
-    .timeBetweenProgress * globalEffectSpeed / speed;
-
-    pulseEffectState.timeBetweenProgress = pulseEffectState.
-    timeBetweenProgress * globalEffectSpeed / speed;
-
-    yellowAmbientEffectState.timeBetweenProgress = yellowAmbientEffectState.
-    timeBetweenProgress * globalEffectSpeed / speed;
-
-    loadingEffectState.timeBetweenProgress = loadingEffectState.timeBetweenProgress * globalEffectSpeed / speed;
-    loadingSplitEffectState.timeBetweenProgress = loadingSplitEffectState.timeBetweenProgress * globalEffectSpeed / speed;
-
-    globalEffectSpeed = speed;
-    globalEffectSpeedIsZero = false;
+    if (speed != globalEffectSpeed) {
+      randomTransitionEffectState.timeBetweenProgress = randomTransitionEffectState
+      .timeBetweenProgress * globalEffectSpeed / speed;
+  
+      swoopEffectState.timeBetweenProgress = swoopEffectState.
+      timeBetweenProgress * globalEffectSpeed / speed;
+  
+      blueAmbientEffectState.timeBetweenProgress = blueAmbientEffectState.
+      timeBetweenProgress * globalEffectSpeed / speed;
+  
+      multiSwoopEffectState.timeBetweenProgress = multiSwoopEffectState
+      .timeBetweenProgress * globalEffectSpeed / speed;
+  
+      pulseEffectState.timeBetweenProgress = pulseEffectState.
+      timeBetweenProgress * globalEffectSpeed / speed;
+  
+      yellowAmbientEffectState.timeBetweenProgress = yellowAmbientEffectState.
+      timeBetweenProgress * globalEffectSpeed / speed;
+  
+      loadingEffectState.timeBetweenProgress = loadingEffectState.timeBetweenProgress * globalEffectSpeed / speed;
+      loadingSplitEffectState.timeBetweenProgress = loadingSplitEffectState.timeBetweenProgress * globalEffectSpeed / speed;
+  
+      globalEffectSpeed = speed;
+      globalEffectSpeedIsZero = false;
+    }
   }
   else globalEffectSpeedIsZero = true;
 }

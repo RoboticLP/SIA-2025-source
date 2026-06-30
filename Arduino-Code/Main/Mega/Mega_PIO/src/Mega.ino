@@ -97,7 +97,7 @@ void setup() {
     lcd.print("Flipper System");
     lcd.setCursor(0, 1);
     lcd.print("Booting...");
-    sendLEDEffect(7);
+    // sendLEDEffect(7); buggy?
     delay(1500);
     lcd.clear();
     if(dfplayerInitialized) {
@@ -391,7 +391,7 @@ bool resetGame(void *) {
     ballInGame = 0;
     gameState = WAIT_FOR_BALL;
     lastGameState = RESET;
-    sendLEDEffect(7);
+    // sendLEDEffect(7); buggy?
     handleLCDDisplay();
     for(int i = 0; i < moduleCount; i++) {
         int addr = moduleSlaves[i];
