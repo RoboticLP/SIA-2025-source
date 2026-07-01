@@ -293,12 +293,20 @@ void loop() {
 
   if (!burstActive) {
     switch (gamePhase) {
-      case PHASE_WAIT:
+      case PHASE_WAIT: {
         randomTransition(allLightInts, NUMPIXELS, 0, "specialblue");
-        { rgb lol = randomRedColor();
-          multipleSwoopsEffect(1, lol.r, lol.g, lol.b, 3, 5); }
+
+        static rgb waitColor = randomRedColor();
+        static unsigned long lastWaitColorChange = 0;
+        if (millis() - lastWaitColorChange > 4000) {   // alle 4 s neue Farbe
+          waitColor = randomRedColor();
+          lastWaitColorChange = millis();
+        }
+        multipleSwoopsEffect(1, waitColor.r, waitColor.g, waitColor.b, 3, 5);
+
         randomYellowAmbient(beachLightInts, 40, 2);
         break;
+      }
 
       case PHASE_GAME:
         randomTransition(allLightInts, NUMPIXELS, 0, "specialblue");
