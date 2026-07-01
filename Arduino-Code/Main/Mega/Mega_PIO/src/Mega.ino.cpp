@@ -1,3 +1,6 @@
+# 1 "C:\\Users\\fkirc\\AppData\\Local\\Temp\\tmpzh8s28e4"
+#include <Arduino.h>
+# 1 "C:/Users/fkirc/Documents/GitHub/SIA-2025-source/Arduino-Code/Main/Mega/Mega_PIO/src/Mega.ino"
 #include <Arduino.h>
 #include <Wire.h>
 #include <LiquidCrystal.h>
@@ -7,29 +10,29 @@
 #include "SoftwareSerial.h"
 #include "DFRobotDFPlayerMini.h"
 
-// ───────────────────── LCD Pins ─────────────────────
+
 LiquidCrystal lcd(A7, A8, A9, A10, A11, A12);
 
-// ───────────────────── DF PLayer Mini ─────────────────────
-SoftwareSerial mySoftwareSerial(10,11); // RX, TX
+
+SoftwareSerial mySoftwareSerial(10,11);
 DFRobotDFPlayerMini myDFPlayer;
 bool dfplayerInitialized = false;
 
-// ───────────────────── Adressen ─────────────────────
-#define slave2      2
-#define slave3      3
-#define slave4      4
-#define light      5
-#define adminpanel  6
 
-// ───────────────────── Globale Variablen ─────────────────────
+#define slave2 2
+#define slave3 3
+#define slave4 4
+#define light 5
+#define adminpanel 6
+
+
 auto timer = timer_create_default();
 int backlightPin = A6;
 
-int singalForBallStart = A3; // Knopf der gedrückt wird wenn ball in startvorrichtung ist
-int ballLostSensor = A4; // Pin für ball lost sensor (done)
-int outputFinger = A5; // Pin um Finger zu aktivieren oder deaktivieren
-int ballInStart = A13; // Ball instartvorrichtung lassen
+int singalForBallStart = A3;
+int ballLostSensor = A4;
+int outputFinger = A5;
+int ballInStart = A13;
 
 int moduleCount = 4;
 int moduleSlaves[4] = { slave2, slave3, slave4, light };
@@ -47,26 +50,26 @@ int volume = 15;
 
 int ballInGame = 0;
 
-// new: counters for rotating start song
-int ballEntryCounter = 0; // increments every time a ball enters the game
-int songStartOffset = 0;  // advances every BALLS_PER_SONG_INCREMENT entries
-const int BALLS_PER_SONG_INCREMENT = 3; // change every 5th ball entry
-const int SONGS_IN_FOLDER = 2; // number of songs in folder 2; adjust if different#
+
+int ballEntryCounter = 0;
+int songStartOffset = 0;
+const int BALLS_PER_SONG_INCREMENT = 3;
+const int SONGS_IN_FOLDER = 2;
 bool pointsOver1000 = false;
 
-GameState gameState     = WAIT_FOR_BALL;
+GameState gameState = WAIT_FOR_BALL;
 GameState lastGameState = RESET;
 
-// ───────────────────── Timer-Handles ─────────────────────
+
 Timer<>::Task gameOverTask;
 Timer<>::Task resetTask;
 
-// ───────────────────── LED Effect 4 Auto-Off ─────────────────────
+
 unsigned long ledEffect4StartTime = 0;
 bool ledEffect4Active = false;
-const unsigned long LED_EFFECT_4_DURATION = 5000; // 5 Sekunden
+const unsigned long LED_EFFECT_4_DURATION = 5000;
 
-// ───────────────────── Forward Declarations ─────────────────────
+
 void handleLCDDisplay();
 void checkGameState();
 void startGameOver();
@@ -76,24 +79,39 @@ void sendStatusToAdminPanel();
 void reciveMessagesFromAdminPanel();
 void sendErrorToESP(int);
 void checkLEDEffect4Timeout();
-
-// ───────────────────── Backlight ─────────────────────
+void setBacklightPercent(int percent);
+void setup();
+void loop();
+void setDebugMode(bool enable);
+bool isSlaveAlive(uint8_t address);
+void processESPData(String key, String value);
+void sendLEDUpdates();
+void sendLEDEffect(int effectCode);
+void sendErrorToESP(int errorCode);
+void processSlaveData(String key, String value, int module);
+void displayLCDDisplay(String line1, String line2);
+void checkFingers();
+bool resetGame(void *);
+void checkBallLost();
+void sendFingerUpdate();
+void checkBallInStart();
+#line 81 "C:/Users/fkirc/Documents/GitHub/SIA-2025-source/Arduino-Code/Main/Mega/Mega_PIO/src/Mega.ino"
 void setBacklightPercent(int percent) {
     percent = constrain(percent, 0, 100);
     int pwm = map(percent, 0, 100, 10, 255);
     analogWrite(backlightPin, pwm);
 }
 
-// ───────────────────── Setup / Loop ─────────────────────
-void setup() {
-    pinMode(backlightPin, OUTPUT); // Hintergrund ist Pin 6
-    pinMode(ballLostSensor, INPUT_PULLUP); // Ball Lost Sensor ist Pin 4
-    pinMode(outputFinger, OUTPUT); // Output für Finger ist Pin 5
-    pinMode(singalForBallStart, INPUT_PULLUP); // Knopf für Ball Start ist Pin 3
-    pinMode(ballInStart, OUTPUT); // Ball in Startvorrichtung lassen ist Pin 13
 
-    //setBacklightPercent(30);
-    
+void setup() {
+    pinMode(backlightPin, OUTPUT);
+    pinMode(ballLostSensor, INPUT_PULLUP);
+    pinMode(outputFinger, OUTPUT);
+    pinMode(singalForBallStart, INPUT_PULLUP);
+    pinMode(ballInStart, OUTPUT);
+
+
+
 
     Wire.begin();
     Serial.begin(9600);
@@ -105,7 +123,7 @@ void setup() {
     Serial.println("Flipper System Starting...");
 
     lcd.begin(16, 2);
-    analogWrite(backlightPin, 50); // ich werde jeden von euch finden der es wagt, nur zu denken diese Zeile zu verändern
+    analogWrite(backlightPin, 50);
     lcd.clear();
     lcd.print("Flipper System");
     lcd.setCursor(0, 1);
@@ -116,7 +134,7 @@ void setup() {
         myDFPlayer.loopFolder(1);
     }
     myDFPlayer.volume(volume);
-    
+
 
     setDebugMode(false);
     sendLEDEffect(7);
@@ -130,14 +148,14 @@ void loop() {
     sendFingerUpdate();
     checkBallInStart();
     checkLEDEffect4Timeout();
-    
-    // Slave-Kommunikation nur alle 100 Milli Sekunden
+
+
     static unsigned long lastSlaveCheck = 0;
     if (millis() - lastSlaveCheck >= 800) {
         printConnectionFromSlaves();
         lastSlaveCheck = millis();
     }
-    // Data-Kommunikation nur alle 2 Sekunden
+
     static unsigned long lastDataCheck = 0;
     if (millis() - lastDataCheck >= 2000) {
         sendStatusToAdminPanel();
@@ -148,14 +166,14 @@ void loop() {
     }
 }
 
-// ───────────────────── Debug Modus ─────────────────────
+
 void setDebugMode(bool enable) {
     gameState = enable ? DEBUG : WAIT_FOR_BALL;
     lastGameState = gameState;
     handleLCDDisplay();
 }
 
-// ───────────────────── Game State Logik ─────────────────────
+
 void checkGameState() {
     if (gameState == DEBUG || gameState == RESET) return;
 
@@ -166,7 +184,7 @@ void checkGameState() {
     }
 }
 
-// ───────────────────── Game Over / Reset ─────────────────────
+
 void startGameOver() {
     if(dfplayerInitialized) {
         myDFPlayer.loopFolder(1);
@@ -185,7 +203,7 @@ bool finishGameOver(void *) {
     return false;
 }
 
-// ───────────────────── I2C ─────────────────────
+
 bool isSlaveAlive(uint8_t address) {
     Wire.beginTransmission(address);
     return (Wire.endTransmission() == 0);
@@ -204,7 +222,7 @@ void sendStatusToAdminPanel() {
     Wire.endTransmission();
 }
 
-void reciveMessagesFromAdminPanel() { // receiving alternating data strings
+void reciveMessagesFromAdminPanel() {
     if (!isSlaveAlive(adminpanel)) return;
     Wire.requestFrom(adminpanel, 100);
     String answer = "";
@@ -283,10 +301,10 @@ void sendErrorToESP(int errorCode) {
     Wire.endTransmission();
 }
 
-// ───────────────────── Slaves ─────────────────────
+
 long updateBeginTime;
 void printConnectionFromSlaves() {
-    String collectedSlaveData = ""; // for debugging purposes, not used in the current implementation
+    String collectedSlaveData = "";
     updateBeginTime = millis();
 
     for (int i = 0; i < moduleCount; i++) {
@@ -296,7 +314,7 @@ void printConnectionFromSlaves() {
             continue;
         }
 
-        // Daten von Slave anfordern
+
         Wire.requestFrom(addr, 50);
 
         String answer = "";
@@ -310,7 +328,7 @@ void printConnectionFromSlaves() {
             continue;
         }
 
-        // Antwort aufteilen und verarbeiten
+
         int dataCount;
         String* data = splitString(answer, '|', dataCount);
 
@@ -321,8 +339,8 @@ void printConnectionFromSlaves() {
             String* dataset = splitString(data[j], ':', count);
 
             if (count == 2) {
-                // Key-Value Pair verarbeiten (z.B. "ssh:5" oder "balllost:1")
-                // Serial.println(answer);
+
+
                 processSlaveData(dataset[0], dataset[1], addr);
             }
 
@@ -332,9 +350,9 @@ void printConnectionFromSlaves() {
     }
 
     Serial.println(collectedSlaveData);
-    //Serial.print("Verarbeitung dauerte: ");
-    //Serial.print((millis() - updateBeginTime) / 1000.0);
-    //Serial.println(" Sekunden");
+
+
+
 }
 
 void processSlaveData(String key, String value, int module) {
@@ -350,18 +368,18 @@ void processSlaveData(String key, String value, int module) {
         handleLCDDisplay();
     };
 
-    if(key == "bth"){ 
-        addPoints("Bumper Hits",   pointsBumper);
+    if(key == "bth"){
+        addPoints("Bumper Hits", pointsBumper);
         if(dataValue > 0 && gameState == IN_GAME){
             sendLEDEffect(1);
-            //myDFPlayer.advertise(1);
+
         }
     }
     else if(key == "ssh"){
         addPoints("Slingshot Hits", pointsSlingsshots);
         if(dataValue > 0 && gameState == IN_GAME)
             sendLEDEffect(2);
-    } 
+    }
     else if(key == "tah"){
          addPoints("Target Hits", pointsTargets);
          if(dataValue > 0 && gameState == IN_GAME)
@@ -375,7 +393,7 @@ void processSlaveData(String key, String value, int module) {
     }
 }
 
-// ───────────────────── LCD ─────────────────────
+
 void displayLCDDisplay(String line1, String line2) {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -432,7 +450,7 @@ bool resetGame(void *) {
 }
 
 
-//Point Methods
+
 void checkBallLost(){
     if(gameState == IN_GAME && digitalRead(ballLostSensor) == HIGH){
         ballInGame = 0;
@@ -459,21 +477,21 @@ void checkBallInStart(){
             ledEffect4StartTime = millis();
             ledEffect4Active = true;
 
-            // increment ball entry counter and advance song offset every X entries
+
             ballEntryCounter++;
             if (ballEntryCounter % BALLS_PER_SONG_INCREMENT == 0) {
                 songStartOffset = (songStartOffset + 1) % SONGS_IN_FOLDER;
             }
 
-            // determine song index (1-based) inside folder 2
+
             int songToPlay = (songStartOffset % SONGS_IN_FOLDER) + 1;
 
             if(dfplayerInitialized) {
-                // Play and loop the selected track from folder 2.
-                // DFRobotDFPlayerMini uses absolute track numbers for loop(), typically folder*100 + trackIndex
-                int absoluteTrack = 200 + songToPlay; // folder 2 -> 200 + track
-                myDFPlayer.playFolder(2, songToPlay); // start that song
-                myDFPlayer.loop(absoluteTrack); // loop that specific track
+
+
+                int absoluteTrack = 200 + songToPlay;
+                myDFPlayer.playFolder(2, songToPlay);
+                myDFPlayer.loop(absoluteTrack);
             }
         }
     }else{
@@ -481,7 +499,7 @@ void checkBallInStart(){
     }
 }
 
-// ───────────────────── LED Effect 4 Auto-Off ─────────────────────
+
 void checkLEDEffect4Timeout() {
     if (gameState == IN_GAME && ledEffect4Active && (millis() - ledEffect4StartTime >= LED_EFFECT_4_DURATION)) {
         sendLEDEffect(6);

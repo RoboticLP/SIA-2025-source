@@ -178,6 +178,13 @@ long starBurstFlashUntil = 0;
 #define PHASE_GAME 1
 #define PHASE_GAME_2 2
 #define PHASE_GAMEOVER 3
+#define PHASE_GOLD 4
+const unsigned long GOLD_DURATION = 9500;   // X Sekunden (hier 9.5 s)
+long timeToShutOffGold = 0;
+int  phaseBeforeGold = PHASE_WAIT;           // wohin danach zurück
+
+EffectState goldState = EffectState(0, 30 / globalEffectSpeed);
+uint16_t goldPhase = 0;
 int gamePhase = PHASE_WAIT;   // Start: Warten
 
 EffectState starBurstState    = EffectState(0, 35 / globalEffectSpeed);
@@ -196,6 +203,11 @@ rgb currentWaveColor() {
   return rgb(a.r + (b.r - a.r) * f, a.g + (b.g - a.g) * f, a.b + (b.b - a.b) * f);
 }
 
+void doGoldEffect() {
+  if (gamePhase != PHASE_GOLD) phaseBeforeGold = gamePhase;  // aktuelle Phase merken
+  timeToShutOffGold = millis() + GOLD_DURATION;
+  gamePhase = PHASE_GOLD;
+}
 
 void setPixelsEqually(int leds[], int listLength, int R, int G, int B, int priority, int duration)
 {
@@ -309,10 +321,21 @@ void loop() {
         break;
       }
 
+      case PHASE_GOLD: {
+        if (millis() > timeToShutOffGold) {
+          gamePhase = phaseBeforeGold;
+          break;
+        }
+        setPixelsEqually(allLightInts, NUMPIXELS, 45, 35, 0, 0, 120);
+        starEffect(allLightInts, NUMPIXELS, 1, 255, 220, 0, 45,
+                   4, 18, starGameOverState, starGOBright, starGOWhite);
+        break;
+      }
+
       case PHASE_GAME:
         randomTransition(allLightInts, NUMPIXELS, 0, "specialblue");
-        loadingEffect(ballOutLoadingInts, 80, 1, 255, 0, 255);
-        swoopBallEffect(ballSwoopInts, 40, 1, 255, 255, 0, true);
+        loadingEffect(ballOutLoadingInts, 80, 1, 255, 255, 67);
+        swoopBallEffect(ballSwoopInts, 40, 1, 100, 100, 0, true);
         break;
         
 
@@ -507,8 +530,8 @@ void loadingEffect(int leds[], int listLength, int priority, uint8_t r, uint8_t 
       LightState &ls = led.prio[priority];
 
       ls.r = r;
-      ls.g = g;
-      ls.b = b;
+      ls.g = b;
+      ls.b = g;
       ls.on = true;
       ls.timeOfShutOff = millis() + cooldown + 10;
     }
@@ -523,8 +546,8 @@ void loadingEffect(int leds[], int listLength, int priority, uint8_t r, uint8_t 
       LightState &ls = led.prio[priority];
 
       ls.r = r;
-      ls.g = g;
-      ls.b = b;
+      ls.g = b;
+      ls.b = g;
       ls.on = true;
       ls.timeOfShutOff = millis() + cooldown + 10;
     }
@@ -982,6 +1005,7 @@ void handleSpeedChange(float speed)
 
       rainbowFlowState.timeBetweenProgress = rainbowFlowState.timeBetweenProgress * globalEffectSpeed / speed;
   
+      goldState.timeBetweenProgress = goldState.timeBetweenProgress * globalEffectSpeed / speed;
       globalEffectSpeed = speed;
       globalEffectSpeedIsZero = false;
     }
@@ -1010,6 +1034,7 @@ void processI2CData(String key, String value) {
       case 5: gamePhase = PHASE_GAMEOVER;     break;  // Verloren
       case 6: gamePhase = PHASE_GAME_2; break; // Game phase 2
       case 7: gamePhase = PHASE_WAIT;         break;  // Warten
+      case 8: doGoldEffect(); break;  // Gold-Effekt für X Sekunden
       default: break;
     }
   }
