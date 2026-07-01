@@ -51,7 +51,7 @@ int ballInGame = 0;
 int ballEntryCounter = 0; // increments every time a ball enters the game
 int songStartOffset = 0;  // advances every BALLS_PER_SONG_INCREMENT entries
 const int BALLS_PER_SONG_INCREMENT = 5; // change every 5th ball entry
-const int SONGS_IN_FOLDER = 10; // number of songs in folder 2; adjust if different
+const int SONGS_IN_FOLDER = 2; // number of songs in folder 2; adjust if different
 
 GameState gameState     = WAIT_FOR_BALL;
 GameState lastGameState = RESET;
