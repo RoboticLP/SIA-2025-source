@@ -112,6 +112,7 @@ void setup() {
     lcd.setCursor(0, 1);
     lcd.print("Booting...");
     delay(500);
+    myDFPlayer.volume(volume);
     if (digitalRead(singalForBallStart) == LOW) { // enable troll mode logic
         lcd.clear();
         lcd.setCursor(0, 0);
@@ -119,25 +120,20 @@ void setup() {
         lcd.setCursor(0, 1);
         lcd.print("Activated ;)");
         sillyMode = true;
-        if(dfplayerInitialized) {
-            myDFPlayer.playFolder(3, 1); // start that song
-            delay(15000);
-        }
+        myDFPlayer.playFolder(3, 1); // start that song
+        delay(15000);
+        myDFPlayer.stop();
     }
     delay(500);
     lcd.clear();
-    if(dfplayerInitialized) {
-        if (sillyMode == false) {
-            myDFPlayer.playFolder(1, 1);
-            myDFPlayer.loop(101);
-        } else {
-            myDFPlayer.playFolder(1, 2);
-            myDFPlayer.loop(102);
-        }
+    if (sillyMode == false) {
+        myDFPlayer.playFolder(1, 1);
+        myDFPlayer.loop(101);
+    } else {
+        myDFPlayer.playFolder(1, 2);
+        myDFPlayer.loop(102);
     }
-    myDFPlayer.volume(volume);
     
-
     setDebugMode(false);
     sendLEDEffect(7);
 }
@@ -151,7 +147,7 @@ void loop() {
     checkBallInStart();
     checkLEDEffect4Timeout();
     
-    // Slave-Kommunikation nur alle 100 Milli Sekunden
+    // Slave-Kommunikation nur alle 800 Milli Sekunden
     static unsigned long lastSlaveCheck = 0;
     if (millis() - lastSlaveCheck >= 800) {
         printConnectionFromSlaves();
@@ -188,10 +184,10 @@ void checkGameState() {
 
 // ───────────────────── Game Over / Reset ─────────────────────
 void startGameOver() {
-    if(dfplayerInitialized) {
-        if (sillyMode == true) {
-            myDFPlayer.playFolder(3, 3); // faaaahhh;
-        }
+    if (sillyMode == true) {
+        myDFPlayer.playFolder(3, 3); // faaaahhh;
+    }else{
+        myDFPlayer.playFolder(1 , 3); // game over sound
     }
     sendLEDEffect(5);
     lastGameState = IN_GAME;
@@ -201,14 +197,12 @@ void startGameOver() {
 }
 
 bool finishGameOver(void *) {
-    if(dfplayerInitialized) {
-        if (sillyMode == false) {
-            myDFPlayer.playFolder(1, 1);
-            myDFPlayer.loop(101);
-        } else {
-            myDFPlayer.playFolder(1, 2);
-            myDFPlayer.loop(102);
-        }
+    if (sillyMode == false) {
+        myDFPlayer.playFolder(1, 1);
+        myDFPlayer.loop(101);
+    } else {
+        myDFPlayer.playFolder(1, 2);
+        myDFPlayer.loop(102);
     }
     gameState = RESET;
     handleLCDDisplay();
@@ -505,8 +499,7 @@ void checkBallInStart(){
             // determine song index (1-based) inside folder 2
             int songToPlay = (songStartOffset % SONGS_IN_FOLDER) + 1;
 
-            if(dfplayerInitialized) {
-                if (sillyMode == false) {
+            if (sillyMode == false) {
                     // Play and loop the selected track from folder 2.
                     // DFRobotDFPlayerMini uses absolute track numbers for loop(), typically folder*100 + trackIndex
                     int absoluteTrack = 200 + songToPlay; // folder 2 -> 200 + track
@@ -516,7 +509,6 @@ void checkBallInStart(){
                     myDFPlayer.playFolder(3, 2); // play the silly song if silly mode is active
                     myDFPlayer.loop(302); // loop the silly song
                 }
-            }
         }
     }else{
         digitalWrite(ballInStart, LOW);
