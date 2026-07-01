@@ -434,7 +434,7 @@ bool resetGame(void *) {
 
 //Point Methods
 void checkBallLost(){
-    if(gameState == IN_GAME && digitalRead(ballLostSensor) == HIGH){
+    if(gameState == IN_GAME && analogRead(ballLostSensor) > 50){
         ballInGame = 0;
         startGameOver();
     }
