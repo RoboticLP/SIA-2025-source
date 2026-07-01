@@ -116,16 +116,21 @@ void loop() {
     checkBallLost();
     sendFingerUpdate();
     checkBallInStart();
-    printConnectionFromSlaves();
     
-    // Slave-Kommunikation nur alle 2 Sekunden
+    // Slave-Kommunikation nur alle 100 Milli Sekunden
     static unsigned long lastSlaveCheck = 0;
-    if (millis() - lastSlaveCheck >= 2000) {
+    if (millis() - lastSlaveCheck >= 100) {
+        printConnectionFromSlaves();
+        lastSlaveCheck = millis();
+    }
+    // Data-Kommunikation nur alle 2 Sekunden
+    static unsigned long lastDataCheck = 0;
+    if (millis() - lastDataCheck >= 2000) {
         sendStatusToAdminPanel();
         reciveMessagesFromAdminPanel();
         sendLEDUpdates();
         myDFPlayer.volume(volume);
-        lastSlaveCheck = millis();
+        lastDataCheck = millis();
     }
 }
 
