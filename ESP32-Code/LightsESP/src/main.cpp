@@ -176,11 +176,26 @@ long starBurstFlashUntil = 0;
 
 #define PHASE_WAIT 0
 #define PHASE_GAME 1
-#define PHASE_GAMEOVER 2
+#define PHASE_GAME_2 2
+#define PHASE_GAMEOVER 3
 int gamePhase = PHASE_WAIT;   // Start: Warten
 
 EffectState starBurstState    = EffectState(0, 35 / globalEffectSpeed);
 EffectState starGameOverState = EffectState(0, 45 / globalEffectSpeed);
+EffectState rainbowFlowState = EffectState(0, 22 / globalEffectSpeed);
+uint16_t    rainbowPhase = 0;
+
+rgb wavePalette[4] = { rgb(0,200,255), rgb(90,0,255), rgb(255,0,170), rgb(0,110,255) };
+
+
+rgb currentWaveColor() {
+  float t = fmod(millis() / 3000.0, 4.0);   // 3 s pro Farbe, 12 s Gesamtzyklus
+  int i = (int)t, j = (i + 1) & 3;
+  float f = t - i;
+  rgb a = wavePalette[i], b = wavePalette[j];
+  return rgb(a.r + (b.r - a.r) * f, a.g + (b.g - a.g) * f, a.b + (b.b - a.b) * f);
+}
+
 
 void setPixelsEqually(int leds[], int listLength, int R, int G, int B, int priority, int duration)
 {
@@ -239,6 +254,31 @@ void starEffect(int leds[], int listLength, int priority,
   state.lastProgressTimeStamp = millis();
 }
 
+rgb hueToRgb(uint16_t hue, uint8_t val) {
+  uint32_t c = pixels.gamma32(pixels.ColorHSV(hue, 255, val));
+  return rgb((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF);
+}
+
+// fliessender Regenbogen ueber den ganzen Strip
+void rainbowFlow(int leds[], int listLength, int priority,
+                 uint8_t val, uint16_t speedStep, uint8_t bands) {
+  if (millis() - rainbowFlowState.lastProgressTimeStamp < rainbowFlowState.timeBetweenProgress) return;
+  if (priority >= PRIORITY_COUNT) return;
+  long cooldown = rainbowFlowState.timeBetweenProgress;
+  for (int i = 0; i < listLength; i++) {
+    int idx = leds[i];
+    if (idx < 0 || idx >= NUMPIXELS) continue;
+    uint16_t hue = rainbowPhase + (uint16_t)((uint32_t)i * 65535UL * bands / listLength);
+    rgb col = hueToRgb(hue, val);
+    LightState &ls = allLights[idx].prio[priority];
+    ls.r = col.r; ls.g = col.g; ls.b = col.b;
+    ls.on = true;
+    ls.timeOfShutOff = millis() + cooldown + 50;
+  }
+  rainbowPhase += speedStep;   // Geschwindigkeit des Farbflusses
+  rainbowFlowState.lastProgressTimeStamp = millis();
+}
+
 void doStarBurst(uint8_t r, uint8_t g, uint8_t b, uint8_t whiteChance) {
   timeToShutOffStarBurst = millis() + 600;
   starBurstFlashUntil    = millis() + 70;                       // NEU
@@ -265,6 +305,13 @@ void loop() {
         loadingEffect(ballOutLoadingInts, 80, 1, 255, 0, 255);
         swoopBallEffect(ballSwoopInts, 40, 1, 255, 255, 0, true);
         break;
+
+      case PHASE_GAME_2: {   // eff:6 — Haupt-Spiel: fließende Wellen
+        rgb wc = currentWaveColor();
+        setPixelsEqually(allLightInts, NUMPIXELS, wc.r/10, wc.g/10, wc.b/10, 0, 60);  // dunkler Grund
+        multipleSwoopsEffect(1, wc.r, wc.g, wc.b, 8, 6);                              // Wellen aus der Mitte
+        break;
+      }
 
       case PHASE_GAMEOVER:
         setPixelsEqually(allLightInts, NUMPIXELS, 45, 0, 0, 0, 120);
@@ -920,6 +967,8 @@ void handleSpeedChange(float speed)
   
       loadingEffectState.timeBetweenProgress = loadingEffectState.timeBetweenProgress * globalEffectSpeed / speed;
       loadingSplitEffectState.timeBetweenProgress = loadingSplitEffectState.timeBetweenProgress * globalEffectSpeed / speed;
+
+      rainbowFlowState.timeBetweenProgress = rainbowFlowState.timeBetweenProgress * globalEffectSpeed / speed;
   
       globalEffectSpeed = speed;
       globalEffectSpeedIsZero = false;
@@ -947,6 +996,7 @@ void processI2CData(String key, String value) {
       case 3: doStarBurst(180, 0,   255, 35); break;  // Taster       -> lila
       case 4: gamePhase = PHASE_GAME;         break;  // In Game
       case 5: gamePhase = PHASE_GAMEOVER;     break;  // Verloren
+      case 6: gamePhase = PHASE_GAME_2; break; // Game phase 2
       case 7: gamePhase = PHASE_WAIT;         break;  // Warten
       default: break;
     }
