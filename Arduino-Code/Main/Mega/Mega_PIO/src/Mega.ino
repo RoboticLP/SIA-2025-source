@@ -47,6 +47,12 @@ int volume = 15;
 
 int ballInGame = 0;
 
+// new: counters for rotating start song
+int ballEntryCounter = 0; // increments every time a ball enters the game
+int songStartOffset = 0;  // advances every BALLS_PER_SONG_INCREMENT entries
+const int BALLS_PER_SONG_INCREMENT = 5; // change every 5th ball entry
+const int SONGS_IN_FOLDER = 10; // number of songs in folder 2; adjust if different
+
 GameState gameState     = WAIT_FOR_BALL;
 GameState lastGameState = RESET;
 
@@ -443,8 +449,22 @@ void checkBallInStart(){
             sendLEDEffect(4);
             ledEffect4StartTime = millis();
             ledEffect4Active = true;
+
+            // increment ball entry counter and advance song offset every X entries
+            ballEntryCounter++;
+            if (ballEntryCounter % BALLS_PER_SONG_INCREMENT == 0) {
+                songStartOffset = (songStartOffset + 1) % SONGS_IN_FOLDER;
+            }
+
+            // determine song index (1-based) inside folder 2
+            int songToPlay = (songStartOffset % SONGS_IN_FOLDER) + 1;
+
             if(dfplayerInitialized) {
-                myDFPlayer.loopFolder(2);
+                // Play and loop the selected track from folder 2.
+                // DFRobotDFPlayerMini uses absolute track numbers for loop(), typically folder*100 + trackIndex
+                int absoluteTrack = 200 + songToPlay; // folder 2 -> 200 + track
+                myDFPlayer.playFolder(2, songToPlay); // start that song
+                myDFPlayer.loop(absoluteTrack); // loop that specific track
             }
         }
     }else{
