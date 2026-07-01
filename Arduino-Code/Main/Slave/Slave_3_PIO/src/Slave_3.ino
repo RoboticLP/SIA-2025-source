@@ -3,12 +3,14 @@
 
 // ───────────────────── Pins / Konstanten ─────────────────────
 const int taster = 2;                    // Bumper-Sensor (LOW-aktiv, INPUT_PULLUP)
-const unsigned long DEBOUNCE_MS = 50;    // Mindestabstand zwischen Treffern
+const unsigned long DEBOUNCE_MS   = 50;  // Mindestabstand zwischen Treffern
+const uint8_t       CONFIRM_COUNT = 5;   // so viele LOW-Messungen am Stueck = echt
+const unsigned long CONFIRM_GAP_US = 300;// Abstand zwischen den Pruef-Messungen
 
 // ───────────────────── Globale Variablen ─────────────────────
-volatile int  hitpoints   = 0;           // bestaetigte Treffer (im I2C-ISR gelesen)
-bool          pressed      = false;       // aktueller bestaetigter Zustand
-unsigned long lastHitTime  = 0;           // letzter gezaehlter Treffer
+volatile int  hitpoints   = 0;
+bool          pressed      = false;
+unsigned long lastHitTime  = 0;
 
 char message[50];
 char command[20];
@@ -16,43 +18,49 @@ char command[20];
 // ───────────────────── Setup ─────────────────────
 void setup() {
     Serial.begin(9600);
-
-    Wire.begin(3);                 // I2C Slave Adresse 3
+    Wire.begin(3);
     Wire.onRequest(requestEvent);
     Wire.onReceive(receiveEvent);
-
     pinMode(taster, INPUT_PULLUP);
 }
 
-// ───────────────────── Loop: Pegel pollen ─────────────────────
+// prueft, ob der Pin WIRKLICH gedrueckt ist (nicht nur Spulen-Stoerimpuls)
+bool reallyPressed() {
+    for (uint8_t k = 0; k < CONFIRM_COUNT; k++) {
+        if (digitalRead(taster) != LOW) return false;   // ein einziges HIGH -> Glitch
+        delayMicroseconds(CONFIRM_GAP_US);
+    }
+    return true;   // alle Messungen LOW -> echter Treffer
+}
+
+// ───────────────────── Loop ─────────────────────
 void loop() {
     bool isLow = (digitalRead(taster) == LOW);
 
     if (isLow) {
-        // noch nicht als Treffer gewertet + entprellt?
         if (!pressed && (millis() - lastHitTime > DEBOUNCE_MS)) {
-            hitpoints++;
-            lastHitTime = millis();
-            pressed = true;                // erst wieder zaehlen nach Loslassen
+            if (reallyPressed()) {          // <-- kurzer Gegen-Check
+                hitpoints++;
+                lastHitTime = millis();
+                pressed = true;
+            }
         }
     } else {
-        pressed = false;                   // HIGH -> zuruecksetzen (losgelassen)
+        pressed = false;
     }
 }
 
 // ───────────────────── Hilfsfunktionen ─────────────────────
 void handleReset() {
-    pressed      = false;
-    lastHitTime  = 0;
-    hitpoints    = 0;
+    pressed     = false;
+    lastHitTime = 0;
+    hitpoints   = 0;
 }
 
 // ───────────────────── I2C Callbacks ─────────────────────
 void requestEvent() {
-    int toSend;
-    toSend    = hitpoints;
-    hitpoints = 0;
-
+    int toSend    = hitpoints;
+    hitpoints     = 0;
     snprintf(message, sizeof(message), "bth:%d|", toSend);
     Wire.write(message);
 }
@@ -63,7 +71,6 @@ void receiveEvent(int howMany) {
         command[i++] = Wire.read();
     }
     command[i] = '\0';
-
     if (strcmp(command, "resetGame") == 0) {
         handleReset();
     }

@@ -1,69 +1,60 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-// ───────────────────── Pins / Konstanten ─────────────────────
-const int scoring = 2;                   // Taster (LOW-aktiv, INPUT_PULLUP)
-const unsigned long CONFIRM_MS  = 5;     // Pegel muss CONFIRM_MS am Stueck LOW sein
-const unsigned long DEBOUNCE_MS = 200;   // Mindestabstand zwischen Treffern
+const int scoring = 2;
+const unsigned long DEBOUNCE_MS    = 200;
+const uint8_t       CONFIRM_COUNT  = 5;    // so viele LOW-Messungen am Stueck = echt
+const unsigned long CONFIRM_GAP_US = 300;  // Abstand zwischen den Pruef-Messungen
 
-// ───────────────────── Globale Variablen ─────────────────────
-volatile int  scoredTimes = 0;           // bestaetigte Treffer (im I2C-ISR gelesen)
-bool          pressed     = false;       // aktueller bestaetigter Zustand
-unsigned long lowSince    = 0;           // seit wann ist der Pin LOW
-unsigned long lastHitTime = 0;           // letzter gezaehlter Treffer
+volatile int  scoredTimes = 0;
+bool          pressed     = false;
+unsigned long lastHitTime = 0;
 
 char message[50];
 char command[20];
 
-// ───────────────────── Setup ─────────────────────
 void setup() {
     Serial.begin(9600);
-
-    Wire.begin(2);                 // I2C Slave Adresse 2
+    Wire.begin(2);
     Wire.onRequest(requestEvent);
     Wire.onReceive(receiveEvent);
-
     pinMode(scoring, INPUT_PULLUP);
 }
 
-// ───────────────────── Loop: Pegel pollen ─────────────────────
-void loop() {
+// prueft, ob der Pin WIRKLICH gedrueckt ist (nicht nur Spulen-Stoerimpuls)
+bool reallyPressed() {
+    for (uint8_t k = 0; k < CONFIRM_COUNT; k++) {
+        if (digitalRead(scoring) != LOW) return false;
+        delayMicroseconds(CONFIRM_GAP_US);
+    }
+    return true;
+}
 
+void loop() {
     bool isLow = (digitalRead(scoring) == LOW);
 
-    Serial.println(isLow);
     if (isLow) {
-        if (lowSince == 0) {
-            lowSince = millis();           // gerade LOW geworden -> Zeit merken
-        }
-        // Pin lange genug LOW + noch nicht als Treffer gewertet + entprellt?
-        if (!pressed &&
-            (millis() - lowSince > CONFIRM_MS) &&
-            (millis() - lastHitTime > DEBOUNCE_MS)) {
-            scoredTimes++;
-            lastHitTime = millis();
-            pressed = true;                // erst wieder zaehlen nach Loslassen
+        if (!pressed && (millis() - lastHitTime > DEBOUNCE_MS)) {
+            if (reallyPressed()) {
+                scoredTimes++;
+                lastHitTime = millis();
+                pressed = true;
+            }
         }
     } else {
-        lowSince = 0;                      // HIGH -> zuruecksetzen (war Glitch oder losgelassen)
-        pressed  = false;
+        pressed = false;
     }
 }
 
-// ───────────────────── Hilfsfunktionen ─────────────────────
 void handleReset() {
     pressed     = false;
-    lowSince    = 0;
     lastHitTime = 0;
     scoredTimes = 0;
 }
 
-// ───────────────────── I2C Callbacks ─────────────────────
 void requestEvent() {
-    int toSend;
-    toSend      = scoredTimes;
+    int toSend  = scoredTimes;
     scoredTimes = 0;
-
     snprintf(message, sizeof(message), "ssh:%d|", toSend);
     Wire.write(message);
 }
@@ -74,7 +65,6 @@ void receiveEvent(int howMany) {
         command[i++] = Wire.read();
     }
     command[i] = '\0';
-
     if (strcmp(command, "resetGame") == 0) {
         handleReset();
     }
