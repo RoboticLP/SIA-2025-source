@@ -53,6 +53,7 @@ int songStartOffset = 0;  // advances every BALLS_PER_SONG_INCREMENT entries
 const int BALLS_PER_SONG_INCREMENT = 3; // change every 5th ball entry
 const int SONGS_IN_FOLDER = 2; // number of songs in folder 2; adjust if different#
 bool pointsOver1000 = false;
+bool sillyMode = false;
 
 GameState gameState     = WAIT_FOR_BALL;
 GameState lastGameState = RESET;
@@ -110,10 +111,29 @@ void setup() {
     lcd.print("Flipper System");
     lcd.setCursor(0, 1);
     lcd.print("Booting...");
-    delay(1500);
+    delay(500);
+    if (digitalRead(singalForBallStart) == LOW) { // enable troll mode logic
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Silly troll mode:");
+        lcd.setCursor(0, 1);
+        lcd.print("Activated ;)");
+        sillyMode = true;
+        if(dfplayerInitialized) {
+            myDFPlayer.playFolder(3, 1); // start that song
+            delay(15000);
+        }
+    }
+    delay(500);
     lcd.clear();
     if(dfplayerInitialized) {
-        myDFPlayer.loopFolder(1);
+        if (sillyMode == false) {
+            myDFPlayer.playFolder(1, 1);
+            myDFPlayer.loop(101);
+        } else {
+            myDFPlayer.playFolder(1, 2);
+            myDFPlayer.loop(102);
+        }
     }
     myDFPlayer.volume(volume);
     
@@ -169,7 +189,9 @@ void checkGameState() {
 // ───────────────────── Game Over / Reset ─────────────────────
 void startGameOver() {
     if(dfplayerInitialized) {
-        myDFPlayer.loopFolder(1);
+        if (sillyMode == true) {
+            myDFPlayer.playFolder(3, 3); // faaaahhh;
+        }
     }
     sendLEDEffect(5);
     lastGameState = IN_GAME;
@@ -179,6 +201,15 @@ void startGameOver() {
 }
 
 bool finishGameOver(void *) {
+    if(dfplayerInitialized) {
+        if (sillyMode == false) {
+            myDFPlayer.playFolder(1, 1);
+            myDFPlayer.loop(101);
+        } else {
+            myDFPlayer.playFolder(1, 2);
+            myDFPlayer.loop(102);
+        }
+    }
     gameState = RESET;
     handleLCDDisplay();
     resetTask = timer.in(2000, resetGame);
@@ -343,7 +374,13 @@ void processSlaveData(String key, String value, int module) {
         if (gameState != IN_GAME) return;
         if(points > 1000 && !pointsOver1000) {
             pointsOver1000 = true;
-            myDFPlayer.advertise(1);
+            if (dfplayerInitialized) {
+                if (sillyMode == false) {
+                    myDFPlayer.advertise(1);
+                } else {
+                    myDFPlayer.advertise(2); // play the silly sound if silly mode is active
+                }
+            }
             sendLEDEffect(8);
         }
         points += dataValue * multiplier * basePoints;
@@ -469,11 +506,16 @@ void checkBallInStart(){
             int songToPlay = (songStartOffset % SONGS_IN_FOLDER) + 1;
 
             if(dfplayerInitialized) {
-                // Play and loop the selected track from folder 2.
-                // DFRobotDFPlayerMini uses absolute track numbers for loop(), typically folder*100 + trackIndex
-                int absoluteTrack = 200 + songToPlay; // folder 2 -> 200 + track
-                myDFPlayer.playFolder(2, songToPlay); // start that song
-                myDFPlayer.loop(absoluteTrack); // loop that specific track
+                if (sillyMode == false) {
+                    // Play and loop the selected track from folder 2.
+                    // DFRobotDFPlayerMini uses absolute track numbers for loop(), typically folder*100 + trackIndex
+                    int absoluteTrack = 200 + songToPlay; // folder 2 -> 200 + track
+                    myDFPlayer.playFolder(2, songToPlay); // start that song
+                    myDFPlayer.loop(absoluteTrack); // loop that specific track
+                } else {
+                    myDFPlayer.playFolder(3, 2); // play the silly song if silly mode is active
+                    myDFPlayer.loop(302); // loop the silly song
+                }
             }
         }
     }else{
