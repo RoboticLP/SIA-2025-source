@@ -455,7 +455,7 @@ void checkBallInStart(){
 // ───────────────────── LED Effect 4 Auto-Off ─────────────────────
 void checkLEDEffect4Timeout() {
     if (ledEffect4Active && (millis() - ledEffect4StartTime >= LED_EFFECT_4_DURATION)) {
-        sendLEDEffect(0);
+        sendLEDEffect(6);
         ledEffect4Active = false;
     }
 }
