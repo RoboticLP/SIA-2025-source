@@ -120,6 +120,7 @@ void setup() {
         lcd.setCursor(0, 1);
         lcd.print("Activated ;)");
         sillyMode = true;
+        sendLEDEffect(5);
         myDFPlayer.playFolder(3, 1); // start that song
         delay(15000);
         myDFPlayer.stop();

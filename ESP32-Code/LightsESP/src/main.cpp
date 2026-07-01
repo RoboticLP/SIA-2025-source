@@ -334,8 +334,8 @@ void loop() {
 
       case PHASE_GAME:
         randomTransition(allLightInts, NUMPIXELS, 0, "specialblue");
-        loadingEffect(ballOutLoadingInts, 80, 1, 255, 255, 67);
-        swoopBallEffect(ballSwoopInts, 40, 1, 100, 100, 0, true);
+        loadingEffect(ballOutLoadingInts, 80, 1, 100, 100, 27);
+        swoopBallEffect(ballSwoopInts, 40, 1, 255, 255, 0, true);
         break;
         
 
