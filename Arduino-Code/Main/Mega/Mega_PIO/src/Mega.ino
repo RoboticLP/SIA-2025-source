@@ -54,6 +54,11 @@ GameState lastGameState = RESET;
 Timer<>::Task gameOverTask;
 Timer<>::Task resetTask;
 
+// ───────────────────── LED Effect 4 Auto-Off ─────────────────────
+unsigned long ledEffect4StartTime = 0;
+bool ledEffect4Active = false;
+const unsigned long LED_EFFECT_4_DURATION = 5000; // 5 Sekunden
+
 // ───────────────────── Forward Declarations ─────────────────────
 void handleLCDDisplay();
 void checkGameState();
@@ -63,6 +68,7 @@ void printConnectionFromSlaves();
 void sendStatusToAdminPanel();
 void reciveMessagesFromAdminPanel();
 void sendErrorToESP(int);
+void checkLEDEffect4Timeout();
 
 // ───────────────────── Backlight ─────────────────────
 void setBacklightPercent(int percent) {
@@ -116,6 +122,7 @@ void loop() {
     checkBallLost();
     sendFingerUpdate();
     checkBallInStart();
+    checkLEDEffect4Timeout();
     
     // Slave-Kommunikation nur alle 100 Milli Sekunden
     static unsigned long lastSlaveCheck = 0;
@@ -434,11 +441,21 @@ void checkBallInStart(){
             lastGameState = WAIT_FOR_BALL;
             gameState = IN_GAME;
             sendLEDEffect(4);
+            ledEffect4StartTime = millis();
+            ledEffect4Active = true;
             if(dfplayerInitialized) {
                 myDFPlayer.loopFolder(2);
             }
         }
     }else{
         digitalWrite(ballInStart, LOW);
+    }
+}
+
+// ───────────────────── LED Effect 4 Auto-Off ─────────────────────
+void checkLEDEffect4Timeout() {
+    if (ledEffect4Active && (millis() - ledEffect4StartTime >= LED_EFFECT_4_DURATION)) {
+        sendLEDEffect(0);
+        ledEffect4Active = false;
     }
 }
