@@ -97,7 +97,7 @@ void setup() {
     lcd.print("Flipper System");
     lcd.setCursor(0, 1);
     lcd.print("Booting...");
-    // sendLEDEffect(7); buggy?
+    sendLEDEffect(7);
     delay(1500);
     lcd.clear();
     if(dfplayerInitialized) {
@@ -116,11 +116,11 @@ void loop() {
     checkBallLost();
     sendFingerUpdate();
     checkBallInStart();
+    printConnectionFromSlaves();
     
     // Slave-Kommunikation nur alle 2 Sekunden
     static unsigned long lastSlaveCheck = 0;
     if (millis() - lastSlaveCheck >= 2000) {
-        printConnectionFromSlaves();
         sendStatusToAdminPanel();
         reciveMessagesFromAdminPanel();
         sendLEDUpdates();
@@ -328,17 +328,17 @@ void processSlaveData(String key, String value, int module) {
 
     if(key == "bth"){ 
         addPoints("Bumper Hits",   pointsBumper);
-        if(dataValue > 0)
+        if(dataValue > 0 && gameState == IN_GAME)
             sendLEDEffect(1);
     }
     else if(key == "ssh"){
         addPoints("Slingshot Hits", pointsSlingsshots);
-        if(dataValue > 0)
+        if(dataValue > 0 && gameState == IN_GAME)
             sendLEDEffect(2);
     } 
     else if(key == "tah"){
          addPoints("Target Hits", pointsTargets);
-         if(dataValue > 0)
+         if(dataValue > 0 && gameState == IN_GAME)
             sendLEDEffect(3);
     }
     else if (key == "err") {
@@ -391,7 +391,7 @@ bool resetGame(void *) {
     ballInGame = 0;
     gameState = WAIT_FOR_BALL;
     lastGameState = RESET;
-    // sendLEDEffect(7); buggy?
+    sendLEDEffect(7);
     handleLCDDisplay();
     for(int i = 0; i < moduleCount; i++) {
         int addr = moduleSlaves[i];
