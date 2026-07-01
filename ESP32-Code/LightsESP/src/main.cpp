@@ -294,17 +294,18 @@ void loop() {
   if (!burstActive) {
     switch (gamePhase) {
       case PHASE_WAIT: {
-        randomTransition(allLightInts, NUMPIXELS, 0, "specialblue");
+        // fester blauer Hintergrund auf prio 0 (unterste Ebene)
+        setPixelsEqually(allLightInts, NUMPIXELS, 0, 40, 120, 0, 100);
 
         static rgb waitColor = randomRedColor();
         static unsigned long lastWaitColorChange = 0;
-        if (millis() - lastWaitColorChange > 4000) {   // alle 4 s neue Farbe
+        if (millis() - lastWaitColorChange > 4000) {
           waitColor = randomRedColor();
           lastWaitColorChange = millis();
         }
-        multipleSwoopsEffect(1, waitColor.r, waitColor.g, waitColor.b, 3, 5);
+        multipleSwoopsEffect(1, waitColor.r, waitColor.g, waitColor.b, 3, 5);   // prio 1 -> überschreibt Blau
 
-        randomYellowAmbient(beachLightInts, 40, 2);
+        randomYellowAmbient(beachLightInts, 40, 2);                             // prio 2 -> Beach-LEDs
         break;
       }
 
@@ -313,6 +314,7 @@ void loop() {
         loadingEffect(ballOutLoadingInts, 80, 1, 255, 0, 255);
         swoopBallEffect(ballSwoopInts, 40, 1, 255, 255, 0, true);
         break;
+        
 
       case PHASE_GAME_2: {   // eff:6 — Haupt-Spiel: fließende Wellen
         rgb wc = currentWaveColor();
@@ -449,12 +451,14 @@ rgb randomYellowColorWithBrightness()
   uint8_t whitepercentage = random (40);
   return rgb(255, col + (255-col)/100 * whitepercentage, 255/100 * whitepercentage);
 }
-rgb randomBlueColorWithWhiteLevel()
-{
+rgb randomBlueColorWithWhiteLevel() {
   uint8_t c = random(256);
-  uint8_t whitepercentage = random (70);
-
-  return rgb(255/100 * whitepercentage, c + ((255-c)/100 * whitepercentage), 255);
+  float w = random(70) / 100.0;              // 0.0 – 0.69 als echter Anteil
+  int r = (int)(255 * w);                    // Weißanteil im Rot
+  int g = (int)(c + (255 - c) * w);          // Weißanteil im Grün
+  if (r > 255) r = 255;
+  if (g > 255) g = 255;
+  return rgb(r, g, 255);
 }
 
 rgb randomRedColor()

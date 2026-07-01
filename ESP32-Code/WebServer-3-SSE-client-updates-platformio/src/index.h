@@ -92,7 +92,7 @@ const char* webpage_main = R"=====(
         </div>
         <div class="input-container">
           <label class="input-label">Point amount targets</label>
-          <input type="number" id="point-amount-targets" class="number-input" min="1" max="50000" step="10" value="10" placeholder="1">
+          <input type="number" id="point-amount-targets" class="number-input" min="1" max="50000" step="10" value="20" placeholder="1">
         </div>
       </div>
 

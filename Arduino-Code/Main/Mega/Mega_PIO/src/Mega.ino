@@ -109,7 +109,6 @@ void setup() {
     lcd.print("Flipper System");
     lcd.setCursor(0, 1);
     lcd.print("Booting...");
-    sendLEDEffect(7);
     delay(1500);
     lcd.clear();
     if(dfplayerInitialized) {
@@ -119,6 +118,7 @@ void setup() {
     
 
     setDebugMode(false);
+    sendLEDEffect(7);
 }
 
 void loop() {
@@ -132,7 +132,7 @@ void loop() {
     
     // Slave-Kommunikation nur alle 100 Milli Sekunden
     static unsigned long lastSlaveCheck = 0;
-    if (millis() - lastSlaveCheck >= 100) {
+    if (millis() - lastSlaveCheck >= 800) {
         printConnectionFromSlaves();
         lastSlaveCheck = millis();
     }
@@ -474,7 +474,7 @@ void checkBallInStart(){
 
 // ───────────────────── LED Effect 4 Auto-Off ─────────────────────
 void checkLEDEffect4Timeout() {
-    if (ledEffect4Active && (millis() - ledEffect4StartTime >= LED_EFFECT_4_DURATION)) {
+    if (gameState == IN_GAME && ledEffect4Active && (millis() - ledEffect4StartTime >= LED_EFFECT_4_DURATION)) {
         sendLEDEffect(6);
         ledEffect4Active = false;
     }
