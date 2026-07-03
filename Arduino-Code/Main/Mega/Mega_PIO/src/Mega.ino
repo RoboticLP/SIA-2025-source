@@ -185,14 +185,16 @@ void checkGameState() {
 
 // ───────────────────── Game Over / Reset ─────────────────────
 void startGameOver() {
+    if (gameState == GAME_OVER) return; // avoid scond call of startGameOver method
+    lastGameState = IN_GAME;
+    gameState = GAME_OVER;
+    
     if (sillyMode == true) {
         myDFPlayer.playFolder(3, 3); // faaaahhh;
     }else{
         myDFPlayer.playFolder(1 , 3); // game over sound
     }
     sendLEDEffect(5);
-    lastGameState = IN_GAME;
-    gameState = GAME_OVER;
     handleLCDDisplay();
     gameOverTask = timer.in(5000, finishGameOver);
 }
