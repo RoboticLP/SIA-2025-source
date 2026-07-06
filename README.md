@@ -92,8 +92,8 @@ len:%d|lsp:%d|vol:%d|rst:%d
 
 ---
 
-#### Datenformat Lichteffekte von Mega zu Nano (5)
-Das Mega sendet zwei verschiedene Light-Daten an den Nano 5:
+#### Datenformat Lichteffekte von Mega zu Light-ESP
+Das Mega sendet drei verschiedene Light-Daten an den Light-ESP:
 
 - `lsp:%d|len:%d|` für Lichtgeschwindigkeit und Ein/Aus-Zustand
 - `eff:%d|` für einen einzelnen Lichteffektcode

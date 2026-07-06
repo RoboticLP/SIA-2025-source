@@ -32,7 +32,7 @@ o o o o o o o o o o o o o o o o
 |---------|----------|--------------|--------------|
 | 1       | VSS      | GND          | Ground |
 | 2       | VDD      | 5V           | Stromversorgung |
-| 3       | V0       | nicht spezifiziert | Kontrast |
+| 3       | V0       | A13          | Kontrast |
 | 4       | RS       | A7           | Register Select (Data/Command) |
 | 5       | RW       | GND          | Read/Write (auf GND = nur Schreiben) |
 | 6       | E        | A8           | Enable Signal |
