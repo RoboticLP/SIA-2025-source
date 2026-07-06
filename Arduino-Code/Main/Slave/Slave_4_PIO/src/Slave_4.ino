@@ -65,7 +65,7 @@ void requestEvent() {
     hitpoints = 0;
     interrupts();
 
-    snprintf(message, sizeof(message), "tar:%d|", toSend);
+    snprintf(message, sizeof(message), "tah:%d|", toSend);
     Wire.write(message);
 }
 
