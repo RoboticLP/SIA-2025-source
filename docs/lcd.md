@@ -32,18 +32,18 @@ o o o o o o o o o o o o o o o o
 |---------|----------|--------------|--------------|
 | 1       | VSS      | GND          | Ground |
 | 2       | VDD      | 5V           | Stromversorgung |
-| 3       | V0       | Pin 13        | Kontrast (über AdminPanel) |
-| 4       | RS       | Pin 7        | Register Select (Data/Command) |
+| 3       | V0       | nicht spezifiziert | Kontrast |
+| 4       | RS       | A7           | Register Select (Data/Command) |
 | 5       | RW       | GND          | Read/Write (auf GND = nur Schreiben) |
-| 6       | E        | Pin 8        | Enable Signal |
+| 6       | E        | A8           | Enable Signal |
 | 7       | D0       | -            | Nicht verwendet (4-Bit Modus) |
 | 8       | D1       | -            | Nicht verwendet (4-Bit Modus) |
 | 9       | D2       | -            | Nicht verwendet (4-Bit Modus) |
 | 10      | D3       | -            | Nicht verwendet (4-Bit Modus) |
-| 11      | D4       | Pin 9        | Datenleitung |
-| 12      | D5       | Pin 10       | Datenleitung |
-| 13      | D6       | Pin 11       | Datenleitung |
-| 14      | D7       | Pin 12       | Datenleitung |
+| 11      | D4       | A9           | Datenleitung |
+| 12      | D5       | A10          | Datenleitung |
+| 13      | D6       | A11          | Datenleitung |
+| 14      | D7       | A12          | Datenleitung |
 | 15      | A        | 5V           | Hintergrundbeleuchtung + |
 | 16      | K        | GND          | Hintergrundbeleuchtung - |
 

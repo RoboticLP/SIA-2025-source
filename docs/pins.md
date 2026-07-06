@@ -40,10 +40,11 @@ Hier werden alle Pin-Belegungen für die Nano und Mega Arduinos festgelegt.
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| 3 | Ball In Start Knopf | Nein | Ja | Button | Digital | Input_Pullup |
-| 4 | Ball Lost Schranke | Nein | Nein | Digitalschranke | Digital | Input_Pullup |
-| 5 | Enable/Disable Fingers While InGame | Nein | Nein | Nix | Digital | Output |
-| 13 | Ball entlass in die Startvorrichtung | Ja | Nein | Spule | Digital | Output |
+| A3 | Ball In Start Knopf | Nein | Nein | Button | Analog | Input_Pullup |
+| A4 | Ball Lost Schranke | Nein | Nein | Digitalschranke | Analog | Input_Pullup |
+| A5 | Enable/Disable Fingers While InGame | Nein | Nein | Finger-Ausgang | Analog | Output |
+| A6 | Background-Light PWM | Nein | Nein | LED-Hintergrundbeleuchtung | Analog | Output |
+| A13 | Ball entlass in die Startvorrichtung | Ja | Nein | Spule | Digital | Output |
 
 ## Nano 2
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
@@ -59,16 +60,14 @@ Ball Eject ist akutell ausgenommen.
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| 2 | Bumper Tower Sensor | Ja | Ja | Spule | Digital | Input |
+| 2 | Bumper Tower Sensor | Nein | Ja | Taster | Digital | Input_Pullup |
 
 ## Nano 4
 > Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
 
-
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| 2 | Targets | Nein | Ja | Taster | Digital | Input |
-| 3 | Ball In Game Schranke | Nein | Nein | Digitalschranke | Digital | Input_Pullup |
+| 2 | Bumper/Trigger Sensor | Nein | Ja | Taster/Schalter | Digital | Input_Pullup |
 
 ## Nano 5
 ### aktuell keine Verwendung
@@ -80,8 +79,8 @@ Ball Eject ist akutell ausgenommen.
 
 ## ESP 2
 ### ESP 2 ist für die Lichter zuständig
-> Information zur Pin verarbeitung [hier](https://devboards.info/boards/arduino-nano)
+> Information zur Pin verarbeitung [hier](https://devboards.info/boards/esp32)
 
 | Pins | Nutzung | Relais | Interrupt | Bauteil | Signal | PinMode |
 |----------|----------|----------|----------|----------|----------|----------|
-| 6 | Datenoutput | Nein | Nein | WS2812B Lichtstreifen DIN | Digital | Output |
+| 23 | Datenoutput | Nein | Nein | WS2812B Lichtstreifen DIN | Digital | Output |

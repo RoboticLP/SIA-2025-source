@@ -26,12 +26,12 @@ Alle Source-Codes der diesjährigen SIA.
 ---
 
 #### Datenformat des Daten-Strings der Module (Nano's)
-Jedes Modul (Arduino Nano) hat bis zu zwei Ziele (Targets) an sich angeschlossen, daher ```ht1``` und ```ht2``` für die Trefferanzahl von jedem Ziel seit der letzten Update-Anfrage.
-Jedes Modul wird mehrmals pro Sekunde nach Updates gefragt, hier definieren wir wie die Antworten Formatiert sein müssen:
+Die Module senden derzeit folgende Key-Values im I²C-String an den Mega-Master:
 
-```c
-bth:%d|ssh:%d|tah:%d|ballingame:%d|err:%s
-```
+- `ssh:%d|` für Slingshot-Hits vom Slave 2
+- `bth:%d|` für Bumper-Hits vom Slave 3/4
+- `err:%s|` für Fehlercodes
+
 > *Die **Reihenfolge der Keys+Werte ist egal**, genau wie ihre **Vorhandenheit** - es werden nur erhaltene Daten verarbeitet und es sind keine speziellen Daten notwendig. Allerdings **muss** jeder versendete Key einen zugehörigen Wert haben*
 
 |  Key-Name  | Wertetyp | Bedeutung                                            |
@@ -39,9 +39,7 @@ bth:%d|ssh:%d|tah:%d|ballingame:%d|err:%s
 | ```\|```   | /        | Trennzeichen zwischen den Daten                      |
 | ```bth```  | int      | Zahl der Treffer (Hits) der Bumper Tower seit dem letzem Update |
 | ```ssh```  | int      | Zahl der Treffer (Hits) der Sling Shots seit dem letzem Update |
-| ```tah```  | int      | Zahl der Treffer (Hits) der Targets seit dem letzem Update |
-| ```ballingame``` | int | Meldet die Kugel im Game (Sensor hat Kugel erkannt) |
-| ```err```  | String (Error-code) | Wird nur versendet wenn Error vorhanden ist. Sendet dann einen Error-code der dann vom ESP32 verarbeitet wird. |
+| ```err```  | String (Error-code) | Wird nur versendet wenn ein Error vorhanden ist. Sendet dann einen Error-code der vom ESP32 verarbeitet wird. |
 
 > Da es von Arduino selbst keine eigene Lösung für das Splitten von Strings hat benutzen wir folgende eigene Lösung: [splitString](#splitstring)
 
@@ -54,45 +52,58 @@ Hilfreiche Resourcen:
 ##### Mega > ESP
 
 ```c
-gs:%d|err:%d
+M2:%d|M3:%d|M4:%d|M5:%d|err:%d
 ```
 
 | Key-Name | Wertetyp | Bedeutung |
 |----------|----------|-----------|
 | ```\|``` | /        | Trennzeichen zwischen den Daten |
-| ```gs``` | int | [Gamestate](docs/id-definitions.md#gamestate-id) (aktueller Zustand des Flippers) |
-| ```err``` | int | Id eines Logs/Errors für das Frontend |
+| ```M2``` | int | Status von Modul 2 (1 = erreichbar, 0 = nicht erreichbar) |
+| ```M3``` | int | Status von Modul 3 (1 = erreichbar, 0 = nicht erreichbar) |
+| ```M4``` | int | Status von Modul 4 (1 = erreichbar, 0 = nicht erreichbar) |
+| ```M5``` | int | Status von Modul 5 (1 = erreichbar, 0 = nicht erreichbar) |
+| ```err``` | int | Fehlercode, der an das Frontend gemeldet wird |
 
 ---
 
 ##### ESP > Mega
 
+Das ESP32 sendet seine Einstellungen in zwei alternierenden I²C-Paketen:
+
 ```c
-mtpl:%.2f|pbu:%d|psl:%d|pta:%d|len:%.2f|lsp:%.2f|rst:%d
+mtpl:%.2f|pbu:%d|psl:%d|pta:%d
+```
+
+```c
+len:%d|lsp:%d|vol:%d|rst:%d
 ```
 
 | Key-Name | Wertetyp | Bedeutung |
 |----------|----------|-----------|
 | ```\|``` | /        | Trennzeichen zwischen den Daten |
-| ```mtpl``` | float (2 Kommastellen)  | Der aktuelle Punkte-Multiplier. *Wird intern für I²C in String umgewandelt* |
+| ```mtpl``` | float (2 Kommastellen)  | Der aktuelle Punkte-Multiplier. |
 | ```pbu``` | int | Trefferpunktzahl für die Bumper-tower |
 | ```psl``` | int | Trefferpunktzahl für die Slingshots |
 | ```pta``` | int | Trefferpunktzahl für die Targets |
-| ```len``` | bit | "1" wenn Lichter an sein sollen, "0" wenn aus|
-| ```lsp``` | float (2 Kommastellen) | Geschwindigkeit der Lichteffekte von 0-200% (0.0-2.0) |
+| ```len``` | int | "1" wenn Lichter an sein sollen, "0" wenn aus |
+| ```lsp``` | int | Geschwindigkeit der Lichteffekte von 0-200 |
+| ```vol``` | int | Lautstärke des DFPlayers |
 | ```rst``` | bit | "1" wenn Spiel resetted werden soll |
 
 ---
 
 #### Datenformat Lichteffekte von Mega zu Nano (5)
-Wir senden die Effekte in Integer, wo der Nano 5 dann weis bei welchem Inegerwert er welchen Effekt abspielen soll. So weis er immer welches Ziel getroffen wurde und zu was er einen Effekt spielen soll.
+Das Mega sendet zwei verschiedene Light-Daten an den Nano 5:
+
+- `lsp:%d|len:%d|` für Lichtgeschwindigkeit und Ein/Aus-Zustand
+- `eff:%d|` für einen einzelnen Lichteffektcode
 
 |  Key-Name  | Wertetyp | Bedeutung |
 |------------|----------|-----------|
 | ```\|```   | /        | Trennzeichen zwischen den Daten                      |
-| ```lsp```  | float    | Lightspeed, vom ESP32 |
-| ```len```  | int      | Light-State (Sagt ob die Lichter an oder aus sein sollen) |
-| ```eff```  | int      | **WIP** [Lichteffekt-ID](docs/id-definitions.md#gamestate-id) |
+| ```lsp```  | int      | Lightspeed, vom ESP32 |
+| ```len```  | int      | Light-State (1 = an, 0 = aus) |
+| ```eff```  | int      | Lichteffekt-ID, die in Nano 5 als separates Paket ausgelöst wird |
 
 ---
 
