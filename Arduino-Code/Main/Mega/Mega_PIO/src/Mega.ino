@@ -6,6 +6,7 @@
 #include <arduino-timer.h>
 #include "SoftwareSerial.h"
 #include "DFRobotDFPlayerMini.h"
+#include <EEPROM.h>
 
 // ───────────────────── LCD Pins ─────────────────────
 LiquidCrystal lcd(A7, A8, A9, A10, A11, A12);
@@ -14,6 +15,25 @@ LiquidCrystal lcd(A7, A8, A9, A10, A11, A12);
 SoftwareSerial mySoftwareSerial(10,11); // RX, TX
 DFRobotDFPlayerMini myDFPlayer;
 bool dfplayerInitialized = false;
+
+// ───────────────────── Highscore ─────────────────────
+// ───────────────────── Highscore ─────────────────────
+#define HIGHSCORE_ADDR 0
+#define HIGHSCORE_MAGIC 0xAB
+#define HIGHSCORE_COUNT 100
+
+struct Highscore {
+    long score;
+};
+
+Highscore highscores[HIGHSCORE_COUNT];  // Array passt jetzt zur Größe
+int totalGames = 0;
+bool showingHighscore = false;
+unsigned long highscoreDisplayStart = 0;
+const unsigned long HIGHSCORE_DISPLAY_TIME = 5000;
+
+#define TOTAL_GAMES_ADDR (HIGHSCORE_ADDR + 1)
+#define SCORES_ADDR (TOTAL_GAMES_ADDR + 2)
 
 // ───────────────────── Adressen ─────────────────────
 #define slave2      2
@@ -54,6 +74,7 @@ const int BALLS_PER_SONG_INCREMENT = 3; // change every 5th ball entry
 const int SONGS_IN_FOLDER = 2; // number of songs in folder 2; adjust if different#
 bool pointsOver1000 = false;
 bool sillyMode = false;
+int lastRank = 0; // Platzierung nach Game Over (0 = nicht in Top 3)
 
 GameState gameState     = WAIT_FOR_BALL;
 GameState lastGameState = RESET;
@@ -103,12 +124,12 @@ void setup() {
     if (!dfplayerInitialized) {
         Serial.println("DFPlayer init failed");
     }
-    Serial.println("Flipper System Starting...");
+    Serial.println("Flopper System Starting...");
 
     lcd.begin(16, 2);
     analogWrite(backlightPin, 50); // ich werde jeden von euch finden der es wagt, nur zu denken diese Zeile zu verändern
     lcd.clear();
-    lcd.print("Flipper System");
+    lcd.print("Flopper System");
     lcd.setCursor(0, 1);
     lcd.print("Booting...");
     delay(500);
@@ -134,6 +155,7 @@ void setup() {
         myDFPlayer.playFolder(1, 2);
         myDFPlayer.loop(102);
     }
+    loadHighscores();
     
     setDebugMode(false);
     sendLEDEffect(7);
@@ -142,6 +164,13 @@ void setup() {
 void loop() {
     timer.tick();
     checkGameState();
+    if (gameState == WAIT_FOR_BALL && showingHighscore) {
+        static unsigned long lastHSUpdate = 0;
+        if (millis() - lastHSUpdate >= 2000) {
+            handleLCDDisplay();
+            lastHSUpdate = millis();
+        }
+    }
     checkFingers();
     checkBallLost();
     sendFingerUpdate();
@@ -165,6 +194,63 @@ void loop() {
     }
 }
 
+int findRank(long score) {
+    for (int i = 0; i < HIGHSCORE_COUNT; i++) {
+        if (score >= highscores[i].score) return i + 1;
+    }
+    return HIGHSCORE_COUNT + 1; // z.B. Platz 4 = außerhalb Top 3
+}
+
+// ───────────────────── Highscore EEPROM ─────────────────────
+void loadHighscores() {
+    if (EEPROM.read(HIGHSCORE_ADDR) != HIGHSCORE_MAGIC) {
+        EEPROM.write(HIGHSCORE_ADDR, HIGHSCORE_MAGIC);
+        totalGames = 0;
+        EEPROM.put(TOTAL_GAMES_ADDR, totalGames);
+        for (int i = 0; i < HIGHSCORE_COUNT; i++) {
+            highscores[i].score = 0;
+            EEPROM.put(SCORES_ADDR + i * sizeof(Highscore), highscores[i]);
+        }
+    } else {
+        EEPROM.get(TOTAL_GAMES_ADDR, totalGames);
+        totalGames = constrain(totalGames, 0, HIGHSCORE_COUNT);
+        for (int i = 0; i < totalGames; i++) {
+            EEPROM.get(SCORES_ADDR + i * sizeof(Highscore), highscores[i]);
+        }
+    }
+}
+
+void saveHighscores() {
+    EEPROM.put(TOTAL_GAMES_ADDR, totalGames);
+    for (int i = 0; i < totalGames; i++) {
+        EEPROM.put(SCORES_ADDR + i * sizeof(Highscore), highscores[i]);
+    }
+}
+
+// Gibt Platzierung zurück (0 = kein Highscore, 1-3 = Platz)
+int checkAndInsertHighscore(long score) {
+    // Position finden (sortiert absteigend)
+    int pos = totalGames; // default: ganz hinten
+    for (int i = 0; i < totalGames; i++) {
+        if (score > highscores[i].score) {
+            pos = i;
+            break;
+        }
+    }
+
+    // Platz machen (letzten droppen wenn voll)
+    int end = (totalGames < HIGHSCORE_COUNT) ? totalGames : HIGHSCORE_COUNT - 1;
+    for (int i = end; i > pos; i--) {
+        highscores[i] = highscores[i - 1];
+    }
+
+    highscores[pos].score = score;
+    if (totalGames < HIGHSCORE_COUNT) totalGames++;
+    saveHighscores();
+
+    return pos + 1; // 1-basierter Rang
+}
+
 // ───────────────────── Debug Modus ─────────────────────
 void setDebugMode(bool enable) {
     gameState = enable ? DEBUG : WAIT_FOR_BALL;
@@ -185,14 +271,21 @@ void checkGameState() {
 
 // ───────────────────── Game Over / Reset ─────────────────────
 void startGameOver() {
-    if (gameState == GAME_OVER) return; // avoid scond call of startGameOver method
+    if (gameState == GAME_OVER) return;
     lastGameState = IN_GAME;
     gameState = GAME_OVER;
-    
-    if (sillyMode == true) {
-        myDFPlayer.playFolder(3, 3); // faaaahhh;
-    }else{
-        myDFPlayer.playFolder(1 , 3); // game over sound
+
+    if (points > 0) {
+    lastRank = checkAndInsertHighscore(points);
+    } else {
+        lastRank = totalGames + 1; // letzter Platz, wird nicht gespeichert
+    }
+    bool isNewTop3 = (lastRank <= 3 && lastRank > 0);
+
+    if (sillyMode) {
+        myDFPlayer.playFolder(3, 3);
+    } else {
+        myDFPlayer.playFolder(1, 3);
     }
     sendLEDEffect(5);
     handleLCDDisplay();
@@ -369,7 +462,7 @@ void processSlaveData(String key, String value, int module) {
     int dataValue = value.toInt();
     auto addPoints = [&](const char* type, int basePoints) {
         if (gameState != IN_GAME) return;
-        if(points > 1000 && !pointsOver1000) {
+        if(points > 500 && !pointsOver1000) {
             pointsOver1000 = true;
             if (dfplayerInitialized) {
                 if (sillyMode == false) {
@@ -421,13 +514,28 @@ void displayLCDDisplay(String line1, String line2) {
 void handleLCDDisplay() {
     switch (gameState) {
         case WAIT_FOR_BALL:
-            displayLCDDisplay("Flipper bereit", "<- druecken");
+            if (showingHighscore) {
+                int showCount = min(totalGames, 3);
+                if (showCount == 0 || millis() - highscoreDisplayStart >= HIGHSCORE_DISPLAY_TIME) {
+                    showingHighscore = false;
+                    displayLCDDisplay("Flopper bereit", "<- druecken");
+                } else {
+                    int idx = ((millis() - highscoreDisplayStart) / 2000) % showCount;
+                    displayLCDDisplay("#" + String(idx + 1) + ": " + String(highscores[idx].score), "Highscores");
+                }
+            } else {
+                displayLCDDisplay("Flopper bereit", "<- druecken");
+            }
             break;
         case IN_GAME:
             displayLCDDisplay("Punkte:", String(points));
             break;
         case GAME_OVER:
-            displayLCDDisplay("Game Over", "Score: " + String(points));
+            if (lastRank <= 3) {
+                displayLCDDisplay("NEUER Highscore", "Score: " + String(points)+ " #"+String(lastRank));
+            } else {
+                displayLCDDisplay("Platz #" + String(lastRank), "Score: " + String(points));
+            }
             break;
         case RESET:
             displayLCDDisplay("Resetting...", "Bitte warten");
@@ -452,6 +560,10 @@ bool resetGame(void *) {
     gameState = WAIT_FOR_BALL;
     pointsOver1000 = false;
     lastGameState = RESET;
+
+    showingHighscore = true;
+    highscoreDisplayStart = millis();
+
     sendLEDEffect(7);
     handleLCDDisplay();
     for(int i = 0; i < moduleCount; i++) {
