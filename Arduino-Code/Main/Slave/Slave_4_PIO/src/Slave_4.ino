@@ -25,7 +25,7 @@ void triggerBumper() {
 void setup() {
     Serial.begin(9600);
 
-    Wire.begin(3);                 // I2C Slave Adresse 3
+    Wire.begin(4);                 // I2C Slave Adresse 3
     Wire.onRequest(requestEvent);
     Wire.onReceive(receiveEvent);
 
@@ -65,7 +65,7 @@ void requestEvent() {
     hitpoints = 0;
     interrupts();
 
-    snprintf(message, sizeof(message), "bth:%d|", toSend);
+    snprintf(message, sizeof(message), "tah:%d|", toSend);
     Wire.write(message);
 }
 

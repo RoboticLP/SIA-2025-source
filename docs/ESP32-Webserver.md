@@ -36,8 +36,9 @@ Zur Programmierung des ESP32 der Hochschule müsst ihr einen [Treiber](https://w
 | ```points_bumper``` | int | Trefferpunktzahl der Bumper Tower |
 | ```points_slingshot``` | int | Trefferpunktzahl der Slingshots |
 | ```points_targets``` | int | Trefferpunktzahl der Targets |
-| ```lights_enabled``` | Bit (true/false) | Ob Lichteffekte ein/aus geschaltet werden sollen |
-| ```light_speed``` | float | Die Geschwindigkeit der Lichteffekte |
+| ```lights_enabled``` | int | Ob Lichteffekte ein/aus geschaltet werden sollen (1 = an, 0 = aus) |
+| ```light_speed``` | int | Die Geschwindigkeit der Lichteffekte |
+| ```volume``` | int | Lautstärke des Audio-Players |
 | ```RESET_GAME``` | / | Wenn das Spiel zurückgesetzt werden soll |
 
 ## WiFi Access Point
@@ -57,11 +58,11 @@ Die Clients verbinden sich nach laden der Website mit der Adresse /sse, der die 
     broadcastSSE_update()
 Sendet alle in ihr definierten Daten an alle der verbundenen Clients zurück (z.B. Toggle states, Slider values, etc...)
 - ```Arduino
-    broadcastSSE_log(String logType, String logMessage, int logTimestamp)
+    broadcastSSE_log(String logType, String logMessage)
 Sendet eine log-Mitteilung an alle verbundenen Clients.
 ```logType``` "error" oder "info"
 ```logMessage``` die zu versendende Nachricht
-```logTimestamp``` der Zeitpunkt von dem zu berichtenden Ereigniss (auf Arduinos z.B. durch ```millis()``` zu bekommen) 
+```logTimestamp``` ist derzeit in der Implementierung auskommentiert und wird nicht gesendet.
 
 ### Client / Website
 - ```javascript
