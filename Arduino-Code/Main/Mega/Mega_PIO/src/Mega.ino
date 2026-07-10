@@ -289,6 +289,7 @@ void startGameOver() {
             myDFPlayer.playFolder(1, 3);
         }
         sendLEDEffect(5);
+        gameOverTask = timer.in(5000, finishGameOver);
     } else {
         // special effect for new highscore
         if (dfplayerInitialized) {
@@ -299,9 +300,9 @@ void startGameOver() {
             }
         }
         sendLEDEffect(8);
+        gameOverTask = timer.in(10000, finishGameOver);
     }
     handleLCDDisplay();
-    gameOverTask = timer.in(5000, finishGameOver);
 }
 
 bool finishGameOver(void *) {
