@@ -282,12 +282,24 @@ void startGameOver() {
     }
     bool isNewTop3 = (lastRank <= 3 && lastRank > 0);
 
-    if (sillyMode) {
-        myDFPlayer.playFolder(3, 3);
+    if (!isNewTop3) {
+        if (sillyMode) {
+            myDFPlayer.playFolder(3, 3);
+        } else {
+            myDFPlayer.playFolder(1, 3);
+        }
+        sendLEDEffect(5);
     } else {
-        myDFPlayer.playFolder(1, 3);
+        // special effect for new highscore
+        if (dfplayerInitialized) {
+            if (sillyMode == false) {
+                myDFPlayer.advertise(1);
+            } else {
+                myDFPlayer.advertise(2); // play the silly sound if silly mode is active
+            }
+        }
+        sendLEDEffect(8);
     }
-    sendLEDEffect(5);
     handleLCDDisplay();
     gameOverTask = timer.in(5000, finishGameOver);
 }
