@@ -133,8 +133,8 @@ void setup() {
     lcd.setCursor(0, 1);
     lcd.print("Booting...");
     delay(500);
-    myDFPlayer.volume(volume);
     if (digitalRead(singalForBallStart) == LOW) { // enable troll mode logic
+        myDFPlayer.volume(20);
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("Silly troll mode:");
@@ -146,6 +146,7 @@ void setup() {
         delay(15000);
         myDFPlayer.stop();
     }
+    myDFPlayer.volume(volume);
     delay(500);
     lcd.clear();
     if (sillyMode == false) {
